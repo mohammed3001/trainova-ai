@@ -40,18 +40,26 @@ export class TestsService {
     if (attempt.trainerId !== trainerId) throw new BadRequestException('Not your attempt');
     if (attempt.status !== 'IN_PROGRESS') throw new BadRequestException('Already submitted');
 
-    let total = 0;
+    let autoTotal = 0;
+    let autoMaxTotal = 0;
     let maxTotal = 0;
+    let hasManualTask = false;
 
     for (const task of attempt.test.tasks) {
       maxTotal += task.maxScore;
+      const isAutoGradable = task.type === 'MCQ' && !!task.answerKey;
+      if (isAutoGradable) {
+        autoMaxTotal += task.maxScore;
+      } else {
+        hasManualTask = true;
+      }
       const entry = responses.find((r) => r.taskId === task.id);
       if (!entry) continue;
 
       let autoScore: number | null = null;
-      if (task.type === 'MCQ' && task.answerKey) {
+      if (isAutoGradable) {
         autoScore = String(entry.response) === task.answerKey ? task.maxScore : 0;
-        total += autoScore;
+        autoTotal += autoScore;
       }
 
       await this.prisma.testTaskResponse.upsert({
@@ -66,14 +74,21 @@ export class TestsService {
       });
     }
 
-    const percent = maxTotal > 0 ? Math.round((total / maxTotal) * 100) : 0;
+    const autoPercent = autoMaxTotal > 0 ? Math.round((autoTotal / autoMaxTotal) * 100) : 0;
+    const totalScore = hasManualTask ? null : autoPercent;
     return this.prisma.testAttempt.update({
       where: { id: attemptId },
       data: {
         status: 'SUBMITTED',
         submittedAt: new Date(),
-        totalScore: percent,
-        scoreBreakdown: { autoTotal: total, max: maxTotal },
+        totalScore,
+        scoreBreakdown: {
+          autoTotal,
+          autoMax: autoMaxTotal,
+          autoPercent,
+          max: maxTotal,
+          requiresManualGrading: hasManualTask,
+        },
       },
       include: { responses: true },
     });
