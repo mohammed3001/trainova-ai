@@ -1,0 +1,51 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: 255 255 255;
+  --foreground: 14 18 30;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: rgb(var(--background));
+  color: rgb(var(--foreground));
+  font-feature-settings: 'cv11', 'ss01';
+}
+
+html[dir='rtl'] body {
+  font-feature-settings: normal;
+}
+
+.btn {
+  @apply inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-brand-500/30;
+}
+.btn-primary {
+  @apply btn bg-brand-600 text-white hover:bg-brand-700;
+}
+.btn-secondary {
+  @apply btn border border-brand-200 bg-white text-brand-700 hover:bg-brand-50;
+}
+.btn-ghost {
+  @apply btn text-brand-700 hover:bg-brand-50;
+}
+.card {
+  @apply rounded-xl border border-slate-200 bg-white p-5 shadow-sm;
+}
+.input {
+  @apply w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm placeholder:text-slate-400 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20;
+}
+.label {
+  @apply mb-1.5 block text-sm font-medium text-slate-700;
+}
+
+.badge {
+  @apply inline-flex items-center rounded-full bg-brand-50 px-2.5 py-0.5 text-xs font-medium text-brand-700;
+}
+.badge-accent {
+  @apply inline-flex items-center rounded-full bg-accent-400/20 px-2.5 py-0.5 text-xs font-medium text-amber-700;
+}

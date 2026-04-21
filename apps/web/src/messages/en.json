@@ -1,0 +1,123 @@
+{
+  "common": {
+    "appName": "Trainova AI",
+    "tagline": "The Global Marketplace for AI Training Talent",
+    "heroSub": "Hire. Test. Trust. Train. Connect with elite AI trainers tested on your actual model.",
+    "getStarted": "Get started",
+    "forCompanies": "For companies",
+    "forTrainers": "For trainers",
+    "signIn": "Sign in",
+    "signOut": "Sign out",
+    "register": "Create account",
+    "login": "Login",
+    "dashboard": "Dashboard",
+    "browseTrainers": "Browse trainers",
+    "browseRequests": "Open requests",
+    "skills": "Skills",
+    "about": "About",
+    "pricing": "Pricing",
+    "search": "Search",
+    "save": "Save",
+    "cancel": "Cancel",
+    "submit": "Submit",
+    "loading": "Loading…",
+    "error": "Something went wrong"
+  },
+  "nav": {
+    "home": "Home",
+    "company": "Company",
+    "trainer": "Trainer",
+    "admin": "Admin"
+  },
+  "landing": {
+    "heroTitle": "Hire, test and train the world's best AI specialists.",
+    "heroBody": "Post a request, link your model or sandbox, and Trainova AI matches you with verified experts — screened on the exact problem you need solved.",
+    "heroCtaCompany": "I'm hiring",
+    "heroCtaTrainer": "I'm a trainer",
+    "statsCompanies": "companies",
+    "statsTrainers": "trainers",
+    "statsRequests": "open requests",
+    "pillars": {
+      "marketplaceTitle": "Global Marketplace",
+      "marketplaceBody": "Discover verified specialists in fine-tuning, RLHF, prompt engineering, safety alignment and more.",
+      "evalTitle": "Model-Linked Evaluation",
+      "evalBody": "Test candidates on your actual model, sandbox or API. Automated + human scoring with full audit trails.",
+      "workspaceTitle": "Collaboration Workspace",
+      "workspaceBody": "Chat, negotiate, contract, pay and review — all inside one secure, audit-ready platform."
+    },
+    "plansTitle": "Built for every stage",
+    "plansSub": "Start free. Scale to enterprise."
+  },
+  "auth": {
+    "emailLabel": "Email",
+    "passwordLabel": "Password",
+    "nameLabel": "Full name",
+    "roleLabel": "I want to…",
+    "roleCompany": "Hire AI trainers (as a company)",
+    "roleTrainer": "Offer my AI training services",
+    "haveAccount": "Already have an account?",
+    "noAccount": "New here?",
+    "registerTitle": "Create your Trainova account",
+    "loginTitle": "Welcome back",
+    "registerCta": "Create account",
+    "loginCta": "Sign in"
+  },
+  "dashboard": {
+    "welcome": "Welcome back, {name}",
+    "companyOverview": "Your hiring overview",
+    "trainerOverview": "Your trainer overview",
+    "createRequest": "Post a new request",
+    "myRequests": "My requests",
+    "myApplications": "My applications",
+    "myTests": "My tests",
+    "openInDashboard": "Open",
+    "applicationsCount": "{count} applications"
+  },
+  "requests": {
+    "listTitle": "Open AI training requests",
+    "noResults": "No open requests yet.",
+    "budget": "Budget",
+    "duration": "Duration",
+    "days": "days",
+    "model": "Model",
+    "industry": "Industry",
+    "skills": "Skills",
+    "apply": "Apply",
+    "coverLetter": "Cover letter",
+    "proposedRate": "Your proposed rate (USD)",
+    "proposedTimeline": "Proposed timeline (days)",
+    "applied": "Application submitted",
+    "fields": {
+      "title": "Title",
+      "description": "Description",
+      "objective": "Objective",
+      "modelFamily": "Model family",
+      "industry": "Industry",
+      "durationDays": "Duration (days)",
+      "budgetMin": "Budget min (USD)",
+      "budgetMax": "Budget max (USD)",
+      "workType": "Work type",
+      "skills": "Required skills"
+    }
+  },
+  "trainers": {
+    "listTitle": "AI trainers",
+    "rate": "Hourly rate",
+    "noResults": "No trainers match your filters."
+  },
+  "admin": {
+    "overview": "Overview",
+    "users": "Users",
+    "companies": "Companies",
+    "requests": "Requests",
+    "skills": "Skills",
+    "settings": "Settings",
+    "kpi": {
+      "users": "Total users",
+      "companies": "Companies",
+      "trainers": "Trainers",
+      "requestsOpen": "Open requests",
+      "applications": "Applications"
+    }
+  }
+}

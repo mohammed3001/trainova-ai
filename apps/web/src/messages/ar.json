@@ -1,0 +1,123 @@
+{
+  "common": {
+    "appName": "Trainova AI",
+    "tagline": "المنصة العالمية لتوظيف خبراء تدريب الذكاء الاصطناعي",
+    "heroSub": "وظّف. اختبر. ثِق. درّب. تواصل مع نخبة الخبراء الذين يتم اختبارهم فعلياً على نموذجك.",
+    "getStarted": "ابدأ الآن",
+    "forCompanies": "للشركات",
+    "forTrainers": "للمدربين",
+    "signIn": "تسجيل الدخول",
+    "signOut": "تسجيل الخروج",
+    "register": "إنشاء حساب",
+    "login": "تسجيل الدخول",
+    "dashboard": "لوحة التحكم",
+    "browseTrainers": "تصفح المدربين",
+    "browseRequests": "الطلبات المفتوحة",
+    "skills": "المهارات",
+    "about": "عن المنصة",
+    "pricing": "الأسعار",
+    "search": "بحث",
+    "save": "حفظ",
+    "cancel": "إلغاء",
+    "submit": "إرسال",
+    "loading": "جاري التحميل…",
+    "error": "حدث خطأ ما"
+  },
+  "nav": {
+    "home": "الرئيسية",
+    "company": "الشركة",
+    "trainer": "المدرب",
+    "admin": "الأدمن"
+  },
+  "landing": {
+    "heroTitle": "وظّف واختبر ودرّب أفضل خبراء الذكاء الاصطناعي في العالم.",
+    "heroBody": "انشر طلبك واربط نموذجك أو بيئة الاختبار، وسترشّح لك Trainova AI الخبراء الموثّقين المختبَرين على المشكلة الفعلية التي تريد حلّها.",
+    "heroCtaCompany": "أنا أبحث عن خبير",
+    "heroCtaTrainer": "أنا مدرب",
+    "statsCompanies": "شركة",
+    "statsTrainers": "مدرب",
+    "statsRequests": "طلب مفتوح",
+    "pillars": {
+      "marketplaceTitle": "سوق عالمي",
+      "marketplaceBody": "اكتشف خبراء موثّقين في الضبط الدقيق، RLHF، هندسة الـ Prompts، مواءمة الأمان والمزيد.",
+      "evalTitle": "اختبار مرتبط بالنموذج",
+      "evalBody": "اختبر المتقدمين على نموذجك أو بيئتك التجريبية فعلياً مع تقييم آلي وبشري وسجلّ كامل.",
+      "workspaceTitle": "مساحة تعاون احترافية",
+      "workspaceBody": "دردشة، تفاوض، عقود، دفع، تقييم — كل شيء داخل منصة واحدة آمنة وقابلة للتدقيق."
+    },
+    "plansTitle": "مصمَّمة لكل مرحلة",
+    "plansSub": "ابدأ مجاناً وتوسّع مع احتياجك."
+  },
+  "auth": {
+    "emailLabel": "البريد الإلكتروني",
+    "passwordLabel": "كلمة المرور",
+    "nameLabel": "الاسم الكامل",
+    "roleLabel": "أرغب في…",
+    "roleCompany": "توظيف مدربي ذكاء اصطناعي (شركة)",
+    "roleTrainer": "تقديم خدمات تدريب الذكاء الاصطناعي",
+    "haveAccount": "لديك حساب بالفعل؟",
+    "noAccount": "جديد هنا؟",
+    "registerTitle": "أنشئ حساب Trainova الخاص بك",
+    "loginTitle": "أهلاً بعودتك",
+    "registerCta": "إنشاء حساب",
+    "loginCta": "تسجيل الدخول"
+  },
+  "dashboard": {
+    "welcome": "أهلاً بعودتك، {name}",
+    "companyOverview": "نظرة عامة على التوظيف",
+    "trainerOverview": "نظرتك كمدرب",
+    "createRequest": "انشر طلباً جديداً",
+    "myRequests": "طلباتي",
+    "myApplications": "تقديماتي",
+    "myTests": "اختباراتي",
+    "openInDashboard": "فتح",
+    "applicationsCount": "{count} تقديم"
+  },
+  "requests": {
+    "listTitle": "طلبات تدريب الذكاء الاصطناعي المفتوحة",
+    "noResults": "لا توجد طلبات مفتوحة بعد.",
+    "budget": "الميزانية",
+    "duration": "المدة",
+    "days": "يوم",
+    "model": "النموذج",
+    "industry": "الصناعة",
+    "skills": "المهارات",
+    "apply": "قدّم",
+    "coverLetter": "رسالة تقديم",
+    "proposedRate": "السعر المقترح (USD)",
+    "proposedTimeline": "المدة المقترحة (أيام)",
+    "applied": "تم إرسال التقديم",
+    "fields": {
+      "title": "العنوان",
+      "description": "الوصف",
+      "objective": "الهدف",
+      "modelFamily": "عائلة النموذج",
+      "industry": "الصناعة",
+      "durationDays": "المدة (أيام)",
+      "budgetMin": "الحد الأدنى للميزانية (USD)",
+      "budgetMax": "الحد الأعلى للميزانية (USD)",
+      "workType": "نوع العمل",
+      "skills": "المهارات المطلوبة"
+    }
+  },
+  "trainers": {
+    "listTitle": "مدربو الذكاء الاصطناعي",
+    "rate": "سعر الساعة",
+    "noResults": "لا يوجد مدربون مطابقون لفلترتك."
+  },
+  "admin": {
+    "overview": "نظرة عامة",
+    "users": "المستخدمون",
+    "companies": "الشركات",
+    "requests": "الطلبات",
+    "skills": "المهارات",
+    "settings": "الإعدادات",
+    "kpi": {
+      "users": "إجمالي المستخدمين",
+      "companies": "الشركات",
+      "trainers": "المدربون",
+      "requestsOpen": "الطلبات المفتوحة",
+      "applications": "التقديمات"
+    }
+  }
+}
