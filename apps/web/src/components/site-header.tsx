@@ -38,7 +38,7 @@ export async function SiteHeader() {
           {token ? (
             <>
               <Link href={dashboardHref} className="btn-secondary">{t('dashboard')}</Link>
-              <Link href={`/${locale}/logout`} className="btn-ghost">{t('signOut')}</Link>
+              <Link href={`/api/logout?locale=${locale}`} prefetch={false} className="btn-ghost">{t('signOut')}</Link>
             </>
           ) : (
             <>

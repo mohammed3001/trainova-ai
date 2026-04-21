@@ -64,9 +64,4 @@ export async function registerAction(_prev: unknown, formData: FormData) {
   }
 }
 
-export async function logoutAction(locale: string) {
-  const c = await cookies();
-  c.delete(AUTH_COOKIE);
-  c.delete(ROLE_COOKIE);
-  redirect(`/${locale}`);
-}
+
