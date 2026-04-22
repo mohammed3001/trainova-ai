@@ -14,6 +14,8 @@
     "typecheck": "pnpm -r run typecheck",
     "db:generate": "pnpm --filter @trainova/db prisma:generate",
     "db:migrate": "pnpm --filter @trainova/db prisma:migrate",
+    "db:migrate:deploy": "pnpm --filter @trainova/db prisma:deploy",
+    "db:push": "pnpm --filter @trainova/db exec prisma db push",
     "db:seed": "pnpm --filter @trainova/db run seed",
     "db:up": "docker compose up -d postgres redis",
     "db:down": "docker compose down",
