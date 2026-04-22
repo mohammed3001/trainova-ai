@@ -37,6 +37,14 @@ export function LoginForm({ locale }: { locale: string }) {
       <button type="submit" disabled={pending} className="btn-primary w-full disabled:opacity-60">
         {pending ? t('common.loading') : t('auth.loginCta')}
       </button>
+      <div className="text-center text-sm">
+        <a
+          href={`/${locale}/forgot-password`}
+          className="font-medium text-brand-700 hover:underline"
+        >
+          {t('auth.forgotPasswordLink')}
+        </a>
+      </div>
     </form>
   );
 }
