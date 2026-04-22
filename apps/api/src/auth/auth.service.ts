@@ -113,7 +113,12 @@ export class AuthService {
     const user = await this.prisma.user.findUnique({ where: { email } });
     if (!user) return; // silent
     if (user.emailVerifiedAt) return; // already verified
-    await this.issueVerificationEmail(user.id, user.email, user.name, locale || user.locale);
+    // Swallow email-provider errors so the response stays neutral (no user enumeration).
+    try {
+      await this.issueVerificationEmail(user.id, user.email, user.name, locale || user.locale);
+    } catch (err) {
+      this.logger.error(`resend-verification email failed: ${(err as Error).message}`);
+    }
   }
 
   /**
@@ -190,28 +195,34 @@ export class AuthService {
     if (!user) return;
     if (user.status !== 'ACTIVE') return;
 
-    // Invalidate previous unconsumed reset tokens for this user.
-    await this.prisma.passwordResetToken.updateMany({
-      where: { userId: user.id, consumedAt: null },
-      data: { consumedAt: new Date() },
-    });
+    // Swallow token-issuance / email-provider errors so the response stays
+    // neutral (no user enumeration via 200 vs 500 differential).
+    try {
+      // Invalidate previous unconsumed reset tokens for this user.
+      await this.prisma.passwordResetToken.updateMany({
+        where: { userId: user.id, consumedAt: null },
+        data: { consumedAt: new Date() },
+      });
 
-    const { raw, hash } = issueOpaqueToken(32);
-    const expiresAt = new Date(Date.now() + RESET_TOKEN_TTL_MS);
-    await this.prisma.passwordResetToken.create({
-      data: { userId: user.id, tokenHash: hash, expiresAt },
-    });
+      const { raw, hash } = issueOpaqueToken(32);
+      const expiresAt = new Date(Date.now() + RESET_TOKEN_TTL_MS);
+      await this.prisma.passwordResetToken.create({
+        data: { userId: user.id, tokenHash: hash, expiresAt },
+      });
 
-    const normalizedLocale = EmailService.normalizeLocale(locale || user.locale);
-    const resetUrl = this.buildAppUrl(
-      `/${normalizedLocale}/reset-password?token=${encodeURIComponent(raw)}`,
-    );
-    await this.email.sendResetPassword(user.email, {
-      locale: normalizedLocale,
-      name: user.name,
-      resetUrl,
-      expiresInMinutes: RESET_TOKEN_TTL_MIN,
-    });
+      const normalizedLocale = EmailService.normalizeLocale(locale || user.locale);
+      const resetUrl = this.buildAppUrl(
+        `/${normalizedLocale}/reset-password?token=${encodeURIComponent(raw)}`,
+      );
+      await this.email.sendResetPassword(user.email, {
+        locale: normalizedLocale,
+        name: user.name,
+        resetUrl,
+        expiresInMinutes: RESET_TOKEN_TTL_MIN,
+      });
+    } catch (err) {
+      this.logger.error(`forgot-password email failed: ${(err as Error).message}`);
+    }
   }
 
   async resetPassword(rawToken: string, newPassword: string): Promise<{ reset: true }> {
