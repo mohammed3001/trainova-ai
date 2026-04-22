@@ -132,21 +132,29 @@ export class AuthService {
     if (row.consumedAt) throw new BadRequestException('Invalid or expired token');
     if (row.expiresAt.getTime() < Date.now()) throw new BadRequestException('Invalid or expired token');
 
-    await this.prisma.$transaction([
-      this.prisma.emailVerificationToken.update({
-        where: { id: row.id },
+    // Interactive transaction so the consume check and the user update share
+    // the same DB transaction and row lock. The conditional `updateMany` with
+    // `consumedAt: null` + `expiresAt: { gt: now }` atomically claims the
+    // token: at most one concurrent caller will get `count === 1`; any other
+    // caller sees 0 and bails with the same neutral error.
+    await this.prisma.$transaction(async (tx) => {
+      const claim = await tx.emailVerificationToken.updateMany({
+        where: { id: row.id, consumedAt: null, expiresAt: { gt: new Date() } },
         data: { consumedAt: new Date() },
-      }),
-      this.prisma.user.update({
+      });
+      if (claim.count === 0) {
+        throw new BadRequestException('Invalid or expired token');
+      }
+      await tx.user.update({
         where: { id: row.userId },
         data: { emailVerifiedAt: new Date() },
-      }),
-      // Optional cleanup: invalidate any other unconsumed tokens for this user.
-      this.prisma.emailVerificationToken.updateMany({
+      });
+      // Invalidate any other unconsumed verify tokens for this user.
+      await tx.emailVerificationToken.updateMany({
         where: { userId: row.userId, consumedAt: null, id: { not: row.id } },
         data: { consumedAt: new Date() },
-      }),
-    ]);
+      });
+    });
 
     return { verified: true };
   }
@@ -232,28 +240,36 @@ export class AuthService {
     if (row.consumedAt) throw new BadRequestException('Invalid or expired token');
     if (row.expiresAt.getTime() < Date.now()) throw new BadRequestException('Invalid or expired token');
 
+    // scrypt is intentionally slow (~50–200ms). We compute the new hash before
+    // opening the transaction so DB work stays short, then claim the token
+    // atomically inside the transaction below. Only the caller whose
+    // conditional `updateMany` returns count===1 wins; concurrent duplicates
+    // see count===0 and raise the same neutral error.
     const passwordHash = await hashPassword(newPassword);
 
-    await this.prisma.$transaction([
-      this.prisma.passwordResetToken.update({
-        where: { id: row.id },
+    await this.prisma.$transaction(async (tx) => {
+      const claim = await tx.passwordResetToken.updateMany({
+        where: { id: row.id, consumedAt: null, expiresAt: { gt: new Date() } },
         data: { consumedAt: new Date() },
-      }),
-      this.prisma.user.update({
+      });
+      if (claim.count === 0) {
+        throw new BadRequestException('Invalid or expired token');
+      }
+      await tx.user.update({
         where: { id: row.userId },
         data: { passwordHash },
-      }),
+      });
       // Invalidate any other outstanding reset tokens for this user.
-      this.prisma.passwordResetToken.updateMany({
+      await tx.passwordResetToken.updateMany({
         where: { userId: row.userId, consumedAt: null, id: { not: row.id } },
         data: { consumedAt: new Date() },
-      }),
+      });
       // Revoke any active refresh sessions so other devices get logged out.
-      this.prisma.refreshToken.updateMany({
+      await tx.refreshToken.updateMany({
         where: { userId: row.userId, revokedAt: null },
         data: { revokedAt: new Date() },
-      }),
-    ]);
+      });
+    });
 
     return { reset: true };
   }
