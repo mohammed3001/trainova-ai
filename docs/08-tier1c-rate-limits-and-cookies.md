@@ -11,12 +11,12 @@ live on `AuthController`.
 
 | Endpoint                    | Limit / minute / IP | Rationale                                                 |
 | --------------------------- | ------------------: | --------------------------------------------------------- |
-| `POST /auth/login`          |                   5 | Slow password guessing. Normal users retry well under 5/min. |
-| `POST /auth/register`       |                   5 | Prevents signup spam per IP.                              |
-| `POST /auth/forgot-password`|                   5 | Limits email-send amplification and probing.              |
-| `POST /auth/reset-password` |                  10 | Generous: users may retype / fix password strength.       |
-| `POST /auth/verify-email`   |                  20 | Clicks on links + SSR auto-hits can add up quickly.       |
-| `POST /auth/resend-verification` |              3 | Most aggressive — this is the only endpoint that triggers a real email on behalf of any caller. |
+| `POST /auth/login`          |                  20 | Caps brute-force at 28,800/day/IP — useless vs any decent password. Stays above realistic human retry rates so shared-NAT users (corporate / café wifi) aren't locked out, and leaves headroom for the serial Playwright suite. |
+| `POST /auth/register`       |                  10 | Prevents signup spam while still allowing small shared-IP bursts. |
+| `POST /auth/forgot-password`|                  10 | Limits email-send amplification / email-existence probing. |
+| `POST /auth/reset-password` |                  20 | Generous: users may mistype / retry password-strength rules. |
+| `POST /auth/verify-email`   |                  30 | Clicks on links + server-component auto-hits during SSR re-renders can add up quickly. |
+| `POST /auth/resend-verification` |              3 | **Most aggressive** — this is the only endpoint that triggers a real outbound email on behalf of any caller. |
 
 Keys are IP-based via `ThrottlerGuard`'s default tracker. When we move behind
 a load balancer we'll need to trust proxy headers so `req.ip` reflects the
@@ -61,11 +61,12 @@ it for role-aware SSR nav, and it contains no secret. The JWT lives only in
 
 ## Verification checklist
 
-- Spam `POST /auth/login` 6 times in < 1 min from one IP → 6th returns 429.
-- Same for register / forgot-password at 6/min, resend-verification at 4/min.
+- Spam `POST /auth/login` 21 times in < 1 min from one IP → 21st returns 429.
+- Same for register at 11/min, forgot-password at 11/min,
+  resend-verification at 4/min.
 - Regular browser traffic (< 10 req/min from the web app) never hits a 429.
-- Golden-flow Playwright suite still green — it registers 2 users and logs in
-  twice, well under any bucket.
+- Golden-flow Playwright suite still green — it registers 2 users and performs
+  ~6 serial logins from the same `127.0.0.1`, well under the 20/min login bucket.
 - In a prod build (`NODE_ENV=production`), DevTools → Application → Cookies
   shows `trainova_token` and `trainova_role` with `Secure=true`; in dev build
   `Secure=false` so the cookie persists on localhost.
