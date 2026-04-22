@@ -15,6 +15,29 @@ export const loginSchema = z.object({
 });
 export type LoginInput = z.infer<typeof loginSchema>;
 
+export const verifyEmailSchema = z.object({
+  token: z.string().min(16).max(256),
+});
+export type VerifyEmailInput = z.infer<typeof verifyEmailSchema>;
+
+export const resendVerificationSchema = z.object({
+  email: z.string().email(),
+  locale: z.enum(['en', 'ar']).optional().default('en'),
+});
+export type ResendVerificationInput = z.infer<typeof resendVerificationSchema>;
+
+export const forgotPasswordSchema = z.object({
+  email: z.string().email(),
+  locale: z.enum(['en', 'ar']).optional().default('en'),
+});
+export type ForgotPasswordInput = z.infer<typeof forgotPasswordSchema>;
+
+export const resetPasswordSchema = z.object({
+  token: z.string().min(16).max(256),
+  password: z.string().min(8).max(128),
+});
+export type ResetPasswordInput = z.infer<typeof resetPasswordSchema>;
+
 export const createJobRequestSchema = z.object({
   title: z.string().min(5).max(200),
   description: z.string().min(20),

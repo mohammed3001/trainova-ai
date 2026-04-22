@@ -1,15 +1,32 @@
-import { Injectable, ConflictException, UnauthorizedException } from '@nestjs/common';
+import {
+  Injectable,
+  ConflictException,
+  UnauthorizedException,
+  BadRequestException,
+  Logger,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
+import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../prisma/prisma.service';
 import { hashPassword, verifyPassword } from '../common/password.util';
 import { slugify, randomSuffix } from '../common/slug.util';
+import { hashToken, issueOpaqueToken } from '../common/token.util';
+import { EmailService } from '../email/email.service';
 import type { RegisterInput, LoginInput } from '@trainova/shared';
+
+const VERIFY_TOKEN_TTL_MS = 24 * 60 * 60 * 1000; // 24h
+const RESET_TOKEN_TTL_MS = 30 * 60 * 1000; // 30m
+const RESET_TOKEN_TTL_MIN = 30;
 
 @Injectable()
 export class AuthService {
+  private readonly logger = new Logger(AuthService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly jwt: JwtService,
+    private readonly email: EmailService,
+    private readonly config: ConfigService,
   ) {}
 
   async register(input: RegisterInput) {
@@ -47,6 +64,11 @@ export class AuthService {
       });
     }
 
+    // Kick off verification email (fire-and-forget; never blocks registration).
+    void this.issueVerificationEmail(user.id, user.email, user.name, user.locale).catch((err) => {
+      this.logger.error(`post-register verification email failed: ${(err as Error).message}`);
+    });
+
     return this.issueTokens(user.id, user.email, user.role);
   }
 
@@ -76,6 +98,165 @@ export class AuthService {
         trainerProfile: { select: { id: true, slug: true, verified: true, headline: true } },
       },
     });
+  }
+
+  // ---------------------------------------------------------------------------
+  // Email verification
+  // ---------------------------------------------------------------------------
+
+  /**
+   * Public endpoint. Always returns a neutral success so we never leak which
+   * emails exist. If the account exists and is unverified, a fresh token is
+   * issued and the old unconsumed ones for that user are invalidated.
+   */
+  async resendVerification(email: string, locale: 'en' | 'ar'): Promise<void> {
+    const user = await this.prisma.user.findUnique({ where: { email } });
+    if (!user) return; // silent
+    if (user.emailVerifiedAt) return; // already verified
+    await this.issueVerificationEmail(user.id, user.email, user.name, locale || user.locale);
+  }
+
+  /**
+   * Confirms an opaque verify token. Single-use: the row is marked consumed
+   * on success so the same link cannot be replayed.
+   */
+  async verifyEmail(rawToken: string): Promise<{ verified: true }> {
+    const tokenHash = hashToken(rawToken);
+    const row = await this.prisma.emailVerificationToken.findUnique({ where: { tokenHash } });
+    if (!row) throw new BadRequestException('Invalid or expired token');
+    if (row.consumedAt) throw new BadRequestException('Invalid or expired token');
+    if (row.expiresAt.getTime() < Date.now()) throw new BadRequestException('Invalid or expired token');
+
+    await this.prisma.$transaction([
+      this.prisma.emailVerificationToken.update({
+        where: { id: row.id },
+        data: { consumedAt: new Date() },
+      }),
+      this.prisma.user.update({
+        where: { id: row.userId },
+        data: { emailVerifiedAt: new Date() },
+      }),
+      // Optional cleanup: invalidate any other unconsumed tokens for this user.
+      this.prisma.emailVerificationToken.updateMany({
+        where: { userId: row.userId, consumedAt: null, id: { not: row.id } },
+        data: { consumedAt: new Date() },
+      }),
+    ]);
+
+    return { verified: true };
+  }
+
+  private async issueVerificationEmail(
+    userId: string,
+    email: string,
+    name: string,
+    locale: string,
+  ): Promise<void> {
+    // Invalidate any previous unconsumed tokens for this user so only the
+    // newest link works.
+    await this.prisma.emailVerificationToken.updateMany({
+      where: { userId, consumedAt: null },
+      data: { consumedAt: new Date() },
+    });
+
+    const { raw, hash } = issueOpaqueToken(32);
+    const expiresAt = new Date(Date.now() + VERIFY_TOKEN_TTL_MS);
+    await this.prisma.emailVerificationToken.create({
+      data: { userId, tokenHash: hash, expiresAt },
+    });
+
+    const normalizedLocale = EmailService.normalizeLocale(locale);
+    const verifyUrl = this.buildAppUrl(
+      `/${normalizedLocale}/verify-email?token=${encodeURIComponent(raw)}`,
+    );
+    await this.email.sendVerifyEmail(email, {
+      locale: normalizedLocale,
+      name,
+      verifyUrl,
+    });
+  }
+
+  // ---------------------------------------------------------------------------
+  // Password reset
+  // ---------------------------------------------------------------------------
+
+  /**
+   * Public endpoint. Always returns success regardless of whether the email
+   * matches a real user (no user-enumeration). If the user exists, a
+   * single-use 30-min token is issued and the reset email sent.
+   */
+  async forgotPassword(email: string, locale: 'en' | 'ar'): Promise<void> {
+    const user = await this.prisma.user.findUnique({ where: { email } });
+    if (!user) return;
+    if (user.status !== 'ACTIVE') return;
+
+    // Invalidate previous unconsumed reset tokens for this user.
+    await this.prisma.passwordResetToken.updateMany({
+      where: { userId: user.id, consumedAt: null },
+      data: { consumedAt: new Date() },
+    });
+
+    const { raw, hash } = issueOpaqueToken(32);
+    const expiresAt = new Date(Date.now() + RESET_TOKEN_TTL_MS);
+    await this.prisma.passwordResetToken.create({
+      data: { userId: user.id, tokenHash: hash, expiresAt },
+    });
+
+    const normalizedLocale = EmailService.normalizeLocale(locale || user.locale);
+    const resetUrl = this.buildAppUrl(
+      `/${normalizedLocale}/reset-password?token=${encodeURIComponent(raw)}`,
+    );
+    await this.email.sendResetPassword(user.email, {
+      locale: normalizedLocale,
+      name: user.name,
+      resetUrl,
+      expiresInMinutes: RESET_TOKEN_TTL_MIN,
+    });
+  }
+
+  async resetPassword(rawToken: string, newPassword: string): Promise<{ reset: true }> {
+    const tokenHash = hashToken(rawToken);
+    const row = await this.prisma.passwordResetToken.findUnique({ where: { tokenHash } });
+    if (!row) throw new BadRequestException('Invalid or expired token');
+    if (row.consumedAt) throw new BadRequestException('Invalid or expired token');
+    if (row.expiresAt.getTime() < Date.now()) throw new BadRequestException('Invalid or expired token');
+
+    const passwordHash = await hashPassword(newPassword);
+
+    await this.prisma.$transaction([
+      this.prisma.passwordResetToken.update({
+        where: { id: row.id },
+        data: { consumedAt: new Date() },
+      }),
+      this.prisma.user.update({
+        where: { id: row.userId },
+        data: { passwordHash },
+      }),
+      // Invalidate any other outstanding reset tokens for this user.
+      this.prisma.passwordResetToken.updateMany({
+        where: { userId: row.userId, consumedAt: null, id: { not: row.id } },
+        data: { consumedAt: new Date() },
+      }),
+      // Revoke any active refresh sessions so other devices get logged out.
+      this.prisma.refreshToken.updateMany({
+        where: { userId: row.userId, revokedAt: null },
+        data: { revokedAt: new Date() },
+      }),
+    ]);
+
+    return { reset: true };
+  }
+
+  // ---------------------------------------------------------------------------
+  // Helpers
+  // ---------------------------------------------------------------------------
+
+  private buildAppUrl(path: string): string {
+    const base =
+      this.config.get<string>('NEXT_PUBLIC_SITE_URL') ??
+      this.config.get<string>('APP_URL') ??
+      'http://localhost:3000';
+    return `${base.replace(/\/+$/, '')}${path.startsWith('/') ? path : `/${path}`}`;
   }
 
   private async issueTokens(id: string, email: string, role: string) {
