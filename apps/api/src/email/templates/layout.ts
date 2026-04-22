@@ -51,9 +51,21 @@ export function renderLayout(locale: Locale, bodyHtml: string): string {
 </html>`;
 }
 
+/**
+ * HTML-escape a string for safe use in text nodes and attribute values.
+ * Shared helper used by the layout + every template so URLs and user-supplied
+ * values cannot break out of attributes or inject markup.
+ */
+export function escapeHtml(s: string): string {
+  return s.replace(/[&<>"']/g, (c) =>
+    c === '&' ? '&amp;' : c === '<' ? '&lt;' : c === '>' ? '&gt;' : c === '"' ? '&quot;' : '&#39;',
+  );
+}
+
 export function renderButton(locale: Locale, url: string, label: string): string {
+  const safeUrl = escapeHtml(url);
   return `<p style="margin:24px 0;">
-    <a href="${url}"
+    <a href="${safeUrl}"
        style="display:inline-block;background:#0ea5a4;color:#ffffff;text-decoration:none;padding:12px 20px;border-radius:8px;font-weight:600;">
       ${label}
     </a>
@@ -62,6 +74,6 @@ export function renderButton(locale: Locale, url: string, label: string): string
     ${locale === 'ar' ? 'أو انسخ هذا الرابط والصقه في المتصفح:' : 'Or copy and paste this URL into your browser:'}
   </p>
   <p style="margin:0 0 24px 0;font-size:13px;word-break:break-all;">
-    <a href="${url}" style="color:#0ea5a4;">${url}</a>
+    <a href="${safeUrl}" style="color:#0ea5a4;">${safeUrl}</a>
   </p>`;
 }
