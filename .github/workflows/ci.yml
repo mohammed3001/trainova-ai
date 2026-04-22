@@ -43,3 +43,132 @@ jobs:
           JWT_REFRESH_SECRET: "ci-refresh"
           NEXT_PUBLIC_API_URL: "http://localhost:4000"
           NEXT_PUBLIC_SITE_URL: "http://localhost:3000"
+
+  e2e:
+    name: Playwright golden-flow E2E
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: trainova
+          POSTGRES_PASSWORD: trainova
+          POSTGRES_DB: trainova
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U trainova -d trainova"
+          --health-interval=5s
+          --health-timeout=3s
+          --health-retries=20
+      redis:
+        image: redis:7
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd="redis-cli ping"
+          --health-interval=5s
+          --health-timeout=3s
+          --health-retries=20
+    env:
+      DATABASE_URL: "postgresql://trainova:trainova@localhost:5432/trainova?schema=public"
+      REDIS_URL: "redis://localhost:6379"
+      JWT_ACCESS_SECRET: "ci-access"
+      JWT_REFRESH_SECRET: "ci-refresh"
+      JWT_ACCESS_TTL: "14d"
+      JWT_REFRESH_TTL: "30d"
+      API_PORT: "4000"
+      NEXT_PUBLIC_API_URL: "http://localhost:4000"
+      NEXT_PUBLIC_SITE_URL: "http://localhost:3000"
+      BASE_URL: "http://localhost:3000"
+      API_BASE_URL: "http://localhost:4000"
+      NODE_ENV: "development"
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.1
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile=false
+
+      - name: Generate Prisma client
+        run: pnpm --filter @trainova/db run prisma:generate
+
+      - name: Apply database migrations
+        run: pnpm db:migrate:deploy
+
+      - name: Seed database
+        run: pnpm db:seed
+
+      - name: Install Playwright browsers
+        run: pnpm --filter @trainova/e2e exec playwright install --with-deps chromium
+
+      - name: Start API (background)
+        run: |
+          pnpm --filter @trainova/api dev > /tmp/api.log 2>&1 &
+          echo $! > /tmp/api.pid
+
+      - name: Start Web (background)
+        run: |
+          pnpm --filter @trainova/web dev > /tmp/web.log 2>&1 &
+          echo $! > /tmp/web.pid
+
+      - name: Wait for API + Web
+        run: |
+          set -e
+          for i in $(seq 1 60); do
+            api=$(curl -fsS -o /dev/null -w "%{http_code}" http://localhost:4000/api/health || echo 000)
+            web=$(curl -fsS -o /dev/null -w "%{http_code}" http://localhost:3000/en || echo 000)
+            echo "attempt $i: api=$api web=$web"
+            if [ "$api" = "200" ] && [ "$web" = "200" ]; then
+              echo "servers ready"
+              exit 0
+            fi
+            sleep 3
+          done
+          echo "::group::api log"; tail -200 /tmp/api.log || true; echo "::endgroup::"
+          echo "::group::web log"; tail -200 /tmp/web.log || true; echo "::endgroup::"
+          exit 1
+
+      - name: Run Playwright golden-flow regression
+        run: pnpm --filter @trainova/e2e test
+
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: apps/e2e/playwright-report
+          if-no-files-found: ignore
+
+      - name: Upload Playwright traces & videos
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-test-results
+          path: apps/e2e/test-results
+          if-no-files-found: ignore
+
+      - name: Upload server logs on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: server-logs
+          path: |
+            /tmp/api.log
+            /tmp/web.log
+          if-no-files-found: ignore
+
+      - name: Stop dev servers
+        if: always()
+        run: |
+          [ -f /tmp/api.pid ] && kill $(cat /tmp/api.pid) 2>/dev/null || true
+          [ -f /tmp/web.pid ] && kill $(cat /tmp/web.pid) 2>/dev/null || true
