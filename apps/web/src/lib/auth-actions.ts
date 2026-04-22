@@ -12,13 +12,29 @@ interface AuthResponse {
 
 async function setAuthCookies(token: string, role: string) {
   const c = await cookies();
+  // `secure` is enabled only in production so the cookie still works over
+  // plain http on localhost and in CI. `sameSite: 'lax'` keeps redirect
+  // flows working (logout + link-based verify/reset flows) while blocking
+  // cross-site POSTs.
+  const secure = process.env.NODE_ENV === 'production';
+  const maxAge = 60 * 60 * 24 * 14;
   c.set(AUTH_COOKIE, token, {
     httpOnly: true,
+    secure,
     sameSite: 'lax',
     path: '/',
-    maxAge: 60 * 60 * 24 * 14,
+    maxAge,
   });
-  c.set(ROLE_COOKIE, role, { httpOnly: false, sameSite: 'lax', path: '/', maxAge: 60 * 60 * 24 * 14 });
+  // Role cookie is intentionally not httpOnly: server components read it for
+  // role-aware SSR nav, and there's no secret in the value (the token is the
+  // secret, and that one IS httpOnly).
+  c.set(ROLE_COOKIE, role, {
+    httpOnly: false,
+    secure,
+    sameSite: 'lax',
+    path: '/',
+    maxAge,
+  });
 }
 
 function redirectForRole(locale: string, role: string): string {

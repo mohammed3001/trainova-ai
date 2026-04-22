@@ -21,7 +21,10 @@ import { HealthController } from './health.controller';
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
-    ThrottlerModule.forRoot([{ ttl: 60_000, limit: 120 }]),
+    // A single 'default' bucket with a generous ceiling for regular traffic.
+    // Sensitive auth endpoints override this via @Throttle() at the method level
+    // (see apps/api/src/auth/auth.controller.ts).
+    ThrottlerModule.forRoot([{ name: 'default', ttl: 60_000, limit: 120 }]),
     PrismaModule,
     EmailModule,
     AuthModule,
