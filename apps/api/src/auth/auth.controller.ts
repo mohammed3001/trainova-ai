@@ -1,5 +1,6 @@
 import { Body, Controller, Get, HttpCode, Post, UseGuards, UsePipes } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { Throttle } from '@nestjs/throttler';
 import {
   forgotPasswordSchema,
   loginSchema,
@@ -24,13 +25,18 @@ import { ZodValidationPipe } from '../common/zod-validation.pipe';
 export class AuthController {
   constructor(private readonly auth: AuthService) {}
 
+  // Per-endpoint rate limits override the global 120/min default bucket.
+  // Windows are 1 minute. Keys are per client IP (ThrottlerGuard default).
+
   @Post('register')
+  @Throttle({ default: { limit: 5, ttl: 60_000 } })
   @UsePipes(new ZodValidationPipe(registerSchema))
   register(@Body() body: RegisterInput) {
     return this.auth.register(body);
   }
 
   @Post('login')
+  @Throttle({ default: { limit: 5, ttl: 60_000 } })
   @UsePipes(new ZodValidationPipe(loginSchema))
   login(@Body() body: LoginInput) {
     return this.auth.login(body);
@@ -45,6 +51,7 @@ export class AuthController {
 
   @Post('verify-email')
   @HttpCode(200)
+  @Throttle({ default: { limit: 20, ttl: 60_000 } })
   @UsePipes(new ZodValidationPipe(verifyEmailSchema))
   verifyEmail(@Body() body: VerifyEmailInput) {
     return this.auth.verifyEmail(body.token);
@@ -56,6 +63,7 @@ export class AuthController {
    */
   @Post('resend-verification')
   @HttpCode(200)
+  @Throttle({ default: { limit: 3, ttl: 60_000 } })
   @UsePipes(new ZodValidationPipe(resendVerificationSchema))
   async resendVerification(@Body() body: ResendVerificationInput) {
     await this.auth.resendVerification(body.email, body.locale);
@@ -67,6 +75,7 @@ export class AuthController {
    */
   @Post('forgot-password')
   @HttpCode(200)
+  @Throttle({ default: { limit: 5, ttl: 60_000 } })
   @UsePipes(new ZodValidationPipe(forgotPasswordSchema))
   async forgotPassword(@Body() body: ForgotPasswordInput) {
     await this.auth.forgotPassword(body.email, body.locale);
@@ -75,6 +84,7 @@ export class AuthController {
 
   @Post('reset-password')
   @HttpCode(200)
+  @Throttle({ default: { limit: 10, ttl: 60_000 } })
   @UsePipes(new ZodValidationPipe(resetPasswordSchema))
   resetPassword(@Body() body: ResetPasswordInput) {
     return this.auth.resetPassword(body.token, body.password);
