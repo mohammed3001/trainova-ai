@@ -29,6 +29,47 @@ export const ApplicationStatuses = [
 ] as const;
 export type ApplicationStatus = (typeof ApplicationStatuses)[number];
 
+/**
+ * MVP transition matrix for the company-facing application workflow.
+ * Keys are the current status; values are the set of statuses a company
+ * owner may transition to. Terminal states (ACCEPTED, REJECTED, WITHDRAWN)
+ * have an empty allowed set. Values that aren't exposed in the MVP UI
+ * (TEST_ASSIGNED/TEST_SUBMITTED/INTERVIEW/OFFERED) are intentionally
+ * omitted from the allowed transitions for now — adding them later is a
+ * pure data change with no schema impact.
+ */
+export const APPLICATION_STATUS_TRANSITIONS: Record<
+  ApplicationStatus,
+  readonly ApplicationStatus[]
+> = {
+  APPLIED: ['SHORTLISTED', 'ACCEPTED', 'REJECTED'],
+  SHORTLISTED: ['APPLIED', 'ACCEPTED', 'REJECTED'],
+  TEST_ASSIGNED: [],
+  TEST_SUBMITTED: [],
+  INTERVIEW: [],
+  OFFERED: [],
+  ACCEPTED: [],
+  REJECTED: [],
+  WITHDRAWN: [],
+} as const;
+
+export function canTransitionApplicationStatus(
+  from: ApplicationStatus,
+  to: ApplicationStatus,
+): boolean {
+  if (from === to) return false;
+  return APPLICATION_STATUS_TRANSITIONS[from].includes(to);
+}
+
+/**
+ * Namespaced action strings written to AuditLog.action. Kept as a const
+ * so API and web UI (history page) agree on the exact strings.
+ */
+export const AUDIT_ACTIONS = {
+  APPLICATION_STATUS_CHANGED: 'APPLICATION_STATUS_CHANGED',
+} as const;
+export type AuditAction = (typeof AUDIT_ACTIONS)[keyof typeof AUDIT_ACTIONS];
+
 export const TestTaskTypes = [
   'MCQ',
   'TEXT',

@@ -121,6 +121,50 @@
     "rate": "Hourly rate",
     "noResults": "No trainers match your filters."
   },
+  "company": {
+    "applications": {
+      "title": "Applications",
+      "empty": "No applications yet.",
+      "viewDetail": "View detail",
+      "backToList": "Back to applications",
+      "terminal": "This application has reached a final state.",
+      "updated": "Status updated",
+      "status": {
+        "applied": "Applied",
+        "shortlisted": "In review",
+        "testAssigned": "Test assigned",
+        "testSubmitted": "Test submitted",
+        "interview": "Interview",
+        "offered": "Offered",
+        "accepted": "Accepted",
+        "rejected": "Rejected",
+        "withdrawn": "Withdrawn"
+      },
+      "actions": {
+        "shortlist": "Move to review",
+        "accept": "Accept",
+        "reject": "Reject",
+        "revert": "Move back to applied",
+        "change": "Change status"
+      },
+      "confirm": {
+        "accept": "Accept this application?",
+        "reject": "Reject this application?",
+        "shortlist": "Move this application into review?",
+        "revert": "Move this application back to applied?"
+      },
+      "note": {
+        "label": "Note to the internal audit trail (optional, max 500 chars)",
+        "placeholder": "e.g. Strong portfolio, invite to an intro interview."
+      },
+      "history": {
+        "title": "Status history",
+        "empty": "No status changes yet.",
+        "changedStatus": "changed status from {from} to {to}",
+        "unknownActor": "Unknown user"
+      }
+    }
+  },
   "admin": {
     "overview": "Overview",
     "users": "Users",

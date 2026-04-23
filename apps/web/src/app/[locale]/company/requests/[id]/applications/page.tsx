@@ -1,7 +1,9 @@
+import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { getLocale } from 'next-intl/server';
+import { getLocale, getTranslations } from 'next-intl/server';
 import { getRole, getToken } from '@/lib/session';
 import { authedFetch } from '@/lib/authed-fetch';
+import { StatusBadge, StatusActions } from './status-controls';
 
 interface Application {
   id: string;
@@ -28,10 +30,11 @@ interface Application {
 export default async function ApplicationsPage({
   params,
 }: {
-  params: Promise<{ id: string }>;
+  params: Promise<{ id: string; locale: string }>;
 }) {
   const { id } = await params;
   const locale = await getLocale();
+  const t = await getTranslations();
   const [token, role] = await Promise.all([getToken(), getRole()]);
   if (!token) redirect(`/${locale}/login`);
   if (role !== 'COMPANY_OWNER') redirect(`/${locale}`);
@@ -40,13 +43,13 @@ export default async function ApplicationsPage({
 
   return (
     <div className="space-y-6">
-      <h1 className="text-3xl font-bold text-slate-900">Applications</h1>
+      <h1 className="text-3xl font-bold text-slate-900">{t('company.applications.title')}</h1>
       {apps.length === 0 ? (
-        <div className="card text-sm text-slate-500">No applications yet.</div>
+        <div className="card text-sm text-slate-500">{t('company.applications.empty')}</div>
       ) : (
         <ul className="space-y-3">
           {apps.map((a) => (
-            <li key={a.id} className="card">
+            <li key={a.id} className="card space-y-3">
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <div className="font-semibold text-slate-900">{a.trainer.name}</div>
@@ -55,14 +58,23 @@ export default async function ApplicationsPage({
                     {a.trainer.trainerProfile?.country ? ` · ${a.trainer.trainerProfile.country}` : ''}
                   </div>
                 </div>
-                <span className="badge">{a.status}</span>
+                <StatusBadge status={a.status} />
               </div>
               {a.coverLetter ? (
-                <p className="mt-3 whitespace-pre-line text-sm text-slate-700">{a.coverLetter}</p>
+                <p className="whitespace-pre-line text-sm text-slate-700">{a.coverLetter}</p>
               ) : null}
-              <div className="mt-2 text-xs text-slate-500">
+              <div className="text-xs text-slate-500">
                 {a.proposedRate ? `Proposed: $${a.proposedRate}/h · ` : ''}
                 {a.proposedTimelineDays ? `${a.proposedTimelineDays} days` : ''}
+              </div>
+              <div className="flex items-center justify-between gap-3 border-t border-slate-100 pt-3">
+                <StatusActions applicationId={a.id} currentStatus={a.status} />
+                <Link
+                  href={`/${locale}/company/requests/${id}/applications/${a.id}`}
+                  className="text-xs font-medium text-brand-600 hover:text-brand-700"
+                >
+                  {t('company.applications.viewDetail')}
+                </Link>
               </div>
             </li>
           ))}

@@ -176,7 +176,7 @@ test.describe('Golden E2E flow — 11 steps', () => {
     }
   });
 
-  test('T6: Company sees the new application on the request applications page', async ({ browser }) => {
+  test('T6: Company sees the new application and can shortlist it (status + audit history)', async ({ browser }) => {
     const { ctx, page } = await newLoggedInContext(browser, companyOwner.email, companyOwner.password);
     try {
       await page.goto('/en/company/dashboard');
@@ -187,6 +187,29 @@ test.describe('Golden E2E flow — 11 steps', () => {
       await expect(page.getByRole('heading', { name: /^applications$/i })).toBeVisible();
       await expect(page.getByText(trainer.name)).toBeVisible({ timeout: 15_000 });
       await expect(page.getByText(coverLetter.slice(0, 30))).toBeVisible();
+
+      // Tier 1.D: status badge + transition action + audit entry.
+      const badge = page.getByTestId('application-status-badge').first();
+      await expect(badge).toHaveAttribute('data-status', 'APPLIED');
+
+      // Open the shortlist confirm pane, leave a note, submit.
+      await page.getByTestId('application-action-shortlisted').first().click();
+      await page.getByLabel('Note to the internal audit trail', { exact: false }).fill(
+        'Automated regression: shortlisting from E2E.',
+      );
+      await page.getByRole('button', { name: /^submit$/i }).click();
+
+      // Badge flips to SHORTLISTED ("In review").
+      await expect(badge).toHaveAttribute('data-status', 'SHORTLISTED', { timeout: 15_000 });
+
+      // Detail page shows the audit history row we just created.
+      await page.getByRole('link', { name: /view detail/i }).first().click();
+      await expect(page).toHaveURL(/\/en\/company\/requests\/[^/]+\/applications\/[^/]+$/);
+      const history = page.getByTestId('application-history');
+      await expect(history).toBeVisible();
+      await expect(history).toContainText('APPLIED');
+      await expect(history).toContainText('SHORTLISTED');
+      await expect(history).toContainText('Automated regression: shortlisting from E2E.');
     } finally {
       await ctx.close();
     }

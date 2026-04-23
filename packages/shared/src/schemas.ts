@@ -63,6 +63,22 @@ export const applyToRequestSchema = z.object({
 });
 export type ApplyToRequestInput = z.infer<typeof applyToRequestSchema>;
 
+export const updateApplicationStatusSchema = z.object({
+  status: z.enum([
+    'APPLIED',
+    'SHORTLISTED',
+    'TEST_ASSIGNED',
+    'TEST_SUBMITTED',
+    'INTERVIEW',
+    'OFFERED',
+    'ACCEPTED',
+    'REJECTED',
+    'WITHDRAWN',
+  ]),
+  note: z.string().max(500).optional(),
+});
+export type UpdateApplicationStatusInput = z.infer<typeof updateApplicationStatusSchema>;
+
 export const updateTrainerProfileSchema = z.object({
   headline: z.string().max(160).optional(),
   bio: z.string().max(4000).optional(),
