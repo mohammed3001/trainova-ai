@@ -42,10 +42,13 @@ export const APPLICATION_STATUS_TRANSITIONS: Record<
   ApplicationStatus,
   readonly ApplicationStatus[]
 > = {
-  APPLIED: ['SHORTLISTED', 'ACCEPTED', 'REJECTED'],
-  SHORTLISTED: ['APPLIED', 'ACCEPTED', 'REJECTED'],
-  TEST_ASSIGNED: [],
-  TEST_SUBMITTED: [],
+  APPLIED: ['SHORTLISTED', 'TEST_ASSIGNED', 'ACCEPTED', 'REJECTED'],
+  SHORTLISTED: ['APPLIED', 'TEST_ASSIGNED', 'ACCEPTED', 'REJECTED'],
+  // TEST_ASSIGNED → TEST_SUBMITTED is performed by the trainer on submit,
+  // not by the company owner, but it's listed here so the transition matrix
+  // is a single source of truth. The controller layer enforces the actor role.
+  TEST_ASSIGNED: ['TEST_SUBMITTED', 'REJECTED', 'WITHDRAWN'],
+  TEST_SUBMITTED: ['ACCEPTED', 'REJECTED'],
   INTERVIEW: [],
   OFFERED: [],
   ACCEPTED: [],
@@ -69,6 +72,7 @@ export const AUDIT_ACTIONS = {
   APPLICATION_STATUS_CHANGED: 'APPLICATION_STATUS_CHANGED',
   ASSET_UPLOADED: 'ASSET_UPLOADED',
   ASSET_DELETED: 'ASSET_DELETED',
+  TEST_ATTEMPT_GRADED: 'TEST_ATTEMPT_GRADED',
 } as const;
 export type AuditAction = (typeof AUDIT_ACTIONS)[keyof typeof AUDIT_ACTIONS];
 

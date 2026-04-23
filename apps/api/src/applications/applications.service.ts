@@ -6,6 +6,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { TestsService } from '../tests/tests.service';
 import {
   APPLICATION_STATUS_TRANSITIONS,
   AUDIT_ACTIONS,
@@ -22,7 +23,10 @@ interface StatusUpdateContext {
 
 @Injectable()
 export class ApplicationsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly tests: TestsService,
+  ) {}
 
   async listMine(trainerId: string) {
     return this.prisma.application.findMany({
@@ -123,6 +127,83 @@ export class ApplicationsService {
 
       return tx.application.findUniqueOrThrow({ where: { id: applicationId } });
     });
+  }
+
+  async assignTest(
+    ownerId: string,
+    applicationId: string,
+    testId: string,
+    ctx: StatusUpdateContext = {},
+  ) {
+    const app = await this.prisma.application.findUnique({
+      where: { id: applicationId },
+      include: { request: { include: { company: true } } },
+    });
+    if (!app) throw new NotFoundException('Application not found');
+    if (app.request.company.ownerId !== ownerId) {
+      throw new ForbiddenException('Not your application');
+    }
+
+    const test = await this.prisma.test.findUnique({
+      where: { id: testId },
+      select: {
+        id: true,
+        requestId: true,
+        tasks: { select: { id: true } },
+      },
+    });
+    if (!test) throw new NotFoundException('Test not found');
+    if (test.requestId !== app.requestId) {
+      throw new BadRequestException('Test does not belong to this application request');
+    }
+    if (test.tasks.length === 0) {
+      throw new BadRequestException('Test has no tasks — add tasks before assigning');
+    }
+
+    const fromStatus = app.status;
+    const toStatus: ApplicationStatus = 'TEST_ASSIGNED';
+    if (!canTransitionApplicationStatus(fromStatus, toStatus)) {
+      throw new BadRequestException(
+        `Cannot assign a test from status ${fromStatus} — application must be APPLIED or SHORTLISTED`,
+      );
+    }
+
+    await this.prisma.$transaction(async (tx) => {
+      const claim = await tx.application.updateMany({
+        where: { id: applicationId, status: fromStatus },
+        data: { status: toStatus },
+      });
+      if (claim.count === 0) {
+        throw new BadRequestException('Application status changed concurrently, please reload');
+      }
+
+      await tx.auditLog.create({
+        data: {
+          actorId: ownerId,
+          action: AUDIT_ACTIONS.APPLICATION_STATUS_CHANGED,
+          entityType: 'Application',
+          entityId: applicationId,
+          ip: ctx.ip ?? null,
+          diff: {
+            fromStatus,
+            toStatus,
+            testId,
+            userAgent: ctx.userAgent ?? null,
+            locale: ctx.locale ?? null,
+          },
+        },
+      });
+    });
+
+    // Send the email outside the transaction so a provider hiccup doesn't
+    // roll back the status change. Failures are logged but not fatal.
+    try {
+      await this.tests.sendAssignmentEmail(applicationId, testId);
+    } catch {
+      /* swallow — status change is authoritative */
+    }
+
+    return this.prisma.application.findUniqueOrThrow({ where: { id: applicationId } });
   }
 
   async history(userId: string, applicationId: string) {

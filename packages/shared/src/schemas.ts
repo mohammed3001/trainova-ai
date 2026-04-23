@@ -119,6 +119,103 @@ export const updateTrainerProfileSchema = z
   );
 export type UpdateTrainerProfileInput = z.infer<typeof updateTrainerProfileSchema>;
 
+// =========================================================================
+// Tests (evaluations)
+// =========================================================================
+
+// MVP task types exposed in the editor. Other schema values (PROMPT_TUNE,
+// LABEL, LIVE_PROMPT, WORKFLOW) remain in the enum for future use but are
+// not authorable in this cycle.
+export const TEST_TASK_TYPE_MVP = ['MCQ', 'TEXT', 'CODE'] as const;
+export type TestTaskTypeMvp = (typeof TEST_TASK_TYPE_MVP)[number];
+
+export const TEST_SCORING_MODES = ['AUTO', 'MANUAL', 'HYBRID'] as const;
+export type TestScoringMode = (typeof TEST_SCORING_MODES)[number];
+
+export const testTaskInputSchema = z
+  .object({
+    // Optional id: present when updating an existing task, absent when creating
+    // a new one inside PATCH /tests/:id.
+    id: z.string().cuid().optional(),
+    prompt: z.string().min(3).max(4000),
+    type: z.enum(TEST_TASK_TYPE_MVP),
+    options: z.array(z.string().min(1).max(400)).max(10).default([]),
+    answerKey: z.string().max(400).optional().nullable(),
+    rubric: z
+      .object({ hint: z.string().max(2000).optional() })
+      .optional()
+      .nullable(),
+    maxScore: z.number().int().min(1).max(100).default(10),
+    order: z.number().int().min(0).max(1000).default(0),
+  })
+  .refine(
+    (v) => {
+      if (v.type !== 'MCQ') return true;
+      if (!v.options || v.options.length < 2) return false;
+      if (!v.answerKey) return false;
+      return v.options.includes(v.answerKey);
+    },
+    {
+      message: 'MCQ tasks need ≥ 2 options and an answerKey that matches one option',
+      path: ['answerKey'],
+    },
+  );
+export type TestTaskInput = z.infer<typeof testTaskInputSchema>;
+
+export const createTestSchema = z.object({
+  requestId: z.string().cuid(),
+  title: z.string().min(3).max(200),
+  description: z.string().max(4000).optional(),
+  timeLimitMin: z.number().int().min(1).max(480).optional(),
+  passingScore: z.number().int().min(0).max(100).default(60),
+  scoringMode: z.enum(TEST_SCORING_MODES).default('HYBRID'),
+  tasks: z.array(testTaskInputSchema).max(50).default([]),
+});
+export type CreateTestInput = z.infer<typeof createTestSchema>;
+
+export const updateTestSchema = z.object({
+  title: z.string().min(3).max(200).optional(),
+  description: z.string().max(4000).optional(),
+  timeLimitMin: z.number().int().min(1).max(480).optional().nullable(),
+  passingScore: z.number().int().min(0).max(100).optional(),
+  scoringMode: z.enum(TEST_SCORING_MODES).optional(),
+  tasks: z.array(testTaskInputSchema).max(50).optional(),
+});
+export type UpdateTestInput = z.infer<typeof updateTestSchema>;
+
+export const assignTestSchema = z.object({
+  testId: z.string().cuid(),
+});
+export type AssignTestInput = z.infer<typeof assignTestSchema>;
+
+export const testAttemptResponseSchema = z.object({
+  taskId: z.string().cuid(),
+  // Server stores as JSON. Accept any primitive/object — service layer narrows.
+  response: z.unknown(),
+});
+export type TestAttemptResponseInput = z.infer<typeof testAttemptResponseSchema>;
+
+export const submitAttemptSchema = z.object({
+  responses: z.array(testAttemptResponseSchema).max(50),
+});
+export type SubmitAttemptInput = z.infer<typeof submitAttemptSchema>;
+
+export const gradeAttemptSchema = z.object({
+  grades: z
+    .array(
+      z.object({
+        taskId: z.string().cuid(),
+        manualScore: z.number().int().min(0).max(100),
+        comments: z.string().max(2000).optional(),
+      }),
+    )
+    .max(50),
+  reviewerNotes: z.string().max(4000).optional(),
+});
+export type GradeAttemptInput = z.infer<typeof gradeAttemptSchema>;
+
+// =========================================================================
+
 export const updateCompanySchema = z.object({
   name: z.string().min(1).max(200).optional(),
   websiteUrl: z.string().url().optional().or(z.literal('')),
