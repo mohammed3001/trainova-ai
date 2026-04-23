@@ -649,12 +649,19 @@ function PortfolioSection({
 }) {
   const t = useTranslations();
   const router = useRouter();
-  const [busyId, setBusyId] = useState<string | null>(null);
+  // Track in-flight deletes by id so two concurrent removes don't re-enable
+  // each other's button when one finishes.
+  const [busyIds, setBusyIds] = useState<Set<string>>(() => new Set());
   const [error, setError] = useState<string | null>(null);
 
   async function onRemove(assetId: string) {
+    if (busyIds.has(assetId)) return;
     setError(null);
-    setBusyId(assetId);
+    setBusyIds((prev) => {
+      const next = new Set(prev);
+      next.add(assetId);
+      return next;
+    });
     try {
       await deleteAsset({
         kind: 'trainer-asset',
@@ -665,7 +672,11 @@ function PortfolioSection({
     } catch (err) {
       setError(err instanceof UploadError ? err.message : t('common.error'));
     } finally {
-      setBusyId(null);
+      setBusyIds((prev) => {
+        const next = new Set(prev);
+        next.delete(assetId);
+        return next;
+      });
     }
   }
 
@@ -721,7 +732,7 @@ function PortfolioSection({
               <button
                 type="button"
                 onClick={() => onRemove(a.id)}
-                disabled={busyId === a.id}
+                disabled={busyIds.has(a.id)}
                 className="text-xs font-medium text-rose-600 hover:underline disabled:opacity-60"
               >
                 {t('profile.uploads.remove')}
