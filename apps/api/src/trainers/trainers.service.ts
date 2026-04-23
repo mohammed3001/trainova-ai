@@ -45,7 +45,24 @@ export class TrainersService {
   async findMe(userId: string) {
     const profile = await this.prisma.trainerProfile.findUnique({
       where: { userId },
-      include: { skills: { include: { skill: true } } },
+      include: {
+        skills: { include: { skill: true } },
+        user: { select: { id: true, avatarUrl: true } },
+        assets: {
+          where: { deletedAt: null },
+          orderBy: [{ order: 'asc' }, { createdAt: 'asc' }],
+          select: {
+            id: true,
+            kind: true,
+            url: true,
+            title: true,
+            mimeType: true,
+            byteLength: true,
+            order: true,
+            createdAt: true,
+          },
+        },
+      },
     });
     if (!profile) throw new NotFoundException('Trainer profile not found');
     return profile;

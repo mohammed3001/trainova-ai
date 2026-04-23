@@ -8,7 +8,15 @@ export class UsersService {
   findById(id: string) {
     return this.prisma.user.findUnique({
       where: { id },
-      select: { id: true, email: true, name: true, role: true, locale: true, status: true },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        role: true,
+        locale: true,
+        status: true,
+        avatarUrl: true,
+      },
     });
   }
 }

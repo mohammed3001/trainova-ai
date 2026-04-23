@@ -3,11 +3,25 @@
 import { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useLocale, useTranslations } from 'next-intl';
+import { FileDropzone } from '@/components/FileDropzone';
+import { deleteAsset, UploadError } from '@/lib/uploads/client';
 
 const LEVELS = ['BEGINNER', 'INTERMEDIATE', 'ADVANCED', 'EXPERT'] as const;
 type Level = (typeof LEVELS)[number];
 
+interface PortfolioAsset {
+  id: string;
+  kind: string;
+  url: string;
+  title: string | null;
+  mimeType: string;
+  byteLength: number;
+  order: number;
+  createdAt: string;
+}
+
 interface Profile {
+  id: string;
   headline: string;
   bio: string | null;
   country: string | null;
@@ -25,6 +39,8 @@ interface Profile {
     yearsExperience?: number | null;
     skill: { slug: string; nameEn: string; nameAr: string };
   }[];
+  user: { id: string; avatarUrl: string | null };
+  assets: PortfolioAsset[];
 }
 interface Skill {
   slug: string;
@@ -188,6 +204,11 @@ export function ProfileForm({ profile, skills }: { profile: Profile; skills: Ski
   return (
     <form onSubmit={onSubmit} className="space-y-6">
       <CompletenessCard completeness={completeness} />
+
+      <AvatarSection
+        userId={profile.user.id}
+        avatarUrl={profile.user.avatarUrl}
+      />
 
       <section className="card space-y-4">
         <h2 className="text-lg font-semibold text-slate-900">
@@ -436,6 +457,8 @@ export function ProfileForm({ profile, skills }: { profile: Profile; skills: Ski
         </div>
       </section>
 
+      <PortfolioSection profileId={profile.id} assets={profile.assets} />
+
       {msg ? (
         <div
           role={msg.kind === 'error' ? 'alert' : 'status'}
@@ -538,6 +561,192 @@ function CompletenessCard({ completeness }: { completeness: Completeness }) {
             .map((k) => t(`profile.trainer.completeness.fields.${k}`))
             .join(' · ')}
         </div>
+      ) : null}
+    </section>
+  );
+}
+
+function AvatarSection({
+  userId,
+  avatarUrl,
+}: {
+  userId: string;
+  avatarUrl: string | null;
+}) {
+  const t = useTranslations();
+  const router = useRouter();
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function onRemove() {
+    setError(null);
+    setBusy(true);
+    try {
+      await deleteAsset({ kind: 'trainer-avatar', entityId: userId, assetId: 'current' });
+      router.refresh();
+    } catch (err) {
+      setError(err instanceof UploadError ? err.message : t('common.error'));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <section className="card space-y-4">
+      <h2 className="text-lg font-semibold text-slate-900">
+        {t('profile.trainer.sections.avatar')}
+      </h2>
+      <div className="flex flex-col gap-3 md:flex-row md:items-start">
+        <div className="h-24 w-24 shrink-0 overflow-hidden rounded-full border border-slate-200 bg-slate-50">
+          {avatarUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={avatarUrl} alt="" className="h-full w-full object-cover" />
+          ) : (
+            <div className="flex h-full w-full items-center justify-center text-xs text-slate-400">
+              {t('profile.uploads.avatarPlaceholder')}
+            </div>
+          )}
+        </div>
+        <div className="flex-1 space-y-2">
+          <FileDropzone
+            kind="trainer-avatar"
+            entityId={userId}
+            label={t(avatarUrl ? 'profile.uploads.replaceAvatar' : 'profile.uploads.dropAvatar')}
+            help={t('profile.uploads.avatarHelp')}
+            disabled={busy}
+            onUploaded={() => {
+              setError(null);
+              router.refresh();
+            }}
+          />
+          {avatarUrl ? (
+            <button
+              type="button"
+              onClick={onRemove}
+              disabled={busy}
+              className="text-xs font-medium text-rose-600 hover:underline disabled:opacity-60"
+            >
+              {t('profile.uploads.remove')}
+            </button>
+          ) : null}
+          {error ? (
+            <p role="alert" className="text-xs text-rose-700">
+              {error}
+            </p>
+          ) : null}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function PortfolioSection({
+  profileId,
+  assets,
+}: {
+  profileId: string;
+  assets: PortfolioAsset[];
+}) {
+  const t = useTranslations();
+  const router = useRouter();
+  const [busyId, setBusyId] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  async function onRemove(assetId: string) {
+    setError(null);
+    setBusyId(assetId);
+    try {
+      await deleteAsset({
+        kind: 'trainer-asset',
+        entityId: profileId,
+        assetId,
+      });
+      router.refresh();
+    } catch (err) {
+      setError(err instanceof UploadError ? err.message : t('common.error'));
+    } finally {
+      setBusyId(null);
+    }
+  }
+
+  return (
+    <section className="card space-y-4">
+      <header className="flex flex-wrap items-baseline justify-between gap-2">
+        <h2 className="text-lg font-semibold text-slate-900">
+          {t('profile.trainer.sections.portfolio')}
+        </h2>
+        <span className="text-xs text-slate-500">
+          {t('profile.uploads.portfolioHelp')}
+        </span>
+      </header>
+
+      {assets.length === 0 ? (
+        <p className="text-sm text-slate-500">
+          {t('profile.uploads.portfolioEmpty')}
+        </p>
+      ) : (
+        <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          {assets.map((a) => (
+            <li
+              key={a.id}
+              className="flex items-center gap-3 rounded-md border border-slate-200 bg-white p-3"
+            >
+              <div className="h-16 w-16 shrink-0 overflow-hidden rounded-md border border-slate-100 bg-slate-50">
+                {a.mimeType.startsWith('image/') ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={a.url}
+                    alt={a.title ?? ''}
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  <div className="flex h-full w-full items-center justify-center text-xs font-semibold text-slate-500">
+                    PDF
+                  </div>
+                )}
+              </div>
+              <div className="min-w-0 flex-1">
+                <a
+                  href={a.url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="block truncate text-sm font-medium text-slate-900 hover:text-brand-700"
+                >
+                  {a.title || a.url.split('/').pop()}
+                </a>
+                <p className="text-xs text-slate-500">
+                  {Math.round(a.byteLength / 1024)} KB
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => onRemove(a.id)}
+                disabled={busyId === a.id}
+                className="text-xs font-medium text-rose-600 hover:underline disabled:opacity-60"
+              >
+                {t('profile.uploads.remove')}
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+
+      <FileDropzone
+        kind="trainer-asset"
+        entityId={profileId}
+        label={t('profile.uploads.dropPortfolio')}
+        help={t('profile.uploads.portfolioFormats')}
+        multiple
+        getTitleForFile={(f) => f.name.slice(0, 200)}
+        onUploaded={() => {
+          setError(null);
+          router.refresh();
+        }}
+      />
+      {error ? (
+        <p role="alert" className="text-xs text-rose-700">
+          {error}
+        </p>
       ) : null}
     </section>
   );

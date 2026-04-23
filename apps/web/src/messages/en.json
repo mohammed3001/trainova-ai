@@ -127,9 +127,11 @@
       "subtitle": "This is what companies see when they browse trainers. Fill it out to get matched.",
       "sections": {
         "basics": "Basics",
+        "avatar": "Profile photo",
         "rates": "Availability & rates",
         "links": "Links",
-        "skills": "Skills & expertise"
+        "skills": "Skills & expertise",
+        "portfolio": "Portfolio"
       },
       "fields": {
         "headline": "Headline",
@@ -200,13 +202,42 @@
         "sizeHelp": "e.g. 1-10, 11-50, 51-200.",
         "description": "About the company",
         "descriptionHelp": "Short public description — mission, domain, what you use AI for.",
-        "logoUrl": "Logo URL",
-        "logoUrlHelp": "Direct image URL. Drag-and-drop uploads are coming in a future release."
+        "logo": "Company logo",
+        "logoHelp": "Shown on your company page and on every request you post."
       },
       "save": "Save company profile",
       "saved": "Company profile saved",
       "saveFailed": "Could not save: {message}",
       "editCta": "Edit company profile"
+    },
+    "uploads": {
+      "dropLogo": "Drag a logo here, or click to choose a file",
+      "replaceLogo": "Drag a new logo, or click to replace",
+      "dropAvatar": "Drag a photo here, or click to choose",
+      "replaceAvatar": "Drag a new photo, or click to replace",
+      "dropPortfolio": "Drag images or PDFs here, or click to choose",
+      "avatarPlaceholder": "No photo",
+      "avatarHelp": "PNG, JPEG, or WebP up to 512 KB. Shown on your public profile.",
+      "portfolioHelp": "Images and PDF case studies — up to 10 items, 5 MB each.",
+      "portfolioFormats": "PNG, JPEG, WebP, or PDF · 5 MB max per file.",
+      "portfolioEmpty": "No portfolio items yet.",
+      "remove": "Remove",
+      "limits": "Max {maxKb} KB · {types}",
+      "stage": {
+        "validating": "Checking file…",
+        "presigning": "Preparing upload…",
+        "uploading": "Uploading…",
+        "committing": "Finishing up…"
+      },
+      "errors": {
+        "clientValidation": "That file can't be uploaded. Max {maxKb} KB and types: {types}.",
+        "rateLimit": "Too many uploads. Please wait a moment and try again.",
+        "tooLarge": "File is larger than the allowed size.",
+        "unsupportedType": "That file type isn't allowed.",
+        "presignFailed": "Couldn't start the upload. Please try again.",
+        "uploadFailed": "Upload failed partway through. Please try again.",
+        "commitFailed": "Upload finished but couldn't be saved. Please try again."
+      }
     }
   },
   "company": {

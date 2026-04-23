@@ -6,6 +6,7 @@ import { apiFetch } from '@/lib/api';
 import { ProfileForm } from './form';
 
 interface Profile {
+  id: string;
   slug: string;
   headline: string;
   bio: string | null;
@@ -23,6 +24,17 @@ interface Profile {
     level: string | null;
     yearsExperience: number | null;
     skill: { slug: string; nameEn: string; nameAr: string };
+  }[];
+  user: { id: string; avatarUrl: string | null };
+  assets: {
+    id: string;
+    kind: string;
+    url: string;
+    title: string | null;
+    mimeType: string;
+    byteLength: number;
+    order: number;
+    createdAt: string;
   }[];
 }
 interface Skill {
