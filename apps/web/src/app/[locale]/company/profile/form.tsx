@@ -33,14 +33,23 @@ export function CompanyProfileForm({ company }: { company: Company }) {
     e.preventDefault();
     setMsg(null);
     setPending(true);
+    // URL fields must send '' (not undefined) when the user has cleared a
+    // previously-set value so the API actually nulls the field. The Zod
+    // schema accepts `.url().or(z.literal(''))` specifically to support this.
+    const urlField = (current: string, original: string | null) => {
+      const trimmed = current.trim();
+      if (trimmed) return trimmed;
+      if (original) return '';
+      return undefined;
+    };
     const payload = {
       name: name.trim() || undefined,
-      websiteUrl: websiteUrl.trim() || undefined,
+      websiteUrl: urlField(websiteUrl, company.websiteUrl),
       country: country.trim() || undefined,
       industry: industry.trim() || undefined,
       size: size.trim() || undefined,
       description: description.trim() || undefined,
-      logoUrl: logoUrl.trim() || undefined,
+      logoUrl: urlField(logoUrl, company.logoUrl),
     };
     const res = await fetch('/api/proxy/companies/me', {
       method: 'PATCH',

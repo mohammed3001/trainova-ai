@@ -141,6 +141,15 @@ export function ProfileForm({ profile, skills }: { profile: Profile; skills: Ski
       return;
     }
     setPending(true);
+    // URL fields must send '' (not undefined) when the user has cleared a
+    // previously-set value so the API actually nulls the field. The Zod
+    // schema accepts `.url().or(z.literal(''))` specifically to support this.
+    const urlField = (current: string, original: string | null) => {
+      const trimmed = current.trim();
+      if (trimmed) return trimmed;
+      if (original) return '';
+      return undefined;
+    };
     const payload = {
       headline: headline.trim(),
       bio: bio.trim() || undefined,
@@ -151,9 +160,9 @@ export function ProfileForm({ profile, skills }: { profile: Profile; skills: Ski
       responseTimeHours: responseTimeHours ? Number(responseTimeHours) : undefined,
       hourlyRateMin: min,
       hourlyRateMax: max,
-      linkedinUrl: linkedinUrl.trim() || undefined,
-      githubUrl: githubUrl.trim() || undefined,
-      websiteUrl: websiteUrl.trim() || undefined,
+      linkedinUrl: urlField(linkedinUrl, profile.linkedinUrl),
+      githubUrl: urlField(githubUrl, profile.githubUrl),
+      websiteUrl: urlField(websiteUrl, profile.websiteUrl),
       skills: selected.map((s) => ({
         slug: s.slug,
         level: s.level,
