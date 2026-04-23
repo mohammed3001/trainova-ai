@@ -38,10 +38,15 @@ export default async function CompanyDashboard() {
         <p className="text-sm text-slate-500">{t('dashboard.companyOverview')}</p>
       </header>
 
-      <div className="flex gap-3">
+      <div className="flex flex-wrap gap-3">
         <Link href={`/${locale}/company/requests/new`} className="btn-primary">
           {t('dashboard.createRequest')}
         </Link>
+        {role === 'COMPANY_OWNER' ? (
+          <Link href={`/${locale}/company/profile`} className="btn-secondary">
+            {t('profile.company.editCta')}
+          </Link>
+        ) : null}
       </div>
 
       <section>

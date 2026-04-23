@@ -45,7 +45,7 @@ export default async function TrainerDashboard() {
           {t('common.browseRequests')}
         </Link>
         <Link href={`/${locale}/trainer/profile`} className="btn-secondary">
-          Edit profile
+          {t('profile.trainer.title')}
         </Link>
       </div>
 

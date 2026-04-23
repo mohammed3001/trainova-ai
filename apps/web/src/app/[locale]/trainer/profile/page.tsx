@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation';
-import { getLocale } from 'next-intl/server';
+import { getLocale, getTranslations } from 'next-intl/server';
 import { getRole, getToken } from '@/lib/session';
 import { authedFetch } from '@/lib/authed-fetch';
 import { apiFetch } from '@/lib/api';
@@ -11,21 +11,30 @@ interface Profile {
   bio: string | null;
   country: string | null;
   languages: string[];
+  timezone: string | null;
+  availability: string | null;
+  responseTimeHours: number | null;
   hourlyRateMin: number | null;
   hourlyRateMax: number | null;
   linkedinUrl: string | null;
   githubUrl: string | null;
   websiteUrl: string | null;
-  skills: { skill: { slug: string; nameEn: string; nameAr: string } }[];
+  skills: {
+    level: string | null;
+    yearsExperience: number | null;
+    skill: { slug: string; nameEn: string; nameAr: string };
+  }[];
 }
 interface Skill {
   slug: string;
   nameEn: string;
   nameAr: string;
+  category?: string;
 }
 
 export default async function TrainerProfilePage() {
   const locale = await getLocale();
+  const t = await getTranslations();
   const [token, role] = await Promise.all([getToken(), getRole()]);
   if (!token) redirect(`/${locale}/login`);
   if (role !== 'TRAINER') redirect(`/${locale}`);
@@ -36,8 +45,11 @@ export default async function TrainerProfilePage() {
   ]);
 
   return (
-    <div className="mx-auto max-w-2xl space-y-6">
-      <h1 className="text-3xl font-bold text-slate-900">My Profile</h1>
+    <div className="mx-auto max-w-3xl space-y-6">
+      <header>
+        <h1 className="text-3xl font-bold text-slate-900">{t('profile.trainer.title')}</h1>
+        <p className="text-sm text-slate-500">{t('profile.trainer.subtitle')}</p>
+      </header>
       <ProfileForm profile={profile} skills={skills} />
     </div>
   );

@@ -79,19 +79,44 @@ export const updateApplicationStatusSchema = z.object({
 });
 export type UpdateApplicationStatusInput = z.infer<typeof updateApplicationStatusSchema>;
 
-export const updateTrainerProfileSchema = z.object({
-  headline: z.string().max(160).optional(),
-  bio: z.string().max(4000).optional(),
-  country: z.string().max(80).optional(),
-  languages: z.array(z.string()).max(20).optional(),
-  timezone: z.string().max(80).optional(),
-  hourlyRateMin: z.number().int().nonnegative().optional(),
-  hourlyRateMax: z.number().int().nonnegative().optional(),
-  linkedinUrl: z.string().url().optional().or(z.literal('')),
-  githubUrl: z.string().url().optional().or(z.literal('')),
-  websiteUrl: z.string().url().optional().or(z.literal('')),
-  skills: z.array(z.string()).max(40).optional(),
-});
+export const SKILL_LEVELS = ['BEGINNER', 'INTERMEDIATE', 'ADVANCED', 'EXPERT'] as const;
+export type SkillLevel = (typeof SKILL_LEVELS)[number];
+
+// A skill may be passed as either a bare slug (legacy) or as a richer
+// object with level + years of experience. The server normalises both.
+export const trainerSkillRefSchema = z.union([
+  z.string().min(1).max(80),
+  z.object({
+    slug: z.string().min(1).max(80),
+    level: z.enum(SKILL_LEVELS).optional(),
+    yearsExperience: z.number().int().min(0).max(60).optional(),
+  }),
+]);
+export type TrainerSkillRef = z.infer<typeof trainerSkillRefSchema>;
+
+export const updateTrainerProfileSchema = z
+  .object({
+    headline: z.string().max(160).optional(),
+    bio: z.string().max(4000).optional(),
+    country: z.string().max(80).optional(),
+    languages: z.array(z.string().min(1).max(40)).max(20).optional(),
+    timezone: z.string().max(80).optional(),
+    availability: z.string().max(200).optional(),
+    responseTimeHours: z.number().int().min(0).max(720).optional(),
+    hourlyRateMin: z.number().int().nonnegative().optional(),
+    hourlyRateMax: z.number().int().nonnegative().optional(),
+    linkedinUrl: z.string().url().optional().or(z.literal('')),
+    githubUrl: z.string().url().optional().or(z.literal('')),
+    websiteUrl: z.string().url().optional().or(z.literal('')),
+    skills: z.array(trainerSkillRefSchema).max(40).optional(),
+  })
+  .refine(
+    (v) =>
+      v.hourlyRateMin === undefined ||
+      v.hourlyRateMax === undefined ||
+      v.hourlyRateMin <= v.hourlyRateMax,
+    { message: 'hourlyRateMin must be ≤ hourlyRateMax', path: ['hourlyRateMax'] },
+  );
 export type UpdateTrainerProfileInput = z.infer<typeof updateTrainerProfileSchema>;
 
 export const updateCompanySchema = z.object({
