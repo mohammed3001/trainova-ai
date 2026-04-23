@@ -98,11 +98,20 @@ export function StatusActions({
 }) {
   const t = useTranslations();
   const router = useRouter();
-  const [pending, startTransition] = useTransition();
+  const [refreshing, startTransition] = useTransition();
+  const [submitting, setSubmitting] = useState(false);
   const [target, setTarget] = useState<ApplicationStatus | null>(null);
   const [note, setNote] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  // Disable the submit button both while the PATCH is in flight AND while
+  // the post-success router.refresh() is still running. useTransition's
+  // pending flag only covers the refresh phase, not the fetch, so without
+  // `submitting` a rapid click could fire multiple concurrent PATCH
+  // requests — the second would hit the backend's atomic claim and fail,
+  // but the error would be swallowed because the confirm pane has already
+  // unmounted on the first success.
+  const pending = submitting || refreshing;
 
   const allowed = (APPLICATION_STATUS_TRANSITIONS[currentStatus as ApplicationStatus] ?? [])
     .filter((s) => MVP_ACTIONABLE.includes(s));
@@ -116,22 +125,28 @@ export function StatusActions({
   }
 
   async function submit(toStatus: ApplicationStatus) {
+    if (submitting) return;
     setError(null);
     setSuccess(null);
-    const res = await fetch(`/api/proxy/applications/${applicationId}/status`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ status: toStatus, note: note.trim() || undefined }),
-    });
-    if (!res.ok) {
-      const body = await res.json().catch(() => ({}));
-      setError((body as { message?: string })?.message ?? 'Request failed');
-      return;
+    setSubmitting(true);
+    try {
+      const res = await fetch(`/api/proxy/applications/${applicationId}/status`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: toStatus, note: note.trim() || undefined }),
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        setError((body as { message?: string })?.message ?? 'Request failed');
+        return;
+      }
+      setTarget(null);
+      setNote('');
+      setSuccess(t('company.applications.updated'));
+      startTransition(() => router.refresh());
+    } finally {
+      setSubmitting(false);
     }
-    setTarget(null);
-    setNote('');
-    setSuccess(t('company.applications.updated'));
-    startTransition(() => router.refresh());
   }
 
   if (target) {
