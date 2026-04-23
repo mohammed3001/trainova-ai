@@ -88,6 +88,19 @@ export class ApplicationsService {
     const fromStatus = app.status;
     const toStatus = status;
 
+    // These targets have dedicated endpoints that enforce extra invariants
+    // (test must exist, belong to the same request, have tasks; submit must
+    // come with an attempt + responses). Reaching them through the generic
+    // PATCH would skip those checks and the assignment email.
+    const RESTRICTED_TARGETS: readonly ApplicationStatus[] = ['TEST_ASSIGNED', 'TEST_SUBMITTED'];
+    if (RESTRICTED_TARGETS.includes(toStatus)) {
+      throw new BadRequestException(
+        toStatus === 'TEST_ASSIGNED'
+          ? 'Use POST /applications/:id/assign-test to assign a test'
+          : 'TEST_SUBMITTED is set by the trainer via POST /tests/attempts/:id/submit',
+      );
+    }
+
     if (!canTransitionApplicationStatus(fromStatus, toStatus)) {
       const allowed = APPLICATION_STATUS_TRANSITIONS[fromStatus];
       throw new BadRequestException(
