@@ -55,7 +55,16 @@ export class TrainersService {
     const profile = await this.prisma.trainerProfile.findUnique({ where: { userId } });
     if (!profile) throw new NotFoundException('Trainer profile not found');
     const { skills, ...rest } = data;
-    await this.prisma.trainerProfile.update({ where: { id: profile.id }, data: rest });
+    // The Zod schema accepts '' for URL fields as an explicit clear signal.
+    // Coerce '' to null before writing so the column ends up nullable instead
+    // of stuck with a blank string that the Zod `original ? '' : undefined`
+    // client logic would never rewrite.
+    const URL_KEYS = ['linkedinUrl', 'githubUrl', 'websiteUrl'] as const;
+    const patch: Record<string, unknown> = { ...rest };
+    for (const k of URL_KEYS) {
+      if (patch[k] === '') patch[k] = null;
+    }
+    await this.prisma.trainerProfile.update({ where: { id: profile.id }, data: patch });
 
     if (skills) {
       // Normalise the two accepted shapes (bare slug OR {slug, level?, yearsExperience?})
