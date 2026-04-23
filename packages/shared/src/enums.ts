@@ -67,6 +67,8 @@ export function canTransitionApplicationStatus(
  */
 export const AUDIT_ACTIONS = {
   APPLICATION_STATUS_CHANGED: 'APPLICATION_STATUS_CHANGED',
+  ASSET_UPLOADED: 'ASSET_UPLOADED',
+  ASSET_DELETED: 'ASSET_DELETED',
 } as const;
 export type AuditAction = (typeof AUDIT_ACTIONS)[keyof typeof AUDIT_ACTIONS];
 
