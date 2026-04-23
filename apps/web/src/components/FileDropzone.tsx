@@ -90,8 +90,8 @@ export function FileDropzone({
         }
       }
 
-      for (const file of list) {
-        try {
+      try {
+        for (const file of list) {
           const result = await uploadFile({
             kind,
             entityId,
@@ -100,18 +100,19 @@ export function FileDropzone({
             onStage: setStage,
           });
           onUploaded(result);
-        } catch (err) {
-          setStage(null);
-          if (err instanceof UploadError) {
-            setError(errorMessage(err, t));
-          } else {
-            setError(t('common.error'));
-          }
-          return;
         }
+      } catch (err) {
+        if (err instanceof UploadError) {
+          setError(errorMessage(err, t));
+        } else {
+          setError(t('common.error'));
+        }
+      } finally {
+        setStage(null);
+        // Always clear the input so a user can retry with the same file after
+        // a failure — browsers skip `onChange` if the value hasn't changed.
+        if (inputRef.current) inputRef.current.value = '';
       }
-      setStage(null);
-      if (inputRef.current) inputRef.current.value = '';
     },
     [disabled, kind, entityId, getTitleForFile, onUploaded, quota, setStage, t],
   );
