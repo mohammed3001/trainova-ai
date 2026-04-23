@@ -121,6 +121,94 @@
     "rate": "Hourly rate",
     "noResults": "No trainers match your filters."
   },
+  "profile": {
+    "trainer": {
+      "title": "My profile",
+      "subtitle": "This is what companies see when they browse trainers. Fill it out to get matched.",
+      "sections": {
+        "basics": "Basics",
+        "rates": "Availability & rates",
+        "links": "Links",
+        "skills": "Skills & expertise"
+      },
+      "fields": {
+        "headline": "Headline",
+        "headlineHelp": "One-line summary, e.g. \"Senior RLHF annotator for Arabic LLMs\".",
+        "bio": "About you",
+        "bioHelp": "Markdown-safe text. Describe your experience, domains, model families, and what you want to work on.",
+        "country": "Country",
+        "languages": "Languages spoken",
+        "languagesHelp": "Press Enter to add each language.",
+        "timezone": "Timezone",
+        "timezoneHelp": "IANA timezone (e.g. Asia/Riyadh, Europe/London).",
+        "availability": "Availability",
+        "availabilityHelp": "e.g. 20h/week, open to full-time.",
+        "responseTimeHours": "Typical response time (hours)",
+        "hourlyRateMin": "Hourly rate min (USD)",
+        "hourlyRateMax": "Hourly rate max (USD)",
+        "linkedinUrl": "LinkedIn URL",
+        "githubUrl": "GitHub URL",
+        "websiteUrl": "Website / portfolio URL"
+      },
+      "skills": {
+        "searchPlaceholder": "Search skills…",
+        "noResults": "No skills match your search.",
+        "levelLabel": "Level",
+        "yearsLabel": "Years",
+        "addCta": "Add skill",
+        "removeCta": "Remove",
+        "noneSelected": "No skills selected yet. Pick at least 3 so companies can match you.",
+        "levels": {
+          "BEGINNER": "Beginner",
+          "INTERMEDIATE": "Intermediate",
+          "ADVANCED": "Advanced",
+          "EXPERT": "Expert"
+        }
+      },
+      "completeness": {
+        "title": "Profile completeness",
+        "lead": "{pct}% complete — profiles at 80%+ get matched 3× more often.",
+        "missing": "Still missing:",
+        "fields": {
+          "headline": "headline",
+          "bio": "about section",
+          "country": "country",
+          "languages": "at least one language",
+          "hourlyRate": "hourly rate range",
+          "skills": "at least 3 skills",
+          "linkedinOrWebsite": "LinkedIn or website URL"
+        }
+      },
+      "save": "Save profile",
+      "saved": "Profile saved",
+      "saveFailed": "Could not save: {message}",
+      "rateOrderError": "Hourly rate min must be ≤ max."
+    },
+    "company": {
+      "title": "Company profile",
+      "subtitle": "Public information shown on your company page and on every request you post.",
+      "sections": {
+        "identity": "Identity",
+        "details": "Details"
+      },
+      "fields": {
+        "name": "Company name",
+        "websiteUrl": "Website",
+        "country": "Country",
+        "industry": "Industry",
+        "size": "Team size",
+        "sizeHelp": "e.g. 1-10, 11-50, 51-200.",
+        "description": "About the company",
+        "descriptionHelp": "Short public description — mission, domain, what you use AI for.",
+        "logoUrl": "Logo URL",
+        "logoUrlHelp": "Direct image URL. Drag-and-drop uploads are coming in a future release."
+      },
+      "save": "Save company profile",
+      "saved": "Company profile saved",
+      "saveFailed": "Could not save: {message}",
+      "editCta": "Edit company profile"
+    }
+  },
   "company": {
     "applications": {
       "title": "Applications",

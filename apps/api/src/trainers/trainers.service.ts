@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import type { UpdateTrainerProfileInput } from '@trainova/shared';
+import type { UpdateTrainerProfileInput, TrainerSkillRef } from '@trainova/shared';
 
 @Injectable()
 export class TrainersService {
@@ -55,17 +55,53 @@ export class TrainersService {
     const profile = await this.prisma.trainerProfile.findUnique({ where: { userId } });
     if (!profile) throw new NotFoundException('Trainer profile not found');
     const { skills, ...rest } = data;
-    await this.prisma.trainerProfile.update({ where: { id: profile.id }, data: rest });
+    // The Zod schema accepts '' for URL fields as an explicit clear signal.
+    // Coerce '' to null before writing so the column ends up nullable instead
+    // of stuck with a blank string that the Zod `original ? '' : undefined`
+    // client logic would never rewrite.
+    const URL_KEYS = ['linkedinUrl', 'githubUrl', 'websiteUrl'] as const;
+    const patch: Record<string, unknown> = { ...rest };
+    for (const k of URL_KEYS) {
+      if (patch[k] === '') patch[k] = null;
+    }
+    await this.prisma.trainerProfile.update({ where: { id: profile.id }, data: patch });
 
     if (skills) {
-      const skillRows = await this.prisma.skill.findMany({
-        where: { slug: { in: skills } },
-        select: { id: true },
-      });
+      // Normalise the two accepted shapes (bare slug OR {slug, level?, yearsExperience?})
+      // into a single map keyed by slug. Last write wins if the same slug appears twice.
+      const bySlug = new Map<
+        string,
+        { level?: string; yearsExperience?: number }
+      >();
+      for (const entry of skills as TrainerSkillRef[]) {
+        if (typeof entry === 'string') {
+          bySlug.set(entry, bySlug.get(entry) ?? {});
+        } else {
+          bySlug.set(entry.slug, {
+            level: entry.level,
+            yearsExperience: entry.yearsExperience,
+          });
+        }
+      }
+      const slugs = [...bySlug.keys()];
+      const skillRows = slugs.length
+        ? await this.prisma.skill.findMany({
+            where: { slug: { in: slugs } },
+            select: { id: true, slug: true },
+          })
+        : [];
       await this.prisma.trainerSkill.deleteMany({ where: { profileId: profile.id } });
       if (skillRows.length) {
         await this.prisma.trainerSkill.createMany({
-          data: skillRows.map((s) => ({ profileId: profile.id, skillId: s.id })),
+          data: skillRows.map((s) => {
+            const meta = bySlug.get(s.slug) ?? {};
+            return {
+              profileId: profile.id,
+              skillId: s.id,
+              level: meta.level ?? null,
+              yearsExperience: meta.yearsExperience ?? null,
+            };
+          }),
           skipDuplicates: true,
         });
       }

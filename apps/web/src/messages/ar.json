@@ -121,6 +121,94 @@
     "rate": "سعر الساعة",
     "noResults": "لا يوجد مدربون مطابقون لفلترتك."
   },
+  "profile": {
+    "trainer": {
+      "title": "ملفي الشخصي",
+      "subtitle": "هذا ما تراه الشركات عندما تتصفح قائمة المدربين. أكمل الملف لزيادة فرص ترشيحك.",
+      "sections": {
+        "basics": "البيانات الأساسية",
+        "rates": "التوفر والأسعار",
+        "links": "الروابط",
+        "skills": "المهارات والخبرات"
+      },
+      "fields": {
+        "headline": "العنوان التعريفي",
+        "headlineHelp": "جملة واحدة مثل «مختص كبير في RLHF لنماذج اللغة العربية».",
+        "bio": "نبذة عنك",
+        "bioHelp": "نص حر (يدعم Markdown). اذكر خبراتك ومجالاتك وعائلات النماذج التي عملت عليها ونوع المهام التي تهمك.",
+        "country": "الدولة",
+        "languages": "اللغات التي تتحدثها",
+        "languagesHelp": "اضغط Enter لإضافة كل لغة.",
+        "timezone": "المنطقة الزمنية",
+        "timezoneHelp": "بصيغة IANA (مثل Asia/Riyadh أو Europe/London).",
+        "availability": "التوفر",
+        "availabilityHelp": "مثال: 20 ساعة أسبوعياً، متاح للعمل بدوام كامل.",
+        "responseTimeHours": "زمن الاستجابة المعتاد (بالساعات)",
+        "hourlyRateMin": "الحد الأدنى لسعر الساعة (USD)",
+        "hourlyRateMax": "الحد الأعلى لسعر الساعة (USD)",
+        "linkedinUrl": "رابط LinkedIn",
+        "githubUrl": "رابط GitHub",
+        "websiteUrl": "رابط الموقع / المعرض"
+      },
+      "skills": {
+        "searchPlaceholder": "ابحث عن مهارة…",
+        "noResults": "لا توجد مهارات مطابقة.",
+        "levelLabel": "المستوى",
+        "yearsLabel": "سنوات",
+        "addCta": "إضافة",
+        "removeCta": "إزالة",
+        "noneSelected": "لم تضف أي مهارة بعد. اختر 3 مهارات على الأقل حتى تتمكن الشركات من إيجادك.",
+        "levels": {
+          "BEGINNER": "مبتدئ",
+          "INTERMEDIATE": "متوسط",
+          "ADVANCED": "متقدم",
+          "EXPERT": "خبير"
+        }
+      },
+      "completeness": {
+        "title": "اكتمال الملف الشخصي",
+        "lead": "اكتمل الملف بنسبة {pct}% — الملفات فوق 80% يتم ترشيحها 3× أكثر.",
+        "missing": "ما زال ينقص:",
+        "fields": {
+          "headline": "العنوان التعريفي",
+          "bio": "النبذة التعريفية",
+          "country": "الدولة",
+          "languages": "لغة واحدة على الأقل",
+          "hourlyRate": "نطاق سعر الساعة",
+          "skills": "3 مهارات على الأقل",
+          "linkedinOrWebsite": "رابط LinkedIn أو الموقع"
+        }
+      },
+      "save": "حفظ الملف",
+      "saved": "تم حفظ الملف",
+      "saveFailed": "تعذّر الحفظ: {message}",
+      "rateOrderError": "يجب أن يكون الحد الأدنى للسعر ≤ الحد الأعلى."
+    },
+    "company": {
+      "title": "ملف الشركة",
+      "subtitle": "معلومات عامة تظهر على صفحة شركتك وعلى كل طلب تنشره.",
+      "sections": {
+        "identity": "الهوية",
+        "details": "التفاصيل"
+      },
+      "fields": {
+        "name": "اسم الشركة",
+        "websiteUrl": "الموقع الإلكتروني",
+        "country": "الدولة",
+        "industry": "الصناعة",
+        "size": "حجم الفريق",
+        "sizeHelp": "مثل: 1-10، 11-50، 51-200.",
+        "description": "نبذة عن الشركة",
+        "descriptionHelp": "وصف عام مختصر — المهمة، المجال، كيف تستخدمون الذكاء الاصطناعي.",
+        "logoUrl": "رابط الشعار",
+        "logoUrlHelp": "رابط مباشر للصورة. رفع الشعار بالسحب والإفلات قادم في تحديث لاحق."
+      },
+      "save": "حفظ ملف الشركة",
+      "saved": "تم حفظ ملف الشركة",
+      "saveFailed": "تعذّر الحفظ: {message}",
+      "editCta": "تعديل ملف الشركة"
+    }
+  },
   "company": {
     "applications": {
       "title": "الطلبات المقدَّمة",
