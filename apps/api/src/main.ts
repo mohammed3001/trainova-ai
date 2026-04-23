@@ -1,12 +1,19 @@
 import 'reflect-metadata';
 import { NestFactory } from '@nestjs/core';
+import { NestExpressApplication } from '@nestjs/platform-express';
 import { ValidationPipe, Logger } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule, { cors: true });
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, { cors: true });
   app.setGlobalPrefix('api');
+
+  // Trust the upstream reverse proxy (Next.js API route / nginx / Vercel).
+  // Required so @Ip() and req.ip resolve the real client address from
+  // X-Forwarded-For rather than the proxy loopback. The Next.js proxy
+  // forwards X-Forwarded-For, so this value ends up in the audit trail.
+  app.set('trust proxy', true);
 
   app.useGlobalPipes(
     new ValidationPipe({
