@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useLocale, useTranslations } from 'next-intl';
 import { FileDropzone } from '@/components/FileDropzone';
@@ -650,12 +650,16 @@ function PortfolioSection({
   const t = useTranslations();
   const router = useRouter();
   // Track in-flight deletes by id so two concurrent removes don't re-enable
-  // each other's button when one finishes.
+  // each other's button when one finishes. The ref is the source of truth for
+  // the synchronous re-entry guard (state reads are closure-stale on rapid
+  // double-clicks); the state drives the button's disabled rendering.
+  const busyRef = useRef<Set<string>>(new Set());
   const [busyIds, setBusyIds] = useState<Set<string>>(() => new Set());
   const [error, setError] = useState<string | null>(null);
 
   async function onRemove(assetId: string) {
-    if (busyIds.has(assetId)) return;
+    if (busyRef.current.has(assetId)) return;
+    busyRef.current.add(assetId);
     setError(null);
     setBusyIds((prev) => {
       const next = new Set(prev);
@@ -672,6 +676,7 @@ function PortfolioSection({
     } catch (err) {
       setError(err instanceof UploadError ? err.message : t('common.error'));
     } finally {
+      busyRef.current.delete(assetId);
       setBusyIds((prev) => {
         const next = new Set(prev);
         next.delete(assetId);
