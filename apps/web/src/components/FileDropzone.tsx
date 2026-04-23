@@ -53,14 +53,22 @@ export function FileDropzone({
   const inputRef = useRef<HTMLInputElement>(null);
 
   const [dragOver, setDragOver] = useState(false);
-  const [stage, setStage] = useState<UploadStage | null>(null);
+  const [stage, setStageState] = useState<UploadStage | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const stageRef = useRef<UploadStage | null>(null);
+  const setStage = useCallback((s: UploadStage | null) => {
+    stageRef.current = s;
+    setStageState(s);
+  }, []);
 
   const acceptAttr = quota.allowedMimes.join(',');
 
   const handleFiles = useCallback(
     async (files: FileList | File[]) => {
       if (disabled) return;
+      // Guard re-entry: drop events don't go through the disabled <input>,
+      // so an in-flight upload could otherwise be clobbered by a second drop.
+      if (stageRef.current !== null) return;
       const list = Array.from(files);
       if (list.length === 0) return;
       setError(null);
@@ -105,7 +113,7 @@ export function FileDropzone({
       setStage(null);
       if (inputRef.current) inputRef.current.value = '';
     },
-    [disabled, kind, entityId, getTitleForFile, onUploaded, quota, t],
+    [disabled, kind, entityId, getTitleForFile, onUploaded, quota, setStage, t],
   );
 
   function onInputChange(e: React.ChangeEvent<HTMLInputElement>) {
