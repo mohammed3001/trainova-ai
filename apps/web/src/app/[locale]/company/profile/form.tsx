@@ -3,8 +3,11 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
+import { FileDropzone } from '@/components/FileDropzone';
+import { deleteAsset, UploadError } from '@/lib/uploads/client';
 
 interface Company {
+  id: string;
   name: string;
   websiteUrl: string | null;
   country: string | null;
@@ -20,6 +23,8 @@ export function CompanyProfileForm({ company }: { company: Company }) {
 
   const [pending, setPending] = useState(false);
   const [msg, setMsg] = useState<{ kind: 'success' | 'error'; text: string } | null>(null);
+  const [logoBusy, setLogoBusy] = useState(false);
+  const [logoError, setLogoError] = useState<string | null>(null);
 
   const [name, setName] = useState(company.name ?? '');
   const [websiteUrl, setWebsiteUrl] = useState(company.websiteUrl ?? '');
@@ -27,7 +32,6 @@ export function CompanyProfileForm({ company }: { company: Company }) {
   const [industry, setIndustry] = useState(company.industry ?? '');
   const [size, setSize] = useState(company.size ?? '');
   const [description, setDescription] = useState(company.description ?? '');
-  const [logoUrl, setLogoUrl] = useState(company.logoUrl ?? '');
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -49,7 +53,6 @@ export function CompanyProfileForm({ company }: { company: Company }) {
       industry: industry.trim() || undefined,
       size: size.trim() || undefined,
       description: description.trim() || undefined,
-      logoUrl: urlField(logoUrl, company.logoUrl),
     };
     const res = await fetch('/api/proxy/companies/me', {
       method: 'PATCH',
@@ -91,18 +94,66 @@ export function CompanyProfileForm({ company }: { company: Company }) {
             placeholder="https://example.com"
           />
         </Field>
-        <Field
-          label={t('profile.company.fields.logoUrl')}
-          help={t('profile.company.fields.logoUrlHelp')}
-        >
-          <input
-            className="input"
-            type="url"
-            value={logoUrl}
-            onChange={(e) => setLogoUrl(e.target.value)}
-            placeholder="https://cdn.example.com/logo.png"
-          />
-        </Field>
+        <div>
+          <span className="label">{t('profile.company.fields.logo')}</span>
+          <div className="space-y-3">
+            {company.logoUrl ? (
+              <div className="flex items-center gap-3 rounded-md border border-slate-200 bg-slate-50 p-3">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={company.logoUrl}
+                  alt={company.name}
+                  className="h-16 w-16 rounded-md border border-slate-200 object-contain bg-white"
+                />
+                <div className="flex-1 text-xs text-slate-500 break-all">{company.logoUrl}</div>
+                <button
+                  type="button"
+                  disabled={logoBusy}
+                  onClick={async () => {
+                    setLogoError(null);
+                    setLogoBusy(true);
+                    try {
+                      await deleteAsset({
+                        kind: 'company-logo',
+                        entityId: company.id,
+                        assetId: 'current',
+                      });
+                      router.refresh();
+                    } catch (err) {
+                      if (err instanceof UploadError) setLogoError(err.message);
+                      else setLogoError(t('common.error'));
+                    } finally {
+                      setLogoBusy(false);
+                    }
+                  }}
+                  className="text-xs font-medium text-rose-600 hover:underline disabled:opacity-60"
+                >
+                  {t('profile.uploads.remove')}
+                </button>
+              </div>
+            ) : null}
+            <FileDropzone
+              kind="company-logo"
+              entityId={company.id}
+              label={t(
+                company.logoUrl
+                  ? 'profile.uploads.replaceLogo'
+                  : 'profile.uploads.dropLogo',
+              )}
+              help={t('profile.company.fields.logoHelp')}
+              disabled={logoBusy}
+              onUploaded={() => {
+                setLogoError(null);
+                router.refresh();
+              }}
+            />
+            {logoError ? (
+              <p role="alert" className="text-xs text-rose-700">
+                {logoError}
+              </p>
+            ) : null}
+          </div>
+        </div>
       </section>
 
       <section className="card space-y-4">

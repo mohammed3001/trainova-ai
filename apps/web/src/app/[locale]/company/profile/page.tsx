@@ -15,6 +15,7 @@ interface Company {
   description: string | null;
   logoUrl: string | null;
 }
+// `id` is required on the client to feed the /uploads/presign entityId.
 
 export default async function CompanyProfilePage() {
   const locale = await getLocale();
