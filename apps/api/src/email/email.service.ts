@@ -5,6 +5,7 @@ import type {
   Locale,
   ResetPasswordParams,
   SendEmailResult,
+  TestAssignedParams,
   VerifyEmailParams,
   WelcomeParams,
 } from './email.types';
@@ -12,6 +13,7 @@ import { ConsoleEmailProvider } from './providers/console.provider';
 import { ResendEmailProvider } from './providers/resend.provider';
 import {
   renderResetPassword,
+  renderTestAssigned,
   renderVerifyEmail,
   renderWelcome,
 } from './templates';
@@ -66,6 +68,11 @@ export class EmailService implements OnModuleInit {
 
   async sendWelcome(to: string, params: WelcomeParams): Promise<SendEmailResult> {
     const rendered = renderWelcome(params);
+    return this.provider.send({ to, ...rendered });
+  }
+
+  async sendTestAssigned(to: string, params: TestAssignedParams): Promise<SendEmailResult> {
+    const rendered = renderTestAssigned(params);
     return this.provider.send({ to, ...rendered });
   }
 

@@ -17,8 +17,10 @@ import { Roles } from '../auth/roles.decorator';
 import { CurrentUser, type AuthUser } from '../auth/current-user.decorator';
 import {
   applyToRequestSchema,
+  assignTestSchema,
   updateApplicationStatusSchema,
   type ApplyToRequestInput,
+  type AssignTestInput,
   type UpdateApplicationStatusInput,
 } from '@trainova/shared';
 import { ZodValidationPipe } from '../common/zod-validation.pipe';
@@ -60,6 +62,26 @@ export class ApplicationsController {
     @Headers('accept-language') acceptLanguage?: string,
   ) {
     return this.service.updateStatus(user.id, id, body.status, body.note, {
+      ip: ip ?? null,
+      userAgent: userAgent ?? null,
+      locale: acceptLanguage?.split(',')[0]?.trim() ?? null,
+    });
+  }
+
+  @Post(':id/assign-test')
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('COMPANY_OWNER')
+  @UsePipes(new ZodValidationPipe(assignTestSchema))
+  assignTest(
+    @CurrentUser() user: AuthUser,
+    @Param('id') id: string,
+    @Body() body: AssignTestInput,
+    @Ip() ip: string,
+    @Headers('user-agent') userAgent?: string,
+    @Headers('accept-language') acceptLanguage?: string,
+  ) {
+    return this.service.assignTest(user.id, id, body.testId, {
       ip: ip ?? null,
       userAgent: userAgent ?? null,
       locale: acceptLanguage?.split(',')[0]?.trim() ?? null,

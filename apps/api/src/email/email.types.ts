@@ -42,3 +42,12 @@ export interface WelcomeParams {
   name: string;
   dashboardUrl: string;
 }
+
+export interface TestAssignedParams {
+  locale: Locale;
+  name: string;
+  companyName: string;
+  testTitle: string;
+  takeUrl: string;
+  timeLimitMin?: number | null;
+}
