@@ -33,6 +33,7 @@ model User {
   role             UserRole
   status           UserStatus  @default(ACTIVE)
   locale           String      @default("en")
+  avatarUrl        String?
   emailVerifiedAt  DateTime?
   twoFactorSecret  String?
   lastLoginAt      DateTime?
@@ -183,8 +184,27 @@ model TrainerProfile {
   updatedAt        DateTime @updatedAt
 
   skills TrainerSkill[]
+  assets TrainerAsset[]
 
   @@index([slug])
+}
+
+model TrainerAsset {
+  id         String    @id @default(cuid())
+  profileId  String
+  kind       String    // 'portfolio' | 'certificate'
+  objectKey  String    @unique
+  url        String
+  title      String?
+  mimeType   String
+  byteLength Int
+  order      Int       @default(0)
+  deletedAt  DateTime?
+  createdAt  DateTime  @default(now())
+
+  profile    TrainerProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  @@index([profileId, deletedAt, order])
 }
 
 model Skill {
@@ -322,12 +342,29 @@ model Application {
   createdAt            DateTime          @default(now())
   updatedAt            DateTime          @updatedAt
 
-  request  JobRequest     @relation(fields: [requestId], references: [id], onDelete: Cascade)
-  trainer  User           @relation(fields: [trainerId], references: [id], onDelete: Cascade)
-  attempts TestAttempt[]
+  request     JobRequest              @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  trainer     User                    @relation(fields: [trainerId], references: [id], onDelete: Cascade)
+  attempts    TestAttempt[]
+  attachments ApplicationAttachment[]
 
   @@unique([requestId, trainerId])
   @@index([trainerId])
+}
+
+model ApplicationAttachment {
+  id            String    @id @default(cuid())
+  applicationId String
+  objectKey     String    @unique
+  mimeType      String
+  byteLength    Int
+  title         String?
+  scanStatus    String    @default("pending") // pending | clean | infected
+  deletedAt     DateTime?
+  createdAt     DateTime  @default(now())
+
+  application   Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+
+  @@index([applicationId, deletedAt])
 }
 
 // =========================
