@@ -9,11 +9,16 @@ async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule, { cors: true });
   app.setGlobalPrefix('api');
 
-  // Trust the upstream reverse proxy (Next.js API route / nginx / Vercel).
-  // Required so @Ip() and req.ip resolve the real client address from
-  // X-Forwarded-For rather than the proxy loopback. The Next.js proxy
-  // forwards X-Forwarded-For, so this value ends up in the audit trail.
-  app.set('trust proxy', true);
+  // Trust ONLY the loopback proxy hop. `trust proxy: true` would have
+  // Express accept the leftmost X-Forwarded-For value from any caller,
+  // letting a client spoof its own IP and bypass the per-IP rate limits
+  // on the auth endpoints. `loopback` means the X-Forwarded-For / X-Real-IP
+  // headers are honoured only when the immediate TCP peer is 127.0.0.1/::1,
+  // i.e. our own Next.js proxy — which sanitises client-supplied IP
+  // headers before forwarding (see apps/web/src/app/api/proxy/[...path]).
+  // Any other reverse proxy in front of the API (Vercel, nginx, Cloudflare)
+  // should be added to this list explicitly rather than via `true`.
+  app.set('trust proxy', 'loopback');
 
   app.useGlobalPipes(
     new ValidationPipe({

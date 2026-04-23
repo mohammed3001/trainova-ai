@@ -5,18 +5,18 @@ import { AUTH_COOKIE } from '@/lib/session';
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000';
 
 // Headers the upstream API uses for context (audit log, i18n). We forward
-// them from the browser request so values like the real client IP,
-// User-Agent, and Accept-Language are available to controllers via @Ip()
-// and @Headers() — the proxy previously stripped them, which made audit
-// rows record the Next.js server's loopback instead of the real client.
-const FORWARD_HEADERS = [
-  'user-agent',
-  'accept-language',
-  'x-forwarded-for',
-  'x-real-ip',
-  'x-forwarded-proto',
-  'x-forwarded-host',
-];
+// them from the browser request so controllers see real User-Agent and
+// Accept-Language values via @Headers().
+//
+// Security-sensitive headers (x-forwarded-for, x-real-ip, x-forwarded-proto,
+// x-forwarded-host) are intentionally NOT in this list: browsers can set
+// them from fetch(), and the NestJS API (trust proxy = loopback) would
+// honour whatever arrives over the loopback socket. Allowing clients to
+// dictate X-Forwarded-For lets them rotate per-request values and bypass
+// the per-IP rate limits that protect the auth endpoints. Instead, this
+// proxy overwrites X-Forwarded-For / X-Real-IP below with a value it
+// controls.
+const FORWARD_HEADERS = ['user-agent', 'accept-language'];
 
 async function forward(req: NextRequest, path: string[]) {
   const url = new URL(req.url);
@@ -32,12 +32,19 @@ async function forward(req: NextRequest, path: string[]) {
     const value = req.headers.get(name);
     if (value) outbound[name] = value;
   }
-  // Append this hop to X-Forwarded-For so the API (trust proxy = true)
-  // still resolves the real client IP even when the request arrived here
-  // without an X-Forwarded-For header (direct browser hit).
-  const clientIp = req.headers.get('x-forwarded-for') ?? (req as unknown as { ip?: string }).ip;
-  if (clientIp && !outbound['x-forwarded-for']) {
-    outbound['x-forwarded-for'] = clientIp;
+
+  // Derive the client IP from signals the Next.js runtime controls — either
+  // the platform-provided NextRequest.ip (Vercel/Edge) or, on Node, the
+  // trusted upstream X-Forwarded-For set by a reverse proxy in front of
+  // Next.js. If we can't determine it, omit the header entirely: the API
+  // will then see the Next proxy's loopback address, which is safe (and
+  // rate-limit keys fall back to that shared value rather than a
+  // client-controlled one).
+  const nextClientIp = (req as unknown as { ip?: string }).ip;
+  if (nextClientIp) {
+    // Overwrite — do NOT preserve any value the client sent.
+    outbound['x-forwarded-for'] = nextClientIp;
+    outbound['x-real-ip'] = nextClientIp;
   }
 
   const res = await fetch(target, {
