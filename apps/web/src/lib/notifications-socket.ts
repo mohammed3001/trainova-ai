@@ -24,28 +24,33 @@ export async function getNotificationsSocket(): Promise<Socket> {
   if (singleton && !singleton.disconnected) return singleton;
   if (connectPromise) return connectPromise;
   connectPromise = (async () => {
-    const token = await fetchTicket();
-    const s = io(API_URL, {
-      path: '/ws/notifications',
-      transports: ['websocket', 'polling'],
-      auth: { token },
-      reconnection: true,
-      reconnectionAttempts: 5,
-    });
-    s.on('connect_error', async (err) => {
-      if (String(err.message).toLowerCase().includes('auth')) {
-        try {
-          const fresh = await fetchTicket();
-          s.auth = { token: fresh };
-          s.connect();
-        } catch {
-          /* fall back to REST polling in UI */
+    try {
+      const token = await fetchTicket();
+      const s = io(API_URL, {
+        path: '/ws/notifications',
+        transports: ['websocket', 'polling'],
+        auth: { token },
+        reconnection: true,
+        reconnectionAttempts: 5,
+      });
+      s.on('connect_error', async (err) => {
+        if (String(err.message).toLowerCase().includes('auth')) {
+          try {
+            const fresh = await fetchTicket();
+            s.auth = { token: fresh };
+            s.connect();
+          } catch {
+            /* fall back to REST polling in UI */
+          }
         }
-      }
-    });
-    singleton = s;
-    connectPromise = null;
-    return s;
+      });
+      singleton = s;
+      return s;
+    } finally {
+      // Always clear so a transient fetchTicket failure does not permanently
+      // cache a rejected promise and block every future call.
+      connectPromise = null;
+    }
   })();
   return connectPromise;
 }
