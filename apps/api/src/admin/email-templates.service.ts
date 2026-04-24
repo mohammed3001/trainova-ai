@@ -122,7 +122,7 @@ export class EmailTemplatesService {
    */
   preview(input: PreviewEmailTemplateInput): EmailTemplatePreview {
     const vars = input.variables ?? {};
-    const subject = interpolateEmailTemplate(input.subject, vars, { escapeHtml: true });
+    const subject = interpolateEmailTemplate(input.subject, vars, { escapeHtml: false });
     const bodyHtml = interpolateEmailTemplate(input.bodyHtml, vars, { escapeHtml: true });
     const bodyText = interpolateEmailTemplate(input.bodyText, vars, { escapeHtml: false });
     const pattern = /\{\{\s*([a-zA-Z_][a-zA-Z0-9_]*)\s*\}\}/g;

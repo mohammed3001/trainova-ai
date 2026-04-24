@@ -101,7 +101,7 @@ export class EmailService implements OnModuleInit {
     const rendered = await this.renderWithOverride(
       'WELCOME',
       params.locale,
-      { name: params.name },
+      { name: params.name, dashboardUrl: params.dashboardUrl },
       () => renderWelcome(params),
     );
     return this.provider.send({ to, ...rendered });
@@ -157,7 +157,7 @@ export class EmailService implements OnModuleInit {
         }
       }
 
-      const subject = interpolateEmailTemplate(row.subject, vars, { escapeHtml: true });
+      const subject = interpolateEmailTemplate(row.subject, vars, { escapeHtml: false });
       const innerHtml = interpolateEmailTemplate(row.bodyHtml, vars, { escapeHtml: true });
       const text = interpolateEmailTemplate(row.bodyText, vars, { escapeHtml: false });
       return { subject, html: renderLayout(locale, innerHtml), text };
