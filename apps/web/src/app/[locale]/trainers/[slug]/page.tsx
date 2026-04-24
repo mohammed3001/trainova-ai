@@ -313,7 +313,7 @@ export default async function TrainerDetailPage({
                   </Link>
                   <span className="shrink-0 text-xs text-slate-500">
                     {s.level ?? '—'}
-                    {s.yearsExperience ? ` · ${s.yearsExperience}y` : ''}
+                    {s.yearsExperience != null ? ` · ${s.yearsExperience}y` : ''}
                   </span>
                 </li>
               ))}

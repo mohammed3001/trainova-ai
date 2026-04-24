@@ -119,7 +119,7 @@ export function renderTrainerCvPdf(t: TrainerCvPayload): Readable {
       const line1 = s.skill.nameEn;
       const meta: string[] = [];
       if (s.level) meta.push(s.level);
-      if (s.yearsExperience) meta.push(`${s.yearsExperience}y`);
+      if (s.yearsExperience != null) meta.push(`${s.yearsExperience}y`);
       doc
         .font('Helvetica-Bold')
         .fontSize(10)
