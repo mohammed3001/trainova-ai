@@ -6,3 +6,4 @@ export * from './models';
 export * from './workbench';
 export * from './payments';
 export * from './ads';
+export * from './email-templates';

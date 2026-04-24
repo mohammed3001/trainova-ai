@@ -1372,6 +1372,69 @@
           "payloadHint": "Optional JSON object passed to the client (e.g. rollout %, variant)."
         }
       }
+    },
+    "emailTemplates": {
+      "title": "Email templates",
+      "subtitle": "Admin-edited copy overrides the built-in templates. If a row is missing or disabled, the platform falls back to the bundled template so every flow keeps sending.",
+      "new": "New template",
+      "newTitle": "New email template",
+      "edit": "Edit template",
+      "empty": "No templates yet. Built-in copy is used until you override it here.",
+      "enabled": "Enabled",
+      "disabled": "Disabled",
+      "saved": "Saved",
+      "saveFailed": "Save failed",
+      "createFailed": "Create failed",
+      "deleteFailed": "Delete failed",
+      "confirmDelete": "Delete this template? The built-in fallback will be used instead.",
+      "editedAt": "Last edited {when}",
+      "by": "by {name}",
+      "unknownKey": "Unknown template key: {key}. Remove the row or add the spec in shared package.",
+      "filter": {
+        "key": "Key",
+        "locale": "Language",
+        "enabled": "Status",
+        "search": "Search",
+        "searchPlaceholder": "Subject or description…",
+        "all": "All",
+        "apply": "Apply"
+      },
+      "missing": {
+        "title": "Missing translations",
+        "subtitle": "These (key, locale) pairs have no override row. The platform will use the built-in template until you create one."
+      },
+      "col": {
+        "key": "Key",
+        "locale": "Locale",
+        "subject": "Subject",
+        "status": "Status",
+        "updated": "Updated"
+      },
+      "editor": {
+        "meta": "Metadata",
+        "key": "Key",
+        "locale": "Locale",
+        "description": "Description",
+        "subject": "Subject",
+        "bodyHtml": "HTML body",
+        "bodyText": "Plain-text body",
+        "selectKey": "Select a template key",
+        "variables": {
+          "title": "Variables",
+          "help": "Use {{name}} inside subject or body. Fill sample values here to preview."
+        },
+        "preview": "Preview",
+        "previewing": "Rendering…",
+        "previewSubject": "Subject",
+        "previewHtml": "HTML preview",
+        "unresolved": "Unresolved variables",
+        "save": "Save changes",
+        "saving": "Saving…",
+        "create": "Create template",
+        "creating": "Creating…",
+        "delete": "Delete template",
+        "deleting": "Deleting…"
+      }
     }
   },
   "ads": {
