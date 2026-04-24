@@ -60,15 +60,11 @@ import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
 import { CurrentUser, AuthUser } from '../auth/current-user.decorator';
 import { ZodValidationPipe } from '../common/zod-validation.pipe';
+import { clientIp } from '../common/client-ip.util';
 import { AdminService, AdminContext } from './admin.service';
 import { AdminOpsService } from './admin-ops.service';
 import { AdminReportsService } from './admin-reports.service';
 import { VerificationService } from '../verification/verification.service';
-
-function clientIp(req: Request): string | null {
-  const addr = (req.socket as { remoteAddress?: string })?.remoteAddress;
-  return addr ?? null;
-}
 
 function ctx(user: AuthUser, req: Request): AdminContext {
   return { actorId: user.id, actorRole: user.role as UserRole, ip: clientIp(req) };

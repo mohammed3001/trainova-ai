@@ -34,15 +34,8 @@ import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
 import { CurrentUser, AuthUser } from '../auth/current-user.decorator';
 import { ZodValidationPipe } from '../common/zod-validation.pipe';
+import { clientIp } from '../common/client-ip.util';
 import { AdminFinanceService } from './admin-finance.service';
-
-function clientIp(req: Request): string | null {
-  const xff = req.headers['x-forwarded-for'];
-  if (typeof xff === 'string' && xff.length > 0) {
-    return xff.split(',')[0]?.trim() ?? null;
-  }
-  return (req.socket as { remoteAddress?: string })?.remoteAddress ?? null;
-}
 
 function actor(user: AuthUser, req: Request) {
   return { actorId: user.id, ip: clientIp(req) };
