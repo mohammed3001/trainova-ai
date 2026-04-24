@@ -580,11 +580,17 @@ export class TestsService {
     if (!isOwner && !isTrainer && !isAdmin) {
       throw new ForbiddenException('Not allowed to view these attempts');
     }
-    return this.prisma.testAttempt.findMany({
+    const attempts = await this.prisma.testAttempt.findMany({
       where: { applicationId },
       orderBy: { createdAt: 'desc' },
       include: { test: { select: { id: true, title: true, passingScore: true } } },
     });
+    // reviewerNotes are company/admin-only; mirror the stripping done in
+    // findAttempt so the list-variant doesn't leak them to trainer callers.
+    if (!isOwner && !isAdmin) {
+      return attempts.map((a) => ({ ...a, reviewerNotes: null }));
+    }
+    return attempts;
   }
 
   // =========================================================================
