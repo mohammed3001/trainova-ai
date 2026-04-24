@@ -332,11 +332,21 @@ export class AdsService {
     amountCents: number,
   ): Promise<void> {
     await this.prisma.$transaction(async (tx) => {
-      const current = await tx.adTopup.findUnique({ where: { id: topupId } });
-      if (!current || current.status === 'SUCCEEDED') return;
-      await tx.adTopup.update({
-        where: { id: topupId },
+      // Atomic claim: only the caller that flips PENDING→SUCCEEDED may
+      // credit the budget. `updateMany` with a status guard collapses the
+      // read-check-write into one statement, so concurrent callers (the
+      // synchronous fast-path in `startTopup` + the `payment_intent.succeeded`
+      // webhook) can't both pass the idempotency check under PostgreSQL
+      // READ COMMITTED. The loser gets `count: 0` and exits without
+      // touching the campaign budget.
+      const claimed = await tx.adTopup.updateMany({
+        where: { id: topupId, status: { not: 'SUCCEEDED' } },
         data: { status: 'SUCCEEDED' },
+      });
+      if (claimed.count === 0) return;
+      const topup = await tx.adTopup.findUniqueOrThrow({
+        where: { id: topupId },
+        select: { campaignId: true },
       });
       // Re-activate campaigns that were auto-paused for running out of
       // runway. APPROVED / DRAFT / PENDING_REVIEW / REJECTED / ENDED are
@@ -346,14 +356,14 @@ export class AdsService {
       // `recordImpression`. A top-up must never resume a campaign that an
       // admin paused for a policy violation.
       const campaign = await tx.adCampaign.findUnique({
-        where: { id: current.campaignId },
+        where: { id: topup.campaignId },
         select: { status: true, pausedReason: true },
       });
       const shouldReactivate =
         campaign?.status === 'PAUSED' &&
         campaign.pausedReason === 'BUDGET_EXHAUSTED';
       await tx.adCampaign.update({
-        where: { id: current.campaignId },
+        where: { id: topup.campaignId },
         data: {
           budgetCents: { increment: amountCents },
           ...(shouldReactivate ? { status: 'ACTIVE' as const, pausedReason: null } : {}),
@@ -582,8 +592,14 @@ export class AdsService {
       // pay for its own impressions. Tag the pause so that a subsequent
       // top-up (see `creditBudget`) is allowed to auto-resume — admin /
       // owner manual pauses are tagged differently and stay paused.
-      await this.prisma.adCampaign.update({
-        where: { id: creative.campaignId },
+      //
+      // `updateMany` with `status: 'ACTIVE'` guard: if an admin or owner
+      // paused the campaign between the read above and this write, the
+      // row will already be PAUSED with a non-budget `pausedReason`, and
+      // we must not overwrite it to `BUDGET_EXHAUSTED` (which would let
+      // a later top-up auto-resume a campaign paused for policy).
+      await this.prisma.adCampaign.updateMany({
+        where: { id: creative.campaignId, status: 'ACTIVE' },
         data: { status: 'PAUSED', pausedReason: 'BUDGET_EXHAUSTED' },
       });
       return { ok: true, skipped: 'budget' };
