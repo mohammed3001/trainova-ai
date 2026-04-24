@@ -17,11 +17,14 @@ export class NotificationsController {
     @Query('limit') limit?: string,
     @Query('cursor') cursor?: string,
   ) {
-    return this.notifications.list(
-      user.id,
-      limit ? Number(limit) : 50,
-      cursor,
-    );
+    // Clamp the client-supplied limit into a sane range so a malformed
+    // ?limit=abc (NaN) or ?limit=-5 (reverses Prisma's cursor direction)
+    // can't crash the endpoint or return bogus rows.
+    const parsed = limit !== undefined ? Number(limit) : 50;
+    const safeLimit = Number.isFinite(parsed)
+      ? Math.max(1, Math.min(100, Math.trunc(parsed)))
+      : 50;
+    return this.notifications.list(user.id, safeLimit, cursor);
   }
 
   @Get('unread-count')
