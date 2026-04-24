@@ -165,8 +165,24 @@ export class AdminService {
     }
     if (target.role === role) return { id: target.id, role };
 
-    const updated = await this.prisma.$transaction(async (tx) => {
-      const u = await tx.user.update({ where: { id: userId }, data: { role }, select: { id: true, role: true } });
+    // Close the TOCTOU race: the above check ran outside the transaction, so
+    // a concurrent promotion of `target` to SUPER_ADMIN could sneak in before
+    // we write. Guard the write with the DB: a non-SUPER_ADMIN actor may only
+    // mutate a row whose current role is also not SUPER_ADMIN. If the count
+    // comes back 0 the race fired and we refuse the request.
+    return this.prisma.$transaction(async (tx) => {
+      const where: Prisma.UserWhereInput = { id: userId };
+      if (ctx.actorRole !== 'SUPER_ADMIN') {
+        where.role = { not: 'SUPER_ADMIN' };
+      }
+      const result = await tx.user.updateMany({ where, data: { role } });
+      if (result.count === 0) {
+        throw new ForbiddenException('Only SUPER_ADMIN may modify a SUPER_ADMIN');
+      }
+      const u = await tx.user.findUniqueOrThrow({
+        where: { id: userId },
+        select: { id: true, role: true },
+      });
       await tx.auditLog.create({
         data: {
           actorId: ctx.actorId,
@@ -179,7 +195,6 @@ export class AdminService {
       });
       return u;
     });
-    return updated;
   }
 
   async setUserStatus(ctx: AdminContext, userId: string, status: UserStatus) {
@@ -195,10 +210,21 @@ export class AdminService {
     }
     if (target.status === status) return { id: target.id, status };
 
+    // Same TOCTOU pattern as setUserRole: the "not a SUPER_ADMIN" check
+    // above ran outside the transaction, so we re-assert it atomically in
+    // the write itself. A non-SUPER_ADMIN actor cannot lock a SUPER_ADMIN
+    // out by racing a promotion past the earlier findUnique.
     return this.prisma.$transaction(async (tx) => {
-      const u = await tx.user.update({
+      const where: Prisma.UserWhereInput = { id: userId };
+      if (ctx.actorRole !== 'SUPER_ADMIN') {
+        where.role = { not: 'SUPER_ADMIN' };
+      }
+      const result = await tx.user.updateMany({ where, data: { status } });
+      if (result.count === 0) {
+        throw new ForbiddenException('Only SUPER_ADMIN may modify a SUPER_ADMIN');
+      }
+      const u = await tx.user.findUniqueOrThrow({
         where: { id: userId },
-        data: { status },
         select: { id: true, status: true },
       });
       // Revoke refresh tokens on suspension to log the user out of all sessions.
