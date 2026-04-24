@@ -292,7 +292,11 @@ export class WorkbenchService {
         operation: input.operation,
         requestBody: sanitizedRequest,
         responseBody: sanitizedResponse,
-        responseStatus: result.status || null,
+        // Preserve status=0 (the proxy's sentinel for "no HTTP response
+        // received" — timeout, DNS failure, etc.). Using `|| null` would
+        // collapse that case to null in the audit row while the live
+        // response still shows 0, causing a live/audit mismatch.
+        responseStatus: result.status,
         latencyMs: result.latencyMs,
         tokensIn: result.tokensIn ?? null,
         tokensOut: result.tokensOut ?? null,

@@ -112,6 +112,16 @@ export class ModelsService {
     // that switches an ANTHROPIC connection to OPENAI_COMPATIBLE without
     // also providing endpointUrl would slip through and leave the row in
     // a permanently-failing state.
+    // Resolve merged credentials so the invariant check below reflects
+    // what the row will actually contain after the update. Explicit
+    // `null` = just-cleared, a Buffer = just-set, otherwise fall back.
+    const mergedCredentials: Buffer | null =
+      data.encryptedCredentials === null
+        ? null
+        : data.encryptedCredentials instanceof Buffer
+          ? data.encryptedCredentials
+          : (existing.encryptedCredentials as Buffer | null);
+
     const merged = {
       provider: (data.provider as string | undefined) ?? existing.provider,
       endpointUrl:
@@ -123,6 +133,7 @@ export class ModelsService {
           ? (data.region as string | null)
           : existing.region,
       authKind: (data.authKind as string | undefined) ?? existing.authKind,
+      credentials: mergedCredentials,
     };
     if (
       ['OPENAI_COMPATIBLE', 'RAW_HTTPS', 'HUGGINGFACE'].includes(merged.provider) &&
@@ -135,6 +146,15 @@ export class ModelsService {
     }
     if (merged.authKind === 'aws_sigv4' && merged.provider !== 'BEDROCK') {
       throw new BadRequestException('aws_sigv4 is only valid for Bedrock');
+    }
+    // Any authKind other than 'none' must have credentials. Otherwise a
+    // PATCH that clears credentials (`credentials: ''`) or flips
+    // authKind from 'none' to a credential-requiring kind would leave
+    // the row permanently 401/403 against upstream.
+    if (merged.authKind !== 'none' && !merged.credentials) {
+      throw new BadRequestException(
+        'credentials are required when authKind is not "none"',
+      );
     }
 
     const row = await this.prisma.modelConnection.update({ where: { id }, data });
