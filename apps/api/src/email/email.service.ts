@@ -77,6 +77,15 @@ export class EmailService implements OnModuleInit {
   }
 
   /**
+   * Generic transactional/notification send. Strips HTML tags for the text
+   * fallback so there's always a plaintext body.
+   */
+  async sendRaw(to: string, subject: string, html: string): Promise<SendEmailResult> {
+    const text = html.replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim();
+    return this.provider.send({ to, subject, html, text });
+  }
+
+  /**
    * Normalize an arbitrary locale string to one of the supported locales.
    * Defaults to `en` for unknown inputs so callers can pass raw user locale.
    */

@@ -538,5 +538,32 @@
       "ADMIN": "Admin",
       "SUPER_ADMIN": "Admin"
     }
+  },
+  "notifications": {
+    "nav": "Notifications",
+    "title": "Notifications",
+    "subtitle": "Real-time updates on your applications, tests, and messages.",
+    "empty": "You're all caught up — no notifications yet.",
+    "markAllRead": "Mark all read",
+    "viewAll": "View all",
+    "justNow": "Just now",
+    "minutesAgo": "{m}m ago",
+    "hoursAgo": "{h}h ago",
+    "daysAgo": "{d}d ago",
+    "unreadBadge": "{n} unread",
+    "loading": "Loading…",
+    "retry": "Retry",
+    "loadFailed": "Couldn't load notifications",
+    "types": {
+      "application.received": "New application",
+      "application.shortlisted": "You were shortlisted",
+      "application.accepted": "Application accepted",
+      "application.rejected": "Application rejected",
+      "test.assigned": "Test assigned",
+      "test.submitted": "Test submitted",
+      "test.graded": "Test graded",
+      "chat.message": "New message",
+      "system.announcement": "Announcement"
+    }
   }
 }

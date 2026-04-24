@@ -538,5 +538,32 @@
       "ADMIN": "مشرف",
       "SUPER_ADMIN": "مشرف"
     }
+  },
+  "notifications": {
+    "nav": "الإشعارات",
+    "title": "الإشعارات",
+    "subtitle": "تحديثات فورية لطلباتك واختباراتك ورسائلك.",
+    "empty": "لا توجد إشعارات جديدة — أنت على اطلاع كامل.",
+    "markAllRead": "تمييز الكل كمقروء",
+    "viewAll": "عرض الكل",
+    "justNow": "الآن",
+    "minutesAgo": "قبل {m} دقيقة",
+    "hoursAgo": "قبل {h} ساعة",
+    "daysAgo": "قبل {d} يوم",
+    "unreadBadge": "{n} غير مقروء",
+    "loading": "جار التحميل…",
+    "retry": "إعادة المحاولة",
+    "loadFailed": "تعذر تحميل الإشعارات",
+    "types": {
+      "application.received": "تقديم جديد",
+      "application.shortlisted": "تم ترشيحك",
+      "application.accepted": "تم قبول التقديم",
+      "application.rejected": "تم رفض التقديم",
+      "test.assigned": "اختبار مُسند",
+      "test.submitted": "تم تسليم الاختبار",
+      "test.graded": "تم تقييم الاختبار",
+      "chat.message": "رسالة جديدة",
+      "system.announcement": "إعلان"
+    }
   }
 }
