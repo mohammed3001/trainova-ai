@@ -803,6 +803,133 @@
       "trainers": "المدربون",
       "requestsOpen": "الطلبات المفتوحة",
       "applications": "التقديمات"
+    },
+    "ads": {
+      "title": "الحملات الإعلانية",
+      "subtitle": "راجع واعتمد أو ارفض الحملات الإعلانية الذاتية الخدمة.",
+      "tabs": {
+        "pending": "بانتظار المراجعة",
+        "all": "جميع الحملات"
+      },
+      "empty": "لا توجد حملات مطابقة لهذا الفلتر.",
+      "actions": {
+        "approve": "اعتماد",
+        "reject": "رفض",
+        "pause": "إيقاف",
+        "resume": "استئناف",
+        "confirmReject": "هل تريد رفض هذه الحملة؟"
+      },
+      "rejectReasonLabel": "السبب (يُعرض للمعلن)",
+      "approvedBy": "اعتُمدت من الإدارة في {at}",
+      "rejectedReason": "مرفوضة: {reason}"
+    }
+  },
+  "ads": {
+    "title": "الحملات الإعلانية",
+    "subtitle": "روّج لشركتك وطلباتك عبر Trainova. اضبط الميزانية واختر مواضع العرض، ويتم الخصم فقط عند ظهور أو نقرة فعلية.",
+    "badge": "المنصّة",
+    "disclosure": "كل المواضع المموّلة تحمل وسم «إعلان» ظاهرًا ولا تُوجّه إلا إلى روابط https بعد المراجعة.",
+    "empty": {
+      "title": "لا توجد حملات بعد",
+      "body": "أنشئ حملتك الأولى للوصول إلى المدربين والشركات النشطة على Trainova.",
+      "cta": "إنشاء حملة"
+    },
+    "status": {
+      "DRAFT": "مسودة",
+      "PENDING_REVIEW": "بانتظار المراجعة",
+      "APPROVED": "معتمدة",
+      "ACTIVE": "نشطة",
+      "PAUSED": "موقوفة",
+      "REJECTED": "مرفوضة",
+      "ENDED": "منتهية"
+    },
+    "pricing": {
+      "CPM": "تكلفة كل 1000 ظهور (CPM)",
+      "CPC": "تكلفة النقرة (CPC)",
+      "FLAT": "رعاية ثابتة"
+    },
+    "placement": {
+      "HOMEPAGE_HERO": "بطل الصفحة الرئيسية",
+      "SIDEBAR_SEARCH": "الشريط الجانبي للبحث",
+      "FEATURED_TRAINER": "مدرب مميّز",
+      "FEATURED_COMPANY": "شركة مميّزة",
+      "SEARCH_RESULT": "نتيجة بحث مروَّجة",
+      "CATEGORY_SPONSOR": "راعي فئة",
+      "NEWSLETTER": "النشرة البريدية",
+      "NATIVE_LISTING": "إدراج أصيل"
+    },
+    "creativeType": {
+      "BANNER": "بانر",
+      "SPONSORED_LISTING": "إدراج ممول",
+      "FEATURED_TRAINER": "مدرب مميّز",
+      "CATEGORY_SPONSOR": "راعي فئة",
+      "NATIVE": "أصيل"
+    },
+    "list": {
+      "header": "حملاتك",
+      "create": "حملة جديدة",
+      "spentOf": "{spent} من أصل {budget}",
+      "impressionsLabel": "الظهور",
+      "clicksLabel": "النقرات",
+      "ctrLabel": "نسبة النقر",
+      "creatives": "التصاميم ({count})"
+    },
+    "detail": {
+      "backToList": "عودة إلى الحملات",
+      "performanceTitle": "الأداء",
+      "budgetTitle": "الميزانية والشحن",
+      "creativesTitle": "التصاميم",
+      "addCreative": "إضافة تصميم",
+      "submitForReview": "إرسال للمراجعة",
+      "pause": "إيقاف",
+      "resume": "استئناف",
+      "delete": "حذف الحملة",
+      "confirmDelete": "حذف هذه الحملة؟ الميزانية المتبقية تُفقد.",
+      "topupCta": "شحن الميزانية",
+      "rejectionReason": "سبب الرفض",
+      "noCreatives": "لا يوجد تصاميم — أضف واحدًا قبل إرسال الحملة للمراجعة.",
+      "remainingBudget": "الميزانية المتبقية"
+    },
+    "campaign": {
+      "name": "اسم الحملة",
+      "pricingModel": "نموذج التسعير",
+      "cpm": "CPM (سنت لكل 1000 ظهور)",
+      "cpc": "CPC (سنت لكل نقرة)",
+      "flat": "رعاية ثابتة (سنت)",
+      "frequencyCap": "الحد الأقصى للظهور لكل زائر يوميًا",
+      "targetingCountries": "الدول المستهدفة (ISO-2)",
+      "targetingLocales": "اللغات المستهدفة",
+      "targetingSkills": "مهارات مستهدفة (معرّفات)",
+      "startDate": "تاريخ البدء",
+      "endDate": "تاريخ الانتهاء",
+      "commaHint": "افصل بينها بفاصلة"
+    },
+    "creative": {
+      "headline": "العنوان",
+      "body": "النص (اختياري)",
+      "ctaLabel": "نص الزر (اختياري)",
+      "ctaUrl": "رابط الوجهة",
+      "assetUrl": "رابط الصورة (https، اختياري)",
+      "placements": "المواضع",
+      "weight": "الوزن (1 – 10)",
+      "active": "فعّال",
+      "save": "حفظ التصميم",
+      "remove": "حذف"
+    },
+    "topup": {
+      "title": "شحن ميزانية الحملة",
+      "amount": "المبلغ (سنت)",
+      "paymentMethodId": "معرّف وسيلة الدفع المحفوظة",
+      "hint": "أضف بطاقتك من صفحة الفوترة أولًا — ومعرّف pm_… المحفوظ يُوضع هنا.",
+      "submit": "خصم وشحن الميزانية",
+      "success": "الشحن جارٍ. تُحدَّث الميزانية فور تأكيد Stripe."
+    },
+    "errors": {
+      "createFailed": "تعذّر إنشاء الحملة.",
+      "updateFailed": "تعذّر تحديث الحملة.",
+      "submitFailed": "تعذّر إرسال الحملة.",
+      "topupFailed": "تعذّر بدء عملية الشحن.",
+      "creativeFailed": "تعذّر حفظ التصميم."
     }
   },
   "chat": {

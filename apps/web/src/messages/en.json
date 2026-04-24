@@ -803,6 +803,133 @@
       "trainers": "Trainers",
       "requestsOpen": "Open requests",
       "applications": "Applications"
+    },
+    "ads": {
+      "title": "Ad campaigns",
+      "subtitle": "Review, approve and moderate self-serve ad campaigns.",
+      "tabs": {
+        "pending": "Pending review",
+        "all": "All campaigns"
+      },
+      "empty": "No campaigns match this filter.",
+      "actions": {
+        "approve": "Approve",
+        "reject": "Reject",
+        "pause": "Pause",
+        "resume": "Resume",
+        "confirmReject": "Reject this campaign?"
+      },
+      "rejectReasonLabel": "Reason (shown to advertiser)",
+      "approvedBy": "Approved by admin on {at}",
+      "rejectedReason": "Rejected: {reason}"
+    }
+  },
+  "ads": {
+    "title": "Ad campaigns",
+    "subtitle": "Promote your company and open roles across Trainova. Set a budget, pick placements, and Trainova only charges per real impression or click.",
+    "badge": "Monetisation",
+    "disclosure": "All sponsored placements carry a visible 'Sponsored' label and link only to https:// destinations after review.",
+    "empty": {
+      "title": "No campaigns yet",
+      "body": "Create your first campaign to reach trainers and companies actively searching Trainova.",
+      "cta": "Create a campaign"
+    },
+    "status": {
+      "DRAFT": "Draft",
+      "PENDING_REVIEW": "Pending review",
+      "APPROVED": "Approved",
+      "ACTIVE": "Active",
+      "PAUSED": "Paused",
+      "REJECTED": "Rejected",
+      "ENDED": "Ended"
+    },
+    "pricing": {
+      "CPM": "Cost per 1 000 impressions (CPM)",
+      "CPC": "Cost per click (CPC)",
+      "FLAT": "Flat sponsorship fee"
+    },
+    "placement": {
+      "HOMEPAGE_HERO": "Homepage hero",
+      "SIDEBAR_SEARCH": "Search sidebar",
+      "FEATURED_TRAINER": "Featured trainer",
+      "FEATURED_COMPANY": "Featured company",
+      "SEARCH_RESULT": "Promoted search result",
+      "CATEGORY_SPONSOR": "Category sponsor",
+      "NEWSLETTER": "Newsletter",
+      "NATIVE_LISTING": "Native listing"
+    },
+    "creativeType": {
+      "BANNER": "Banner",
+      "SPONSORED_LISTING": "Sponsored listing",
+      "FEATURED_TRAINER": "Featured trainer",
+      "CATEGORY_SPONSOR": "Category sponsor",
+      "NATIVE": "Native"
+    },
+    "list": {
+      "header": "Your campaigns",
+      "create": "New campaign",
+      "spentOf": "{spent} spent of {budget}",
+      "impressionsLabel": "Impressions",
+      "clicksLabel": "Clicks",
+      "ctrLabel": "CTR",
+      "creatives": "Creatives ({count})"
+    },
+    "detail": {
+      "backToList": "Back to campaigns",
+      "performanceTitle": "Performance",
+      "budgetTitle": "Budget & top-up",
+      "creativesTitle": "Creatives",
+      "addCreative": "Add creative",
+      "submitForReview": "Submit for review",
+      "pause": "Pause",
+      "resume": "Resume",
+      "delete": "Delete campaign",
+      "confirmDelete": "Delete this campaign? Any remaining budget is forfeit.",
+      "topupCta": "Top up budget",
+      "rejectionReason": "Rejection reason",
+      "noCreatives": "No creatives yet — add one before submitting for review.",
+      "remainingBudget": "Remaining budget"
+    },
+    "campaign": {
+      "name": "Campaign name",
+      "pricingModel": "Pricing model",
+      "cpm": "CPM (cents per 1 000 impressions)",
+      "cpc": "CPC (cents per click)",
+      "flat": "Flat fee (cents)",
+      "frequencyCap": "Frequency cap per visitor per day",
+      "targetingCountries": "Target countries (ISO-2)",
+      "targetingLocales": "Target locales",
+      "targetingSkills": "Target skill ids",
+      "startDate": "Start date",
+      "endDate": "End date",
+      "commaHint": "Comma-separated"
+    },
+    "creative": {
+      "headline": "Headline",
+      "body": "Body (optional)",
+      "ctaLabel": "CTA label (optional)",
+      "ctaUrl": "Destination URL",
+      "assetUrl": "Image URL (https, optional)",
+      "placements": "Placements",
+      "weight": "Weight (1 – 10)",
+      "active": "Active",
+      "save": "Save creative",
+      "remove": "Remove"
+    },
+    "topup": {
+      "title": "Top up campaign budget",
+      "amount": "Amount (cents)",
+      "paymentMethodId": "Saved payment method id",
+      "hint": "Use your billing page to add a card first — the saved pm_… id goes here.",
+      "submit": "Charge & credit budget",
+      "success": "Top up in progress. Your budget updates as soon as Stripe confirms."
+    },
+    "errors": {
+      "createFailed": "We couldn't create the campaign.",
+      "updateFailed": "We couldn't update the campaign.",
+      "submitFailed": "We couldn't submit the campaign.",
+      "topupFailed": "We couldn't start the top up.",
+      "creativeFailed": "We couldn't save the creative."
     }
   },
   "chat": {

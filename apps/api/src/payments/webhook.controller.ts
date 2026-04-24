@@ -7,11 +7,13 @@ import {
   Post,
   Req,
 } from '@nestjs/common';
+import { ModuleRef } from '@nestjs/core';
 import { ApiExcludeController } from '@nestjs/swagger';
 import type { Request } from 'express';
 import type { Stripe } from 'stripe/cjs/stripe.core.js';
 import { Prisma } from '@trainova/db';
 import { PrismaService } from '../prisma/prisma.service';
+import { AdsService } from '../ads/ads.service';
 import { PaymentsService } from './payments.service';
 import { StripeService } from './stripe.service';
 
@@ -32,7 +34,18 @@ export class StripeWebhookController {
     private readonly stripe: StripeService,
     private readonly payments: PaymentsService,
     private readonly prisma: PrismaService,
+    private readonly moduleRef: ModuleRef,
   ) {}
+
+  /**
+   * AdsService is resolved lazily to avoid a circular module graph:
+   * `AdsModule -> PaymentsModule -> AdsModule`. Webhook deliveries are
+   * the only place PaymentsModule needs to see ads, and by the time a
+   * request arrives the full container is wired.
+   */
+  private ads(): AdsService {
+    return this.moduleRef.get(AdsService, { strict: false });
+  }
 
   @Post()
   @HttpCode(200)
@@ -99,17 +112,26 @@ export class StripeWebhookController {
       case 'payment_intent.succeeded': {
         const pi = event.data.object as Stripe.PaymentIntent;
         const milestoneId = pi.metadata?.trainovaMilestoneId;
+        const adTopupId = pi.metadata?.trainovaAdTopupId;
         await this.payments.markPaymentIntentStatus(pi.id, 'SUCCEEDED');
         if (milestoneId) await this.payments.markMilestoneFunded(milestoneId, pi.id);
+        if (adTopupId) await this.ads().handleTopupSucceeded(pi.id);
         return;
       }
       case 'payment_intent.payment_failed': {
         const pi = event.data.object as Stripe.PaymentIntent;
+        const adTopupId = pi.metadata?.trainovaAdTopupId;
         await this.payments.markPaymentIntentStatus(
           pi.id,
           'FAILED',
           pi.last_payment_error?.message ?? 'payment_intent.payment_failed',
         );
+        if (adTopupId) {
+          await this.ads().handleTopupFailed(
+            pi.id,
+            pi.last_payment_error?.message ?? null,
+          );
+        }
         return;
       }
       case 'payment_intent.canceled': {
