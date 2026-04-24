@@ -95,16 +95,25 @@ export class PublicAdsController {
     @Res() res: Response,
     @CurrentUserOptional() userId: string | null,
     @Param('id') id: string,
+    @Query('p') placementQ: string | undefined,
   ): Promise<void> {
-    const { ctaUrl } = await this.ads.recordClickAndResolve(id, {
-      sessionHash: AdsService.hashSession(
-        extractClientIp(req),
-        String(req.headers['user-agent'] ?? ''),
-      ),
-      userId,
-      locale: String(req.query?.locale ?? '') || undefined,
-      country: String(req.query?.country ?? '') || undefined,
-    });
+    const placement =
+      placementQ && (AD_PLACEMENTS as readonly string[]).includes(placementQ)
+        ? (placementQ as AdPlacement)
+        : undefined;
+    const { ctaUrl } = await this.ads.recordClickAndResolve(
+      id,
+      {
+        sessionHash: AdsService.hashSession(
+          extractClientIp(req),
+          String(req.headers['user-agent'] ?? ''),
+        ),
+        userId,
+        locale: String(req.query?.locale ?? '') || undefined,
+        country: String(req.query?.country ?? '') || undefined,
+      },
+      placement,
+    );
     res.setHeader('X-Robots-Tag', 'noindex, nofollow');
     res.setHeader('Cache-Control', 'no-store');
     res.redirect(302, ctaUrl);

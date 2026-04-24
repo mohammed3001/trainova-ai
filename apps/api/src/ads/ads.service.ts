@@ -11,6 +11,7 @@ import {
 import {
   AD_PLACEMENTS,
   type AdCampaignStatus,
+  type AdPlacement,
   type AdPricingModel,
   type CreateCampaignInput,
   type CreateCreativeInput,
@@ -628,6 +629,7 @@ export class AdsService {
       locale?: string;
       country?: string;
     },
+    placement?: AdPlacement,
   ): Promise<{ ctaUrl: string }> {
     const creative = await this.prisma.adCreative.findUnique({
       where: { id: creativeId },
@@ -651,9 +653,10 @@ export class AdsService {
         data: {
           creativeId: creative.id,
           campaignId: creative.campaignId,
-          // We don't know placement server-side on a plain redirect —
-          // the click endpoint accepts `?p=` which gets validated here.
-          placement: 'NATIVE_LISTING',
+          // The click endpoint accepts `?p=` and forwards a validated
+          // AdPlacement; we fall back to NATIVE_LISTING only if the
+          // caller (or a very old client) omitted the hint.
+          placement: placement ?? 'NATIVE_LISTING',
           locale: session.locale ?? null,
           country: session.country ?? null,
           sessionHash: session.sessionHash ?? null,
@@ -688,10 +691,10 @@ export class AdsService {
     const company = await this.prisma.company.findUnique({
       where: { ownerId: userId },
     });
-    if (hint && company && company.id !== hint) {
+    if (hint && (!company || company.id !== hint)) {
       throw new ForbiddenException('That company does not belong to you');
     }
-    return company?.id ?? hint ?? null;
+    return company?.id ?? null;
   }
 
   private async loadOwned(userId: string, campaignId: string) {
