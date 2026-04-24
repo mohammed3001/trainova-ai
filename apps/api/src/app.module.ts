@@ -23,6 +23,8 @@ import { ModelsModule } from './models/models.module';
 import { WorkbenchModule } from './workbench/workbench.module';
 import { PaymentsModule } from './payments/payments.module';
 import { AdsModule } from './ads/ads.module';
+import { SettingsModule } from './settings/settings.module';
+import { FeatureFlagsModule } from './feature-flags/feature-flags.module';
 import { HealthController } from './health.controller';
 
 @Module({
@@ -52,6 +54,8 @@ import { HealthController } from './health.controller';
     WorkbenchModule,
     PaymentsModule,
     AdsModule,
+    SettingsModule,
+    FeatureFlagsModule,
   ],
   controllers: [HealthController],
   providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],

@@ -301,6 +301,7 @@ test.describe('Golden E2E flow — 11 steps', () => {
     const expected = [
       'admin',
       'admin-cms',
+      'admin-settings',
       'ads',
       'applications',
       'auth',
