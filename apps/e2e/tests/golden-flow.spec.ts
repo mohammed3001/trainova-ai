@@ -280,7 +280,7 @@ test.describe('Golden E2E flow — 11 steps', () => {
     }
   });
 
-  test('T11: Swagger /docs loads with the expected 12 tags', async ({ page }) => {
+  test('T11: Swagger /docs loads with the expected 14 tags', async ({ page }) => {
     const res = await page.request.get(`${API_BASE_URL}/docs-json`);
     expect(res.status()).toBe(200);
     const doc = (await res.json()) as {
@@ -306,6 +306,7 @@ test.describe('Golden E2E flow — 11 steps', () => {
       'companies',
       'health',
       'job-requests',
+      'models',
       'public',
       'skills',
       'tests',
