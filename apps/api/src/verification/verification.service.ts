@@ -57,36 +57,48 @@ export class VerificationService {
       targetId = trainer.id;
     }
 
-    // Block if there is already a pending request for the same target.
+    // Uniqueness of a single PENDING row per (submitter, targetType, targetId)
+    // is enforced by a partial unique index on VerificationRequest (see
+    // 20260425000000_t5a_verification migration). We do a cheap pre-check
+    // to return a friendly error on the common path, and still catch P2002
+    // on the race where two concurrent submits pass the pre-check.
     const pending = await this.prisma.verificationRequest.findFirst({
       where: { submitterId: ctx.userId, targetType: input.targetType, targetId, status: 'PENDING' },
       select: { id: true },
     });
     if (pending) throw new BadRequestException('A pending verification already exists');
 
-    const created = await this.prisma.$transaction(async (tx) => {
-      const v = await tx.verificationRequest.create({
-        data: {
-          submitterId: ctx.userId,
-          targetType: input.targetType,
-          targetId,
-          status: 'PENDING',
-          documents: input.documents as unknown as Prisma.JsonArray,
-          notes: input.notes ?? null,
-        },
+    let created;
+    try {
+      created = await this.prisma.$transaction(async (tx) => {
+        const v = await tx.verificationRequest.create({
+          data: {
+            submitterId: ctx.userId,
+            targetType: input.targetType,
+            targetId,
+            status: 'PENDING',
+            documents: input.documents as unknown as Prisma.JsonArray,
+            notes: input.notes ?? null,
+          },
+        });
+        await tx.auditLog.create({
+          data: {
+            actorId: ctx.userId,
+            action: AUDIT_ACTIONS.VERIFICATION_REQUESTED,
+            entityType: 'VerificationRequest',
+            entityId: v.id,
+            ip: ctx.ip ?? null,
+            diff: { targetType: input.targetType, targetId, documentCount: input.documents.length },
+          },
+        });
+        return v;
       });
-      await tx.auditLog.create({
-        data: {
-          actorId: ctx.userId,
-          action: AUDIT_ACTIONS.VERIFICATION_REQUESTED,
-          entityType: 'VerificationRequest',
-          entityId: v.id,
-          ip: ctx.ip ?? null,
-          diff: { targetType: input.targetType, targetId, documentCount: input.documents.length },
-        },
-      });
-      return v;
-    });
+    } catch (err) {
+      if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2002') {
+        throw new BadRequestException('A pending verification already exists');
+      }
+      throw err;
+    }
     return created;
   }
 
