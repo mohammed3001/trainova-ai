@@ -86,20 +86,31 @@ export function ApplicationAttachmentsPanel({ applicationId, canEdit }: Props) {
     [applicationId, canEdit, refresh, t],
   );
 
-  const handleDownload = useCallback(async (id: string) => {
-    setDownloadingId(id);
-    try {
-      const res = await fetch(
-        `/api/proxy/uploads/attachments/${encodeURIComponent(id)}/download`,
-      );
-      if (!res.ok) return;
-      const body = (await res.json()) as { url: string };
-      // Open in a new tab. Signed URL expires quickly so we don't persist it.
-      window.open(body.url, '_blank', 'noopener,noreferrer');
-    } finally {
-      setDownloadingId(null);
-    }
-  }, []);
+  const handleDownload = useCallback(
+    async (id: string) => {
+      setDownloadingId(id);
+      try {
+        const res = await fetch(
+          `/api/proxy/uploads/attachments/${encodeURIComponent(id)}/download`,
+        );
+        if (!res.ok) {
+          setError(t('errors.download'));
+          return;
+        }
+        const body = (await res.json()) as { url: string };
+        // Open in a new tab. Signed URL expires quickly so we don't persist it.
+        window.open(body.url, '_blank', 'noopener,noreferrer');
+      } catch {
+        // Network error (offline, CORS, etc.) — surface the same message
+        // path the other failures use so callers that `void handleDownload`
+        // don't leak an unhandled rejection to the console.
+        setError(t('errors.download'));
+      } finally {
+        setDownloadingId(null);
+      }
+    },
+    [t],
+  );
 
   const dir = locale === 'ar' ? 'rtl' : 'ltr';
 

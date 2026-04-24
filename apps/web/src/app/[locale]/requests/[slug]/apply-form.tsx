@@ -72,11 +72,13 @@ export function ApplyForm({ requestId, applicationSchema, locale }: ApplyFormPro
     }
   }
 
-  // Once the application exists, stop showing the form and surface the
-  // attachments panel — the trainer can attach CV / portfolio files against
-  // the freshly-created applicationId. This is the only spot where we hold
-  // that id on the client side (the RSC page does not know it yet).
-  if (state.ok && state.applicationId) {
+  // Once the application is successfully submitted, stop showing the form.
+  // If we captured the new applicationId we also surface the attachments
+  // panel (the trainer can attach CV / portfolio files against the
+  // freshly-created row). If we did not — e.g. the backend response body
+  // was unparseable — we still show the success banner so the user has
+  // clear feedback and does not resubmit into a ConflictException.
+  if (state.ok) {
     return (
       <div className="space-y-3">
         <div
@@ -86,10 +88,12 @@ export function ApplyForm({ requestId, applicationSchema, locale }: ApplyFormPro
         >
           {t('requests.applied')}
         </div>
-        <ApplicationAttachmentsPanel
-          applicationId={state.applicationId}
-          canEdit
-        />
+        {state.applicationId ? (
+          <ApplicationAttachmentsPanel
+            applicationId={state.applicationId}
+            canEdit
+          />
+        ) : null}
       </div>
     );
   }

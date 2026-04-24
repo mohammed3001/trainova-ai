@@ -234,7 +234,8 @@
       },
       "errors": {
         "list": "Couldn't load attachments.",
-        "delete": "Couldn't remove this attachment."
+        "delete": "Couldn't remove this attachment.",
+        "download": "Couldn't open this attachment."
       }
     }
   },
