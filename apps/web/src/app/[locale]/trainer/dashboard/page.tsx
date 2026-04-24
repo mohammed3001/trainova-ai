@@ -55,26 +55,71 @@ export default async function TrainerDashboard() {
           <div className="card text-sm text-slate-500">You haven&apos;t applied to any requests yet.</div>
         ) : (
           <ul className="space-y-3">
-            {apps.map((a) => (
-              <li key={a.id} className="card flex items-center justify-between">
-                <div>
-                  <Link
-                    href={`/${locale}/requests/${a.request.slug}`}
-                    className="font-semibold text-slate-900 hover:text-brand-700"
-                  >
-                    {a.request.title}
-                  </Link>
-                  <div className="text-xs text-slate-500">
-                    {a.request.company.name}
-                    {a.request.modelFamily ? ` · ${a.request.modelFamily}` : ''}
+            {apps.map((a) => {
+              const testCta = testCtaFor(a.status);
+              return (
+                <li
+                  key={a.id}
+                  className="card space-y-2"
+                  data-testid={`trainer-app-row-${a.id}`}
+                >
+                  <div className="flex items-center justify-between gap-3">
+                    <div>
+                      <Link
+                        href={`/${locale}/requests/${a.request.slug}`}
+                        className="font-semibold text-slate-900 hover:text-brand-700"
+                      >
+                        {a.request.title}
+                      </Link>
+                      <div className="text-xs text-slate-500">
+                        {a.request.company.name}
+                        {a.request.modelFamily ? ` · ${a.request.modelFamily}` : ''}
+                      </div>
+                    </div>
+                    <span className="badge">{a.status}</span>
                   </div>
-                </div>
-                <span className="badge">{a.status}</span>
-              </li>
-            ))}
+                  {testCta ? (
+                    <div className="flex items-center justify-between gap-3 border-t border-slate-100 pt-2">
+                      <div className="text-xs text-slate-600">
+                        {t(`trainer.tests.dashboardRow.${testCta.messageKey}`)}
+                      </div>
+                      <Link
+                        href={`/${locale}/trainer/applications/${a.id}/test`}
+                        className={
+                          testCta.variant === 'primary' ? 'btn-primary' : 'btn-secondary'
+                        }
+                        data-testid={`trainer-test-cta-${a.id}`}
+                      >
+                        {t(`trainer.tests.dashboardRow.${testCta.ctaKey}`)}
+                      </Link>
+                    </div>
+                  ) : null}
+                </li>
+              );
+            })}
           </ul>
         )}
       </section>
     </div>
   );
+}
+
+type TestCta = {
+  messageKey: 'testAssigned' | 'testSubmitted' | 'graded';
+  ctaKey: 'takeCta' | 'viewResultCta';
+  variant: 'primary' | 'secondary';
+};
+
+function testCtaFor(status: string): TestCta | null {
+  if (status === 'TEST_ASSIGNED') {
+    return { messageKey: 'testAssigned', ctaKey: 'takeCta', variant: 'primary' };
+  }
+  if (status === 'TEST_SUBMITTED') {
+    return { messageKey: 'testSubmitted', ctaKey: 'viewResultCta', variant: 'secondary' };
+  }
+  // Once the application moves to ACCEPTED/REJECTED we still surface the
+  // result link if the trainer had reached the testing stage. The API will
+  // return the same attempt + graded payload. Using a heuristic based on
+  // status only avoids an extra N+1 fetch per row.
+  return null;
 }

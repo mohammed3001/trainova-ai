@@ -568,6 +568,80 @@ export class TestsService {
     return updatedAttempt;
   }
 
+  // Returns the test assigned to an application, along with any existing
+  // attempt for this (application, trainer) tuple. The assigned testId is
+  // resolved from the latest assign-test audit entry so we don't need a
+  // dedicated column on Application. Trainer sees the public test shape
+  // (answerKey / rubric stripped, same as findOneForUser).
+  async getAssignedTestForApplication(
+    userId: string,
+    userRole: string,
+    applicationId: string,
+  ) {
+    const app = await this.prisma.application.findUnique({
+      where: { id: applicationId },
+      include: { request: { include: { company: { select: { ownerId: true } } } } },
+    });
+    if (!app) throw new NotFoundException('Application not found');
+    const isOwner = app.request.company.ownerId === userId;
+    const isTrainer = app.trainerId === userId;
+    const isAdmin = userRole === 'ADMIN' || userRole === 'SUPER_ADMIN';
+    if (!isOwner && !isTrainer && !isAdmin) {
+      throw new ForbiddenException('Not allowed to view this application');
+    }
+
+    // Prefer the most recent attempt's test (authoritative once the trainer
+    // has started). Fallback to the latest assign-test audit entry for the
+    // TEST_ASSIGNED → no-attempt-yet window.
+    const attempt = await this.prisma.testAttempt.findFirst({
+      where: { applicationId, trainerId: app.trainerId },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    let testId: string | null = attempt?.testId ?? null;
+    if (!testId) {
+      const auditRow = await this.prisma.auditLog.findFirst({
+        where: {
+          entityType: 'Application',
+          entityId: applicationId,
+          action: AUDIT_ACTIONS.APPLICATION_STATUS_CHANGED,
+        },
+        orderBy: { createdAt: 'desc' },
+      });
+      const diff = (auditRow?.diff ?? null) as { testId?: unknown } | null;
+      if (diff && typeof diff.testId === 'string') {
+        testId = diff.testId;
+      }
+    }
+    if (!testId) {
+      return { test: null, attempt: null };
+    }
+
+    const test = await this.prisma.test.findUnique({
+      where: { id: testId },
+      include: {
+        tasks: {
+          orderBy: { order: 'asc' },
+          select: {
+            id: true,
+            prompt: true,
+            type: true,
+            options: true,
+            maxScore: true,
+            order: true,
+            // answerKey + rubric intentionally excluded
+          },
+        },
+      },
+    });
+    if (!test) return { test: null, attempt };
+
+    // Strip reviewerNotes from the attempt for trainer callers.
+    const attemptPayload =
+      attempt && !isOwner && !isAdmin ? { ...attempt, reviewerNotes: null } : attempt;
+    return { test, attempt: attemptPayload };
+  }
+
   async listAttemptsForApplication(userId: string, userRole: string, applicationId: string) {
     const app = await this.prisma.application.findUnique({
       where: { id: applicationId },
