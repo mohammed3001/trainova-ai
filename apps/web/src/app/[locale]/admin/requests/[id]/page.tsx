@@ -88,9 +88,16 @@ export default async function AdminRequestDetailPage({
 
   return (
     <div className="space-y-6">
-      <nav className="text-sm text-slate-500">
+      <nav className="flex items-center justify-between gap-3 text-sm text-slate-500">
         <Link href={`/${locale}/admin/requests`} className="hover:text-brand-700">
           ← {t('admin.requests.title')}
+        </Link>
+        <Link
+          href={`/${locale}/admin/matching/requests/${row.id}`}
+          className="rounded-md border border-brand-200 bg-brand-50 px-3 py-1.5 text-xs font-semibold text-brand-700 hover:bg-brand-100"
+          data-testid="admin-request-matches-link"
+        >
+          {t('matching.admin.title')}
         </Link>
       </nav>
 
