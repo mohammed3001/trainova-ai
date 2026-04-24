@@ -488,6 +488,15 @@ export class AdsService {
     if (campaign.status !== 'PAUSED') {
       throw new ConflictException('Only paused campaigns can be resumed');
     }
+    // Only admins can resume a campaign an admin paused for a policy
+    // violation — otherwise the owner would trivially override policy
+    // moderation. This mirrors the invariant `creditBudget` protects
+    // against when auto-resuming after a top-up.
+    if (!isAdmin && campaign.pausedReason === 'ADMIN') {
+      throw new ForbiddenException(
+        'This campaign was paused by an admin and can only be resumed by an admin',
+      );
+    }
     if (campaign.spentCents >= campaign.budgetCents) {
       throw new ConflictException('Top up the budget before resuming');
     }
