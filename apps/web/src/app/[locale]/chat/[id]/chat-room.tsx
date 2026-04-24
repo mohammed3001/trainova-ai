@@ -61,9 +61,18 @@ export function ChatRoom({
         if (cancelled) return;
         socketRef.current = socket;
         setConnected(socket.connected);
-        socket.on('connect', () => setConnected(true));
+        // Server-side Socket.IO room memberships are dropped on disconnect,
+        // so we must rejoin `conv:${conversationId}` every time the socket
+        // comes back — otherwise message:new/typing/presence silently stop
+        // arriving after a network blip even though the green "Live" dot
+        // lights back up.
+        const joinRoom = () => socket?.emit('conversation:join', { conversationId });
+        socket.on('connect', () => {
+          setConnected(true);
+          joinRoom();
+        });
         socket.on('disconnect', () => setConnected(false));
-        socket.emit('conversation:join', { conversationId });
+        joinRoom();
 
         socket.on('message:new', (m: ChatMessage) => {
           if (m.conversationId !== conversationId) return;
