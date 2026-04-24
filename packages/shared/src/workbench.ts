@@ -39,7 +39,11 @@ export const workbenchCallInputSchema = z
     // embeddings require `input`. Keeping this validation in the shared
     // schema so the trainer form surfaces the error locally before we
     // even make a round-trip.
-    if (value.operation === 'CHAT') {
+    // CUSTOM routes to the chat/completions endpoint server-side (it
+    // only exists so trainers can attach vendor-specific `extra` without
+    // being locked to the CHAT name), so it has the same messages
+    // requirement as CHAT.
+    if (value.operation === 'CHAT' || value.operation === 'CUSTOM') {
       if (!value.messages || value.messages.length === 0) {
         ctx.addIssue({
           code: 'custom',

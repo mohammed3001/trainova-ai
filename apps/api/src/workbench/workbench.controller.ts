@@ -20,6 +20,18 @@ import { RolesGuard } from '../auth/roles.guard';
 import { ZodValidationPipe } from '../common/zod-validation.pipe';
 import { WorkbenchService } from './workbench.service';
 
+/**
+ * Parse a query-string `limit` into a positive integer, or `undefined`
+ * for any non-finite / non-positive value. Defensive: passing a raw
+ * `NaN` (from `parseInt('abc')`) into Prisma's `take` surfaces as a 500
+ * `PrismaClientValidationError` instead of the expected 400.
+ */
+function parseLimitQuery(raw: string | undefined): number | undefined {
+  if (!raw) return undefined;
+  const n = Number.parseInt(raw, 10);
+  return Number.isFinite(n) && n > 0 ? n : undefined;
+}
+
 @ApiTags('workbench')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -57,7 +69,7 @@ export class WorkbenchController {
     return this.workbench.listCallsForTrainer(
       user.id,
       applicationId,
-      limit ? Number.parseInt(limit, 10) : undefined,
+      parseLimitQuery(limit),
     );
   }
 
@@ -71,7 +83,7 @@ export class WorkbenchController {
     return this.workbench.listCallsForCompany(
       user.id,
       id,
-      limit ? Number.parseInt(limit, 10) : undefined,
+      parseLimitQuery(limit),
     );
   }
 }
