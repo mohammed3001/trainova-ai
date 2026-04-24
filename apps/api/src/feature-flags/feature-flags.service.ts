@@ -194,7 +194,7 @@ export class FeatureFlagsService {
 
     if (typeof payload.rolloutPercent === 'number' && payload.rolloutPercent < 100) {
       const bucket = hashBucket(key, subject) / BUCKET_MAX;
-      if (bucket > payload.rolloutPercent / 100) {
+      if (bucket >= payload.rolloutPercent / 100) {
         return { key, enabled: false, variant: null, reason: 'rollout-excluded', payload: null };
       }
       const variant = payload.variants ? pickVariant(key, subject, payload.variants) : null;
@@ -241,7 +241,7 @@ export class FeatureFlagsService {
       }
       if (typeof payload.rolloutPercent === 'number' && payload.rolloutPercent < 100) {
         const bucket = hashBucket(key, subject) / BUCKET_MAX;
-        if (bucket > payload.rolloutPercent / 100) {
+        if (bucket >= payload.rolloutPercent / 100) {
           results[key] = { key, enabled: false, variant: null, reason: 'rollout-excluded', payload: null };
           continue;
         }
