@@ -44,6 +44,7 @@ export class ApplicationsService {
             modelFamily: true,
             industry: true,
             status: true,
+            modelConnectionId: true,
             company: {
               select: {
                 name: true,

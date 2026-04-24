@@ -15,7 +15,22 @@ interface Skill {
   nameAr: string;
 }
 
-export function NewRequestForm({ locale, skills }: { locale: string; skills: Skill[] }) {
+export interface ModelOption {
+  id: string;
+  name: string;
+  provider: string;
+  modelId: string | null;
+}
+
+export function NewRequestForm({
+  locale,
+  skills,
+  modelOptions,
+}: {
+  locale: string;
+  skills: Skill[];
+  modelOptions: ModelOption[];
+}) {
   const t = useTranslations();
   const router = useRouter();
   const [pending, setPending] = useState(false);
@@ -25,6 +40,7 @@ export function NewRequestForm({ locale, skills }: { locale: string; skills: Ski
     version: APPLICATION_FORM_SCHEMA_VERSION,
     fields: [],
   });
+  const [modelConnectionId, setModelConnectionId] = useState<string>('');
 
   function toggleSkill(slug: string) {
     setSelected((prev) => (prev.includes(slug) ? prev.filter((s) => s !== slug) : [...prev, slug]));
@@ -58,6 +74,7 @@ export function NewRequestForm({ locale, skills }: { locale: string; skills: Ski
       workType: String(fd.get('workType') ?? 'REMOTE'),
       skills: selected,
       applicationSchema: applicationSchema.fields.length > 0 ? applicationSchema : null,
+      ...(modelConnectionId ? { modelConnectionId } : {}),
     };
     const res = await fetch('/api/proxy/job-requests', {
       method: 'POST',
@@ -96,6 +113,31 @@ export function NewRequestForm({ locale, skills }: { locale: string; skills: Ski
           <option value="HYBRID">Hybrid</option>
         </select>
       </div>
+      {modelOptions.length > 0 ? (
+        <div>
+          <label className="label" htmlFor="modelConnectionId">
+            {t('requests.fields.modelConnection')}
+          </label>
+          <select
+            id="modelConnectionId"
+            name="modelConnectionId"
+            className="input"
+            value={modelConnectionId}
+            onChange={(e) => setModelConnectionId(e.target.value)}
+          >
+            <option value="">{t('requests.fields.modelConnectionNone')}</option>
+            {modelOptions.map((m) => (
+              <option key={m.id} value={m.id}>
+                {m.name} · {m.provider}
+                {m.modelId ? ` · ${m.modelId}` : ''}
+              </option>
+            ))}
+          </select>
+          <p className="mt-1 text-[11px] text-slate-500">
+            {t('requests.fields.modelConnectionHint')}
+          </p>
+        </div>
+      ) : null}
       <div>
         <span className="label">{t('requests.fields.skills')}</span>
         <div className="flex flex-wrap gap-2">

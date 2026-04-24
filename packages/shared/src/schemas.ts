@@ -54,8 +54,20 @@ export const createJobRequestSchema = z.object({
   workType: z.enum(['REMOTE', 'ONSITE', 'HYBRID']).default('REMOTE'),
   confidentialityLevel: z.enum(['LOW', 'MEDIUM', 'HIGH']).default('LOW'),
   applicationSchema: applicationFormSchema.nullable().optional(),
+  /** Optional: attach an existing model connection so trainers get proxied workbench access. */
+  modelConnectionId: z.string().cuid().optional(),
 });
 export type CreateJobRequestInput = z.infer<typeof createJobRequestSchema>;
+
+/**
+ * Partial update for a company's own request. We accept `null` for
+ * `modelConnectionId` so the company can explicitly detach a model
+ * without deleting the request.
+ */
+export const updateJobRequestSchema = z.object({
+  modelConnectionId: z.union([z.string().cuid(), z.null()]).optional(),
+});
+export type UpdateJobRequestInput = z.infer<typeof updateJobRequestSchema>;
 
 export const applyToRequestSchema = z.object({
   requestId: z.string().cuid(),

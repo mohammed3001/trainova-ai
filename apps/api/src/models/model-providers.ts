@@ -176,20 +176,86 @@ async function probeRawHttps(input: ProbeInput): Promise<ProbeResult> {
   }
 }
 
-function probeBedrock(input: ProbeInput): ProbeResult {
+async function probeBedrock(input: ProbeInput): Promise<ProbeResult> {
   if (!input.region) {
     return { ok: false, status: null, error: 'region is required for Bedrock' };
   }
-  // We don't ship the AWS SigV4 signer in T4.A — connections can be saved
-  // (DRAFT) but the live probe is deferred until T4.B plugs in the AWS
-  // SDK. Return a deterministic message so the UI shows a clear hint.
-  return {
-    ok: false,
-    status: null,
-    error:
-      'Bedrock live probe is not enabled yet. The connection will activate ' +
-      'once the SigV4 proxy ships in T4.B.',
-  };
+  if (!input.credentials) {
+    return { ok: false, status: null, error: 'AWS credentials are required for Bedrock' };
+  }
+  const parts = input.credentials.split(':');
+  if (parts.length < 2) {
+    return {
+      ok: false,
+      status: null,
+      error:
+        'Bedrock credentials must be in the form "accessKeyId:secretAccessKey[:sessionToken]"',
+    };
+  }
+  const [accessKeyId, secretAccessKey, sessionToken] = parts;
+  if (!accessKeyId || !secretAccessKey) {
+    return {
+      ok: false,
+      status: null,
+      error: 'Bedrock credentials must contain both accessKeyId and secretAccessKey',
+    };
+  }
+
+  // `/foundation-models` is an IAM-authorised listing endpoint on the
+  // control plane; responding 200 proves the key can sign a SigV4
+  // request against Bedrock in the given region. We avoid
+  // `bedrock-runtime` for the probe since that requires a modelId.
+  const host = `bedrock.${input.region}.amazonaws.com`;
+  const path = '/foundation-models';
+
+  try {
+    // Lazy-import keeps the crypto deps out of the probe hot-path when
+    // no Bedrock connection exists in the tenant.
+    const { SignatureV4 } = await import('@smithy/signature-v4');
+    const { HttpRequest } = await import('@smithy/protocol-http');
+    const { Sha256 } = await import('@aws-crypto/sha256-js');
+
+    const signer = new SignatureV4({
+      service: 'bedrock',
+      region: input.region,
+      credentials: {
+        accessKeyId,
+        secretAccessKey,
+        ...(sessionToken ? { sessionToken } : {}),
+      },
+      sha256: Sha256,
+    });
+    const signed = await signer.sign(
+      new HttpRequest({
+        method: 'GET',
+        hostname: host,
+        path,
+        headers: { host, accept: 'application/json' },
+      }),
+    );
+    const res = await fetchWithTimeout(`https://${host}${path}`, {
+      method: 'GET',
+      headers: signed.headers as Record<string, string>,
+    });
+    if (res.ok) {
+      return { ok: true, status: res.status, detail: `GET ${path} 2xx` };
+    }
+    if (res.status === 403 || res.status === 401) {
+      return {
+        ok: false,
+        status: res.status,
+        error: `Bedrock rejected SigV4 (${res.status}) — credentials or region mismatch`,
+      };
+    }
+    const body = await res.text().catch(() => '');
+    return {
+      ok: false,
+      status: res.status,
+      error: `GET ${path} ${res.status}${body ? `: ${truncate(body, 200)}` : ''}`,
+    };
+  } catch (e) {
+    return { ok: false, status: null, error: errorMessage(e) };
+  }
 }
 
 export async function probeModelConnection(

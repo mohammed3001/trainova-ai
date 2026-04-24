@@ -26,33 +26,34 @@ enum UserStatus {
 }
 
 model User {
-  id               String      @id @default(cuid())
-  email            String      @unique
-  passwordHash     String
-  name             String
-  role             UserRole
-  status           UserStatus  @default(ACTIVE)
-  locale           String      @default("en")
-  avatarUrl        String?
-  emailVerifiedAt  DateTime?
-  twoFactorSecret  String?
-  lastLoginAt      DateTime?
-  createdAt        DateTime    @default(now())
-  updatedAt        DateTime    @updatedAt
+  id              String     @id @default(cuid())
+  email           String     @unique
+  passwordHash    String
+  name            String
+  role            UserRole
+  status          UserStatus @default(ACTIVE)
+  locale          String     @default("en")
+  avatarUrl       String?
+  emailVerifiedAt DateTime?
+  twoFactorSecret String?
+  lastLoginAt     DateTime?
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
 
-  company          Company?           @relation("CompanyOwner")
-  companyMembers   CompanyMember[]
-  trainerProfile   TrainerProfile?
-  sessions         RefreshToken[]
-  applications     Application[]
-  sentMessages     Message[]          @relation("MessageSender")
-  conversationsIn  ConversationParticipant[]
-  authoredReviews  Review[]           @relation("ReviewAuthor")
-  targetReviews    Review[]           @relation("ReviewTarget")
-  notifications    Notification[]
-  auditLogs        AuditLog[]
+  company                 Company?                  @relation("CompanyOwner")
+  companyMembers          CompanyMember[]
+  trainerProfile          TrainerProfile?
+  sessions                RefreshToken[]
+  applications            Application[]
+  sentMessages            Message[]                 @relation("MessageSender")
+  conversationsIn         ConversationParticipant[]
+  authoredReviews         Review[]                  @relation("ReviewAuthor")
+  targetReviews           Review[]                  @relation("ReviewTarget")
+  notifications           Notification[]
+  auditLogs               AuditLog[]
   emailVerificationTokens EmailVerificationToken[]
   passwordResetTokens     PasswordResetToken[]
+  modelCalls              ModelCall[]
 
   @@index([role, status])
 }
@@ -82,15 +83,15 @@ model PasswordResetToken {
 }
 
 model RefreshToken {
-  id         String   @id @default(cuid())
-  userId     String
-  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  hash       String
-  userAgent  String?
-  ip         String?
-  expiresAt  DateTime
-  revokedAt  DateTime?
-  createdAt  DateTime @default(now())
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  hash      String
+  userAgent String?
+  ip        String?
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime  @default(now())
 
   @@index([userId])
 }
@@ -131,9 +132,9 @@ model Company {
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 
-  members    CompanyMember[]
-  requests   JobRequest[]
-  adCampaigns AdCampaign[]
+  members          CompanyMember[]
+  requests         JobRequest[]
+  adCampaigns      AdCampaign[]
   modelConnections ModelConnection[]
 
   @@index([slug])
@@ -199,9 +200,49 @@ model ModelConnection {
   updatedAt            DateTime              @updatedAt
   deletedAt            DateTime?
 
-  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  company    Company      @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  requests   JobRequest[]
+  modelCalls ModelCall[]
 
   @@index([companyId, deletedAt])
+}
+
+enum ModelCallOperation {
+  CHAT
+  COMPLETE
+  EMBED
+  CUSTOM
+}
+
+/// A single proxied call from a trainer against a company-owned model
+/// connection. Persisted for RLHF / auditing / billing purposes. The
+/// request/response bodies are stored *sanitised* — auth headers are
+/// stripped before persistence in the service layer.
+model ModelCall {
+  id             String             @id @default(cuid())
+  connectionId   String
+  applicationId  String?
+  jobRequestId   String?
+  trainerId      String
+  operation      ModelCallOperation @default(CHAT)
+  requestBody    Json
+  responseBody   Json?
+  responseStatus Int?
+  latencyMs      Int?
+  tokensIn       Int?
+  tokensOut      Int?
+  costCents      Int?
+  errorMessage   String?
+  createdAt      DateTime           @default(now())
+
+  connection  ModelConnection @relation(fields: [connectionId], references: [id], onDelete: Cascade)
+  application Application?    @relation(fields: [applicationId], references: [id], onDelete: SetNull)
+  jobRequest  JobRequest?     @relation(fields: [jobRequestId], references: [id], onDelete: SetNull)
+  trainer     User            @relation(fields: [trainerId], references: [id], onDelete: Cascade)
+
+  @@index([connectionId, createdAt])
+  @@index([applicationId, createdAt])
+  @@index([trainerId, createdAt])
 }
 
 // =========================
@@ -209,25 +250,25 @@ model ModelConnection {
 // =========================
 
 model TrainerProfile {
-  id               String   @id @default(cuid())
-  userId           String   @unique
-  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  slug             String   @unique
-  headline         String?
-  bio              String?
-  country          String?
-  languages        String[] @default([])
-  timezone         String?
-  hourlyRateMin    Int?
-  hourlyRateMax    Int?
-  availability     String?
+  id                String   @id @default(cuid())
+  userId            String   @unique
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  slug              String   @unique
+  headline          String?
+  bio               String?
+  country           String?
+  languages         String[] @default([])
+  timezone          String?
+  hourlyRateMin     Int?
+  hourlyRateMax     Int?
+  availability      String?
   responseTimeHours Int?
-  verified         Boolean  @default(false)
-  linkedinUrl      String?
-  githubUrl        String?
-  websiteUrl       String?
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
+  verified          Boolean  @default(false)
+  linkedinUrl       String?
+  githubUrl         String?
+  websiteUrl        String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
 
   skills TrainerSkill[]
   assets TrainerAsset[]
@@ -238,7 +279,7 @@ model TrainerProfile {
 model TrainerAsset {
   id         String    @id @default(cuid())
   profileId  String
-  kind       String    // 'portfolio' | 'certificate'
+  kind       String // 'portfolio' | 'certificate'
   objectKey  String    @unique
   url        String
   title      String?
@@ -248,7 +289,7 @@ model TrainerAsset {
   deletedAt  DateTime?
   createdAt  DateTime  @default(now())
 
-  profile    TrainerProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  profile TrainerProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
 
   @@index([profileId, deletedAt, order])
 }
@@ -308,6 +349,7 @@ enum ConfidentialityLevel {
 model JobRequest {
   id                   String               @id @default(cuid())
   companyId            String
+  modelConnectionId    String?
   slug                 String               @unique
   title                String
   description          String
@@ -329,23 +371,26 @@ model JobRequest {
   createdAt            DateTime             @default(now())
   updatedAt            DateTime             @updatedAt
 
-  company       Company            @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  skills        JobRequestSkill[]
-  questions     JobRequestQuestion[]
-  applications  Application[]
-  tests         Test[]
-  conversations Conversation[]
+  company         Company              @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  modelConnection ModelConnection?     @relation(fields: [modelConnectionId], references: [id], onDelete: SetNull)
+  skills          JobRequestSkill[]
+  questions       JobRequestQuestion[]
+  applications    Application[]
+  tests           Test[]
+  conversations   Conversation[]
+  modelCalls      ModelCall[]
 
   @@index([status, publishedAt])
   @@index([companyId])
+  @@index([modelConnectionId])
 }
 
 model JobRequestSkill {
-  id         String  @id @default(cuid())
-  requestId  String
-  skillId    String
-  required   Boolean @default(true)
-  minYears   Int?
+  id        String  @id @default(cuid())
+  requestId String
+  skillId   String
+  required  Boolean @default(true)
+  minYears  Int?
 
   request JobRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
   skill   Skill      @relation(fields: [skillId], references: [id], onDelete: Cascade)
@@ -354,13 +399,13 @@ model JobRequestSkill {
 }
 
 model JobRequestQuestion {
-  id        String  @id @default(cuid())
+  id        String   @id @default(cuid())
   requestId String
   prompt    String
-  type      String  @default("TEXT") // TEXT | MCQ | MULTI | SCALE
+  type      String   @default("TEXT") // TEXT | MCQ | MULTI | SCALE
   options   String[] @default([])
-  required  Boolean @default(false)
-  order     Int     @default(0)
+  required  Boolean  @default(false)
+  order     Int      @default(0)
 
   request JobRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
 }
@@ -394,6 +439,7 @@ model Application {
   trainer     User                    @relation(fields: [trainerId], references: [id], onDelete: Cascade)
   attempts    TestAttempt[]
   attachments ApplicationAttachment[]
+  modelCalls  ModelCall[]
 
   @@unique([requestId, trainerId])
   @@index([trainerId])
@@ -410,7 +456,7 @@ model ApplicationAttachment {
   deletedAt     DateTime?
   createdAt     DateTime  @default(now())
 
-  application   Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  application Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
 
   @@index([applicationId, deletedAt])
 }
@@ -426,15 +472,15 @@ enum TestScoringMode {
 }
 
 model Test {
-  id            String          @id @default(cuid())
-  requestId     String?
-  title         String
-  description   String?
-  timeLimitMin  Int?
-  passingScore  Int             @default(60)
-  scoringMode   TestScoringMode @default(AUTO)
-  createdAt     DateTime        @default(now())
-  updatedAt     DateTime        @updatedAt
+  id           String          @id @default(cuid())
+  requestId    String?
+  title        String
+  description  String?
+  timeLimitMin Int?
+  passingScore Int             @default(60)
+  scoringMode  TestScoringMode @default(AUTO)
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
 
   request  JobRequest?   @relation(fields: [requestId], references: [id], onDelete: SetNull)
   tasks    TestTask[]
@@ -442,12 +488,12 @@ model Test {
 }
 
 model TestTask {
-  id        String  @id @default(cuid())
+  id        String   @id @default(cuid())
   testId    String
   prompt    String
-  type      String  @default("MCQ") // MCQ | TEXT | CODE | PROMPT_TUNE | LABEL | LIVE_PROMPT | WORKFLOW
+  type      String   @default("MCQ") // MCQ | TEXT | CODE | PROMPT_TUNE | LABEL | LIVE_PROMPT | WORKFLOW
   options   String[] @default([])
-  answerKey String?   // For MCQ / LABEL
+  answerKey String? // For MCQ / LABEL
   maxScore  Int      @default(10)
   rubric    Json?
   order     Int      @default(0)
@@ -464,22 +510,22 @@ enum TestAttemptStatus {
 }
 
 model TestAttempt {
-  id              String            @id @default(cuid())
-  testId          String
-  applicationId   String?
-  trainerId       String
-  startedAt       DateTime          @default(now())
-  submittedAt     DateTime?
-  status          TestAttemptStatus @default(IN_PROGRESS)
-  totalScore      Int?
-  scoreBreakdown  Json?
-  durationSec     Int?
-  reviewerNotes   String?
-  createdAt       DateTime          @default(now())
-  updatedAt       DateTime          @updatedAt
+  id             String            @id @default(cuid())
+  testId         String
+  applicationId  String?
+  trainerId      String
+  startedAt      DateTime          @default(now())
+  submittedAt    DateTime?
+  status         TestAttemptStatus @default(IN_PROGRESS)
+  totalScore     Int?
+  scoreBreakdown Json?
+  durationSec    Int?
+  reviewerNotes  String?
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
 
-  test        Test              @relation(fields: [testId], references: [id], onDelete: Cascade)
-  application Application?      @relation(fields: [applicationId], references: [id], onDelete: SetNull)
+  test        Test               @relation(fields: [testId], references: [id], onDelete: Cascade)
+  application Application?       @relation(fields: [applicationId], references: [id], onDelete: SetNull)
   responses   TestTaskResponse[]
 
   @@unique([testId, trainerId, applicationId])
@@ -487,13 +533,13 @@ model TestAttempt {
 }
 
 model TestTaskResponse {
-  id           String  @id @default(cuid())
-  attemptId    String
-  taskId       String
-  response     Json
-  autoScore    Int?
-  manualScore  Int?
-  comments     String?
+  id          String  @id @default(cuid())
+  attemptId   String
+  taskId      String
+  response    Json
+  autoScore   Int?
+  manualScore Int?
+  comments    String?
 
   attempt TestAttempt @relation(fields: [attemptId], references: [id], onDelete: Cascade)
   task    TestTask    @relation(fields: [taskId], references: [id], onDelete: Cascade)
@@ -506,10 +552,10 @@ model TestTaskResponse {
 // =========================
 
 model Conversation {
-  id         String   @id @default(cuid())
-  requestId  String?
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  id        String   @id @default(cuid())
+  requestId String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   request      JobRequest?               @relation(fields: [requestId], references: [id], onDelete: SetNull)
   participants ConversationParticipant[]
@@ -517,12 +563,12 @@ model Conversation {
 }
 
 model ConversationParticipant {
-  id              String   @id @default(cuid())
-  conversationId  String
-  userId          String
-  archivedAt      DateTime?
-  lastReadAt      DateTime?
-  createdAt       DateTime @default(now())
+  id             String    @id @default(cuid())
+  conversationId String
+  userId         String
+  archivedAt     DateTime?
+  lastReadAt     DateTime?
+  createdAt      DateTime  @default(now())
 
   conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
   user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -549,13 +595,13 @@ model Message {
 // =========================
 
 model Review {
-  id          String   @id @default(cuid())
-  authorId    String
-  targetId    String
-  projectRef  String?
-  rating      Int
-  comment     String?
-  createdAt   DateTime @default(now())
+  id         String   @id @default(cuid())
+  authorId   String
+  targetId   String
+  projectRef String?
+  rating     Int
+  comment    String?
+  createdAt  DateTime @default(now())
 
   author User @relation("ReviewAuthor", fields: [authorId], references: [id], onDelete: Cascade)
   target User @relation("ReviewTarget", fields: [targetId], references: [id], onDelete: Cascade)
@@ -564,12 +610,12 @@ model Review {
 }
 
 model Notification {
-  id        String   @id @default(cuid())
+  id        String    @id @default(cuid())
   userId    String
   type      String
   payload   Json
   readAt    DateTime?
-  createdAt DateTime @default(now())
+  createdAt DateTime  @default(now())
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -586,14 +632,14 @@ enum PlanAudience {
 }
 
 model Plan {
-  id             String       @id @default(cuid())
-  audience       PlanAudience
-  tier           String
-  priceMonthly   Int
-  priceYearly    Int
-  featuresJson   Json
-  stripePriceId  String?
-  createdAt      DateTime     @default(now())
+  id            String       @id @default(cuid())
+  audience      PlanAudience
+  tier          String
+  priceMonthly  Int
+  priceYearly   Int
+  featuresJson  Json
+  stripePriceId String?
+  createdAt     DateTime     @default(now())
 }
 
 model Subscription {
@@ -612,32 +658,32 @@ model Subscription {
 }
 
 model AdCampaign {
-  id           String    @id @default(cuid())
-  companyId    String?
-  name         String
-  budget       Int
-  startDate    DateTime?
-  endDate      DateTime?
-  status       String    @default("ACTIVE")
-  targeting    Json?
-  createdAt    DateTime  @default(now())
+  id        String    @id @default(cuid())
+  companyId String?
+  name      String
+  budget    Int
+  startDate DateTime?
+  endDate   DateTime?
+  status    String    @default("ACTIVE")
+  targeting Json?
+  createdAt DateTime  @default(now())
 
-  company    Company?     @relation(fields: [companyId], references: [id], onDelete: SetNull)
-  creatives  AdCreative[]
+  company   Company?     @relation(fields: [companyId], references: [id], onDelete: SetNull)
+  creatives AdCreative[]
 }
 
 model AdCreative {
-  id          String   @id @default(cuid())
-  campaignId  String
-  type        String   // BANNER | SPONSORED_LISTING | FEATURED_TRAINER | CATEGORY_SPONSOR
-  assetUrl    String?
-  headline    String
-  body        String?
-  ctaUrl      String?
-  placements  String[] @default([])
-  createdAt   DateTime @default(now())
+  id         String   @id @default(cuid())
+  campaignId String
+  type       String // BANNER | SPONSORED_LISTING | FEATURED_TRAINER | CATEGORY_SPONSOR
+  assetUrl   String?
+  headline   String
+  body       String?
+  ctaUrl     String?
+  placements String[] @default([])
+  createdAt  DateTime @default(now())
 
-  campaign    AdCampaign    @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  campaign    AdCampaign     @relation(fields: [campaignId], references: [id], onDelete: Cascade)
   impressions AdImpression[]
   clicks      AdClick[]
 }
@@ -686,8 +732,8 @@ model Page {
 }
 
 model Setting {
-  key       String @id
+  key       String   @id
   value     Json
-  group     String @default("general")
+  group     String   @default("general")
   updatedAt DateTime @updatedAt
 }
