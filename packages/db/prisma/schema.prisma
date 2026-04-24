@@ -279,6 +279,7 @@ model JobRequest {
   featured             Boolean              @default(false)
   publishedAt          DateTime?
   closedAt             DateTime?
+  applicationSchema    Json?
   createdAt            DateTime             @default(now())
   updatedAt            DateTime             @updatedAt
 
@@ -339,6 +340,7 @@ model Application {
   proposedRate         Int?
   proposedTimelineDays Int?
   matchScore           Float?
+  answers              Json              @default("{}")
   createdAt            DateTime          @default(now())
   updatedAt            DateTime          @updatedAt
 

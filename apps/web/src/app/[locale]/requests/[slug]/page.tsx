@@ -3,6 +3,7 @@ import { getTranslations, getLocale } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 import { apiFetch } from '@/lib/api';
 import { getRole, getToken } from '@/lib/session';
+import { applicationFormSchema, type ApplicationForm } from '@trainova/shared';
 import { ApplyForm } from './apply-form';
 
 interface RequestDetail {
@@ -19,6 +20,7 @@ interface RequestDetail {
   budgetMax: number | null;
   currency: string;
   workType: string;
+  applicationSchema: unknown;
   company: { name: string; slug: string; country: string | null; industry: string | null; verified: boolean; description: string | null };
   skills: { skill: { id: string; slug: string; nameEn: string; nameAr: string } }[];
   questions: { id: string; prompt: string; type: string; options: string[] }[];
@@ -39,6 +41,12 @@ export default async function RequestDetailPage({
     req = await apiFetch<RequestDetail>(`/job-requests/${slug}`);
   } catch {
     notFound();
+  }
+
+  let applicationSchema: ApplicationForm | null = null;
+  if (req.applicationSchema) {
+    const parsed = applicationFormSchema.safeParse(req.applicationSchema);
+    if (parsed.success) applicationSchema = parsed.data;
   }
 
   return (
@@ -107,7 +115,7 @@ export default async function RequestDetailPage({
         </div>
 
         {token && role === 'TRAINER' ? (
-          <ApplyForm requestId={req.id} />
+          <ApplyForm requestId={req.id} applicationSchema={applicationSchema} locale={locale} />
         ) : (
           <div className="card text-sm text-slate-600">
             <Link href={`/${locale}/login`} className="font-semibold text-brand-700 hover:underline">

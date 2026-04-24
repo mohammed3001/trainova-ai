@@ -103,6 +103,39 @@
     "proposedRate": "Your proposed rate (USD)",
     "proposedTimeline": "Proposed timeline (days)",
     "applied": "Application submitted",
+    "customFields": "Additional questions from the company",
+    "answerErrors": "Please fix the highlighted answers.",
+    "formBuilder": {
+      "title": "Application form",
+      "description": "Add custom questions trainers must answer when applying. Optional.",
+      "empty": "No custom questions yet. Use the buttons below to add fields.",
+      "remove": "Remove",
+      "dragHandle": "Drag to reorder",
+      "labelEn": "Label (English)",
+      "labelAr": "Label (Arabic)",
+      "helpEn": "Help text (English)",
+      "helpAr": "Help text (Arabic)",
+      "required": "Required",
+      "options": "Options",
+      "optionValue": "Value",
+      "addOption": "Add option",
+      "removeOption": "Remove option",
+      "kinds": {
+        "short_text": "Short text",
+        "long_text": "Long text",
+        "single_select": "Single choice",
+        "multi_select": "Multiple choice",
+        "number": "Number",
+        "date": "Date",
+        "url": "URL",
+        "email": "Email",
+        "boolean": "Yes / No"
+      },
+      "errors": {
+        "missingLabels": "Every custom field needs both English and Arabic labels.",
+        "missingOptions": "Choice fields need at least two options."
+      }
+    },
     "fields": {
       "title": "Title",
       "description": "Description",
@@ -282,7 +315,11 @@
         "changedStatus": "changed status from {from} to {to}",
         "unknownActor": "Unknown user"
       },
-      "manageTests": "Manage tests"
+      "manageTests": "Manage tests",
+      "answers": {
+        "title": "Application answers",
+        "empty": "—"
+      }
     },
     "tests": {
       "title": "Tests",

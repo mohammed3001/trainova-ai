@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { applicationFormSchema } from './application-form';
 
 export const registerSchema = z.object({
   email: z.string().email(),
@@ -52,6 +53,7 @@ export const createJobRequestSchema = z.object({
   currency: z.string().length(3).default('USD'),
   workType: z.enum(['REMOTE', 'ONSITE', 'HYBRID']).default('REMOTE'),
   confidentialityLevel: z.enum(['LOW', 'MEDIUM', 'HIGH']).default('LOW'),
+  applicationSchema: applicationFormSchema.nullable().optional(),
 });
 export type CreateJobRequestInput = z.infer<typeof createJobRequestSchema>;
 
@@ -60,6 +62,7 @@ export const applyToRequestSchema = z.object({
   coverLetter: z.string().max(5000).optional(),
   proposedRate: z.number().int().nonnegative().optional(),
   proposedTimelineDays: z.number().int().min(1).max(365).optional(),
+  answers: z.record(z.string(), z.unknown()).optional(),
 });
 export type ApplyToRequestInput = z.infer<typeof applyToRequestSchema>;
 

@@ -10,10 +10,13 @@ import { TestsService } from '../tests/tests.service';
 import {
   APPLICATION_STATUS_TRANSITIONS,
   AUDIT_ACTIONS,
+  applicationFormSchema,
   canTransitionApplicationStatus,
+  validateAnswers,
+  type ApplicationForm,
   type ApplyToRequestInput,
 } from '@trainova/shared';
-import type { ApplicationStatus } from '@trainova/db';
+import type { ApplicationStatus, Prisma } from '@trainova/db';
 
 interface StatusUpdateContext {
   ip?: string | null;
@@ -58,6 +61,19 @@ export class ApplicationsService {
     });
     if (existing) throw new ConflictException('Already applied');
 
+    let schema: ApplicationForm | null = null;
+    if (request.applicationSchema) {
+      const parsed = applicationFormSchema.safeParse(request.applicationSchema);
+      if (parsed.success) schema = parsed.data;
+    }
+    const validated = validateAnswers(schema, input.answers ?? {});
+    if (!validated.ok) {
+      throw new BadRequestException({
+        message: 'Invalid answers',
+        fieldErrors: validated.errors,
+      });
+    }
+
     return this.prisma.application.create({
       data: {
         requestId: input.requestId,
@@ -65,6 +81,7 @@ export class ApplicationsService {
         coverLetter: input.coverLetter,
         proposedRate: input.proposedRate,
         proposedTimelineDays: input.proposedTimelineDays,
+        answers: validated.answers as Prisma.InputJsonValue,
       },
     });
   }
