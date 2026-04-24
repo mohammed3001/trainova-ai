@@ -144,7 +144,7 @@ function buildOpenAiBody(input: ProxyInvokeInput): Record<string, unknown> {
     if (input.call.temperature != null) base.temperature = input.call.temperature;
     if (input.call.maxTokens != null) base.max_tokens = input.call.maxTokens;
   }
-  return { ...base, ...(input.call.extra ?? {}) };
+  return { ...base, ...safeExtra(input.call.extra, OPENAI_PROTECTED) };
 }
 
 function extractOpenAiOutput(op: ModelCallOperation, json: unknown): string | null {
@@ -195,7 +195,7 @@ async function invokeAnthropic(
         : [{ role: 'user', content: input.call.prompt ?? '' }],
     ...(system ? { system } : {}),
     ...(input.call.temperature != null ? { temperature: input.call.temperature } : {}),
-    ...(input.call.extra ?? {}),
+    ...safeExtra(input.call.extra, ANTHROPIC_PROTECTED),
   };
 
   const res = await fetchWithTimeout(url, {
@@ -275,7 +275,7 @@ async function invokeHuggingFace(
       ...(input.call.temperature != null ? { temperature: input.call.temperature } : {}),
       ...(input.call.maxTokens != null ? { max_new_tokens: input.call.maxTokens } : {}),
     },
-    ...(input.call.extra ?? {}),
+    ...safeExtra(input.call.extra, HUGGINGFACE_PROTECTED),
   };
 
   const res = await fetchWithTimeout(input.endpointUrl, {
@@ -478,7 +478,7 @@ function buildBedrockBody(input: ProxyInvokeInput): Record<string, unknown> {
           : [{ role: 'user', content: input.call.prompt ?? '' }],
       ...(system ? { system } : {}),
       ...(input.call.temperature != null ? { temperature: input.call.temperature } : {}),
-      ...(input.call.extra ?? {}),
+      ...safeExtra(input.call.extra, BEDROCK_CLAUDE_PROTECTED),
     };
   }
   if (modelId.includes('meta.llama')) {
@@ -486,7 +486,7 @@ function buildBedrockBody(input: ProxyInvokeInput): Record<string, unknown> {
       prompt: input.call.prompt ?? messagesToPrompt(input.call.messages),
       max_gen_len: input.call.maxTokens ?? 512,
       ...(input.call.temperature != null ? { temperature: input.call.temperature } : {}),
-      ...(input.call.extra ?? {}),
+      ...safeExtra(input.call.extra, BEDROCK_LLAMA_PROTECTED),
     };
   }
   if (modelId.includes('amazon.titan')) {
@@ -496,12 +496,12 @@ function buildBedrockBody(input: ProxyInvokeInput): Record<string, unknown> {
         maxTokenCount: input.call.maxTokens ?? 512,
         ...(input.call.temperature != null ? { temperature: input.call.temperature } : {}),
       },
-      ...(input.call.extra ?? {}),
+      ...safeExtra(input.call.extra, BEDROCK_TITAN_PROTECTED),
     };
   }
   return {
     prompt: input.call.prompt ?? messagesToPrompt(input.call.messages),
-    ...(input.call.extra ?? {}),
+    ...safeExtra(input.call.extra, BEDROCK_GENERIC_PROTECTED),
   };
 }
 
@@ -532,6 +532,47 @@ function extractBedrockOutput(modelId: string, json: unknown): string | null {
 // --------------------------------------------------------------------------
 // Helpers
 // --------------------------------------------------------------------------
+
+/**
+ * Strip proxy-owned keys from the trainer-supplied `extra` object. The
+ * `extra` passthrough is useful for vendor-specific toggles (top_p,
+ * stop, tools, etc.) but MUST NOT let a trainer override fields the
+ * proxy controls — notably `model`, which would let them swap the
+ * company's chosen `modelId` for a more expensive one and charge it
+ * to the company's API key.
+ */
+function safeExtra(
+  extra: Record<string, unknown> | undefined,
+  denylist: readonly string[],
+): Record<string, unknown> {
+  if (!extra) return {};
+  const out: Record<string, unknown> = {};
+  const blocked = new Set(denylist);
+  for (const [k, v] of Object.entries(extra)) {
+    if (blocked.has(k)) continue;
+    out[k] = v;
+  }
+  return out;
+}
+
+const OPENAI_PROTECTED = ['model', 'messages', 'prompt', 'input', 'max_tokens'] as const;
+const ANTHROPIC_PROTECTED = [
+  'model',
+  'messages',
+  'system',
+  'max_tokens',
+  'anthropic_version',
+] as const;
+const HUGGINGFACE_PROTECTED = ['inputs', 'parameters'] as const;
+const BEDROCK_CLAUDE_PROTECTED = [
+  'anthropic_version',
+  'max_tokens',
+  'messages',
+  'system',
+] as const;
+const BEDROCK_LLAMA_PROTECTED = ['prompt', 'max_gen_len'] as const;
+const BEDROCK_TITAN_PROTECTED = ['inputText', 'textGenerationConfig'] as const;
+const BEDROCK_GENERIC_PROTECTED = ['prompt'] as const;
 
 function bearerHeader(input: ProxyInvokeInput): Record<string, string> {
   if (input.authKind === 'none' || !input.credentials) return {};
