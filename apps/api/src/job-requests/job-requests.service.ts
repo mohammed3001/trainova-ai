@@ -96,7 +96,7 @@ export class JobRequestsService {
         publishedAt: new Date(),
         applicationSchema: input.applicationSchema
           ? (input.applicationSchema as Prisma.InputJsonValue)
-          : Prisma.JsonNull,
+          : Prisma.DbNull,
         skills: skillRows.length ? { create: skillRows.map((s) => ({ skillId: s.id })) } : undefined,
       },
       include: { skills: { include: { skill: true } } },
