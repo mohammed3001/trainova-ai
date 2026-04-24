@@ -95,6 +95,47 @@ export const modelConnectionUpdateSchema = modelConnectionInputSchema
   .extend({
     /** Required to keep `superRefine` predictable on partial updates. */
     provider: z.enum(MODEL_PROVIDERS).optional(),
+    /**
+     * On update, an explicit empty string is the documented way to clear
+     * the stored credential — the service maps `''` to `encryptedCredentials = null`.
+     * The create schema (`min(1)`) intentionally rejects empty strings; the
+     * update schema must allow them, otherwise the clearing branch is
+     * unreachable and the user has no way to revoke a key without deleting
+     * the whole connection.
+     */
+    credentials: z.string().max(8192).optional(),
+  })
+  .superRefine((value, ctx) => {
+    // Mirror the create-time provider contracts on PATCH so a request that
+    // *changes* provider (or pushes an endpointUrl alongside an existing
+    // provider) is still validated. We only enforce a rule when the
+    // relevant field is actually present in the patch — otherwise the
+    // partial update would never be acceptable.
+    if (
+      value.provider &&
+      ['OPENAI_COMPATIBLE', 'RAW_HTTPS', 'HUGGINGFACE'].includes(value.provider) &&
+      value.endpointUrl === null
+    ) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['endpointUrl'],
+        message: 'endpointUrl is required for this provider',
+      });
+    }
+    if (value.provider === 'BEDROCK' && value.region === null) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['region'],
+        message: 'region is required for Bedrock',
+      });
+    }
+    if (value.authKind === 'aws_sigv4' && value.provider && value.provider !== 'BEDROCK') {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['authKind'],
+        message: 'aws_sigv4 is only valid for Bedrock',
+      });
+    }
   });
 export type ModelConnectionUpdate = z.infer<typeof modelConnectionUpdateSchema>;
 
