@@ -92,7 +92,7 @@ export async function reviewVerificationAction(formData: FormData): Promise<void
 // T5.B — requests / conversations / messages / reports
 // ---------------------------------------------------------------------------
 
-const REQUEST_STATUSES = new Set(['DRAFT', 'OPEN', 'PAUSED', 'CLOSED', 'ARCHIVED']);
+const REQUEST_STATUSES = new Set(['DRAFT', 'OPEN', 'IN_REVIEW', 'CLOSED', 'ARCHIVED']);
 
 export async function setRequestStatusAction(formData: FormData): Promise<void> {
   const id = String(formData.get('id') ?? '');

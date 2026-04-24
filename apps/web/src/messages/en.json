@@ -742,7 +742,7 @@
       "status": {
         "DRAFT": "Draft",
         "OPEN": "Open",
-        "PAUSED": "Paused",
+        "IN_REVIEW": "In review",
         "CLOSED": "Closed",
         "ARCHIVED": "Archived"
       },
