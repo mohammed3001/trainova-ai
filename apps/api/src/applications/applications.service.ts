@@ -288,4 +288,44 @@ export class ApplicationsService {
       };
     });
   }
+
+  /**
+   * Lists (non-deleted) attachments for an application. Both the applying
+   * trainer and the owning company can view the list; the company only ever
+   * sees attachments after the trainer has committed them, so this is the
+   * portfolio surface for the hiring decision.
+   *
+   * The endpoint intentionally excludes the raw objectKey — downloads go
+   * through `/uploads/attachments/:id/download` which signs a short-lived
+   * GET URL after re-checking ownership. Returning the key here would leak
+   * the bucket path.
+   */
+  async listAttachments(userId: string, applicationId: string) {
+    const app = await this.prisma.application.findUnique({
+      where: { id: applicationId },
+      include: { request: { include: { company: { select: { ownerId: true } } } } },
+    });
+    if (!app) throw new NotFoundException('Application not found');
+
+    const isOwner = app.request.company.ownerId === userId;
+    const isTrainer = app.trainerId === userId;
+    if (!isOwner && !isTrainer) {
+      throw new ForbiddenException('Not allowed to view these attachments');
+    }
+
+    const rows = await this.prisma.applicationAttachment.findMany({
+      where: { applicationId, deletedAt: null },
+      orderBy: { createdAt: 'desc' },
+      select: {
+        id: true,
+        title: true,
+        mimeType: true,
+        byteLength: true,
+        scanStatus: true,
+        createdAt: true,
+      },
+    });
+
+    return rows;
+  }
 }

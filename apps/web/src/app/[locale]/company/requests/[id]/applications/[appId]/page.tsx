@@ -9,6 +9,7 @@ import { AssignTestButton } from '../assign-test-button';
 import { AttemptsCard } from './attempts-card';
 import { AnswersCard } from './answers-card';
 import { StartChatButton } from '@/components/chat/start-chat-button';
+import { ApplicationAttachmentsPanel } from '@/app/[locale]/requests/[slug]/application-attachments-panel';
 
 interface Application {
   id: string;
@@ -115,6 +116,9 @@ export default async function ApplicationDetailPage({
         answers={app.answers ?? {}}
         locale={locale}
       />
+
+      <ApplicationAttachmentsPanel applicationId={appId} canEdit={false} />
+
 
       <AttemptsCard applicationId={appId} requestId={id} locale={locale} />
 
