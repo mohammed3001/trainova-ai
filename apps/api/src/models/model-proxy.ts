@@ -225,10 +225,14 @@ async function invokeAnthropic(
   const content = (json && (json as Record<string, unknown>).content) as
     | Array<{ type?: string; text?: string }>
     | undefined;
-  const outputText = content
-    ?.filter((c) => c.type === 'text')
-    .map((c) => c.text ?? '')
-    .join('\n') ?? null;
+  // `?? null` would leak `''` when the response has non-text blocks only
+  // (e.g. tool_use or image). Use `|| null` so an empty join collapses to
+  // null, matching how OpenAI/HF extractors signal "no text output".
+  const outputText =
+    content
+      ?.filter((c) => c.type === 'text')
+      .map((c) => c.text ?? '')
+      .join('\n') || null;
   const usage = (json && (json as Record<string, unknown>).usage) as
     | { input_tokens?: number; output_tokens?: number }
     | undefined;
@@ -514,11 +518,14 @@ function extractBedrockOutput(modelId: string, json: unknown): string | null {
   const obj = json as Record<string, unknown>;
   if (modelId.includes('anthropic.claude')) {
     const content = obj.content as Array<{ type?: string; text?: string }> | undefined;
+    // Same empty-string guard as `invokeAnthropic` — no text blocks means
+    // the assistant only returned tool_use/image content, which the UI
+    // renders as "no textual output" (null), not an empty string.
     return (
       content
         ?.filter((c) => c.type === 'text')
         .map((c) => c.text ?? '')
-        .join('\n') ?? null
+        .join('\n') || null
     );
   }
   if (modelId.includes('meta.llama')) {
