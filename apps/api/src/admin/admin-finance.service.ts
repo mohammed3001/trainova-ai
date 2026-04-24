@@ -541,7 +541,9 @@ export class AdminFinanceService {
 
     if (sub.stripeSubscriptionId) {
       try {
-        await this.stripe.cancelSubscription(sub.stripeSubscriptionId);
+        await this.stripe.cancelSubscription(sub.stripeSubscriptionId, {
+          immediate: input.immediate ?? false,
+        });
       } catch (err) {
         // Log but don't fail — Stripe row may have been removed externally;
         // we still want to mark our DB row as canceled to stop billing UI.
