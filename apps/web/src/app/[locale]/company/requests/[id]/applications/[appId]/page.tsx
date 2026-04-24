@@ -4,6 +4,8 @@ import { getLocale, getTranslations } from 'next-intl/server';
 import { getRole, getToken } from '@/lib/session';
 import { authedFetch } from '@/lib/authed-fetch';
 import { StatusBadge, StatusActions } from '../status-controls';
+import { AssignTestButton } from '../assign-test-button';
+import { AttemptsCard } from './attempts-card';
 
 interface Application {
   id: string;
@@ -87,10 +89,15 @@ export default async function ApplicationDetailPage({
           {app.proposedRate ? `Proposed: $${app.proposedRate}/h · ` : ''}
           {app.proposedTimelineDays ? `${app.proposedTimelineDays} days` : ''}
         </div>
-        <div className="border-t border-slate-100 pt-3">
+        <div className="flex flex-wrap items-center gap-2 border-t border-slate-100 pt-3">
           <StatusActions applicationId={app.id} currentStatus={app.status} />
+          {app.status === 'APPLIED' || app.status === 'SHORTLISTED' ? (
+            <AssignTestButton applicationId={app.id} requestId={id} />
+          ) : null}
         </div>
       </header>
+
+      <AttemptsCard applicationId={appId} requestId={id} locale={locale} />
 
       <section className="card space-y-3" data-testid="application-history">
         <h2 className="text-lg font-semibold text-slate-900">

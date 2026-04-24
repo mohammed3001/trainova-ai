@@ -25,11 +25,15 @@ import {
 } from '@trainova/shared';
 import { ZodValidationPipe } from '../common/zod-validation.pipe';
 import { ApplicationsService } from './applications.service';
+import { TestsService } from '../tests/tests.service';
 
 @ApiTags('applications')
 @Controller('applications')
 export class ApplicationsController {
-  constructor(private readonly service: ApplicationsService) {}
+  constructor(
+    private readonly service: ApplicationsService,
+    private readonly tests: TestsService,
+  ) {}
 
   @Get('mine')
   @ApiBearerAuth()
@@ -93,5 +97,12 @@ export class ApplicationsController {
   @UseGuards(JwtAuthGuard)
   history(@CurrentUser() user: AuthUser, @Param('id') id: string) {
     return this.service.history(user.id, id);
+  }
+
+  @Get(':id/attempts')
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
+  attempts(@CurrentUser() user: AuthUser, @Param('id') id: string) {
+    return this.tests.listAttemptsForApplication(user.id, user.role, id);
   }
 }

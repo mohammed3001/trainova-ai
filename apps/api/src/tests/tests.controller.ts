@@ -97,6 +97,14 @@ export class TestsController {
     return this.service.findOneForUser(user.id, user.role, id);
   }
 
+  @Get(':id/edit')
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('COMPANY_OWNER')
+  findOneForEditor(@CurrentUser() user: AuthUser, @Param('id') id: string) {
+    return this.service.findOneForEditor(user.id, user.role, id);
+  }
+
   // =========================================================================
   // Trainer — taking
   // =========================================================================

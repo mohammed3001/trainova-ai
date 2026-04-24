@@ -138,6 +138,27 @@ export class TestsService {
     });
   }
 
+  // Editor-facing fetch: returns full task data including answerKey + rubric,
+  // restricted to the company owner (or admin). The public `findOneForUser`
+  // deliberately strips those fields so neither the trainer nor any non-owner
+  // company role ever sees the answers — this endpoint is only for authoring.
+  async findOneForEditor(userId: string, userRole: string, testId: string) {
+    const test = await this.prisma.test.findUnique({
+      where: { id: testId },
+      include: {
+        request: { include: { company: { select: { ownerId: true, name: true } } } },
+        tasks: { orderBy: { order: 'asc' } },
+      },
+    });
+    if (!test) throw new NotFoundException('Test not found');
+    const isOwner = test.request?.company.ownerId === userId;
+    const isAdmin = userRole === 'ADMIN' || userRole === 'SUPER_ADMIN';
+    if (!isOwner && !isAdmin) {
+      throw new ForbiddenException('Not allowed to edit this test');
+    }
+    return test;
+  }
+
   async remove(ownerId: string, testId: string) {
     const test = await this.loadOwnedTest(ownerId, testId);
     const attempts = await this.prisma.testAttempt.count({ where: { testId: test.id } });

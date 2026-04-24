@@ -281,6 +281,114 @@
         "empty": "No status changes yet.",
         "changedStatus": "changed status from {from} to {to}",
         "unknownActor": "Unknown user"
+      },
+      "manageTests": "Manage tests"
+    },
+    "tests": {
+      "title": "Tests",
+      "empty": "No tests yet.",
+      "new": "New test",
+      "edit": "Edit",
+      "delete": "Delete",
+      "confirmDelete": "Delete this test?",
+      "confirmDeleteYes": "Yes, delete",
+      "backToList": "Back to tests",
+      "backToApplications": "Back to applications",
+      "meta": {
+        "tasks": "{count, plural, one {# task} other {# tasks}}",
+        "attempts": "{count, plural, one {# attempt} other {# attempts}}",
+        "timeLimit": "{minutes}-minute limit"
+      },
+      "errors": {
+        "generic": "Something went wrong. Please try again.",
+        "hasAttempts": "This test already has attempts and can't be deleted.",
+        "titleRequired": "Title must be at least 3 characters.",
+        "noTasks": "Add at least one task.",
+        "promptRequired": "Task {n}: prompt is required.",
+        "mcqNeedsOptions": "Task {n}: MCQ needs at least 2 options.",
+        "mcqNeedsAnswer": "Task {n}: pick one option as the correct answer."
+      },
+      "editor": {
+        "createTitle": "New test",
+        "editTitle": "Edit test",
+        "fields": {
+          "title": "Title",
+          "description": "Description",
+          "timeLimitMin": "Time limit (minutes)",
+          "passingScore": "Passing score",
+          "passingScoreHint": "Hint for reviewers — the decision is still manual.",
+          "scoringMode": "Scoring mode"
+        },
+        "scoringMode": {
+          "auto": "Auto",
+          "manual": "Manual",
+          "hybrid": "Hybrid"
+        },
+        "tasks": {
+          "heading": "Tasks",
+          "empty": "No tasks yet — add one using the buttons above.",
+          "addMcq": "+ MCQ",
+          "addText": "+ Text",
+          "addCode": "+ Code",
+          "prompt": "Prompt",
+          "options": "Options",
+          "addOption": "+ Option",
+          "removeOption": "Remove option",
+          "markCorrect": "Mark as the correct answer",
+          "rubricHint": "Grading hint for reviewers (hidden from trainer)",
+          "rubricPlaceholder": "e.g. Look for correct framing, not just keywords.",
+          "maxScore": "Max score",
+          "row": "Task {n} · {type}",
+          "remove": "Remove",
+          "moveUp": "Move up",
+          "moveDown": "Move down"
+        }
+      },
+      "assign": {
+        "button": "Assign test",
+        "pickButton": "Assign",
+        "success": "Test assigned. The trainer has been notified by email.",
+        "popover": {
+          "title": "Pick a test to assign",
+          "empty": "No tests authored yet — create one first."
+        }
+      },
+      "attempts": {
+        "title": "Test attempts",
+        "empty": "No attempts yet.",
+        "total": "Score {score}/100",
+        "gradeCta": "Grade attempt",
+        "reviewCta": "Review grading",
+        "status": {
+          "in_progress": "In progress",
+          "submitted": "Submitted — awaiting grading",
+          "graded": "Graded",
+          "inProgress": "In progress"
+        }
+      },
+      "grading": {
+        "backToApplicant": "Back to applicant",
+        "currentTotal": "Current total: {score}/100",
+        "passingHint": "Passing hint: ≥ {score}",
+        "passingHintTooltip": "Suggested by the test author; the decision is still yours.",
+        "reviewerNotes": "Internal reviewer notes",
+        "reviewerNotesHint": "Not shown to the trainer.",
+        "submit": "Submit grades",
+        "alreadyGraded": "This attempt has already been graded.",
+        "taskHeading": "Task {n} · {type} · max {max}",
+        "errors": {
+          "scoreRange": "Score must be between 0 and {max}."
+        },
+        "task": {
+          "auto": "Auto-scored {score}/{max}",
+          "manual": "Manual score (0–{max})",
+          "comments": "Comments for the trainer (optional)",
+          "correctOption": "correct answer",
+          "noResponse": "(no response)"
+        },
+        "result": {
+          "title": "Grading recorded"
+        }
       }
     }
   },
