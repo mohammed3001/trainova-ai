@@ -105,4 +105,11 @@ export class ApplicationsController {
   attempts(@CurrentUser() user: AuthUser, @Param('id') id: string) {
     return this.tests.listAttemptsForApplication(user.id, user.role, id);
   }
+
+  @Get(':id/assigned-test')
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
+  assignedTest(@CurrentUser() user: AuthUser, @Param('id') id: string) {
+    return this.tests.getAssignedTestForApplication(user.id, user.role, id);
+  }
 }

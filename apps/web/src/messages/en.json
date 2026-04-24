@@ -392,6 +392,65 @@
       }
     }
   },
+  "trainer": {
+    "tests": {
+      "dashboardRow": {
+        "testAssigned": "A test has been assigned — take it to move forward.",
+        "testSubmitted": "Test submitted — awaiting grading.",
+        "graded": "Test graded — open to see your result.",
+        "takeCta": "Take test",
+        "viewResultCta": "View result"
+      },
+      "page": {
+        "backToDashboard": "Back to my applications",
+        "title": "{testTitle}",
+        "companyLine": "Assigned by {companyName}",
+        "tasksCount": "{count, plural, one {# task} other {# tasks}}",
+        "timeLimit": "{minutes}-minute limit",
+        "passingHint": "Passing hint: ≥ {score}/100",
+        "passingHintTooltip": "Guidance from the company — grading is still manual.",
+        "description": "Description",
+        "ready": {
+          "title": "Ready to start?",
+          "body": "You'll answer each task in order. You can only submit once.",
+          "startCta": "Start attempt",
+          "starting": "Starting…"
+        },
+        "noTest": {
+          "title": "No test is assigned yet",
+          "body": "The company hasn't assigned a test to this application. Check back later."
+        }
+      },
+      "take": {
+        "taskHeading": "Task {n} of {total} · {type} · max {max}",
+        "type": {
+          "MCQ": "Multiple choice",
+          "TEXT": "Short answer"
+        },
+        "mcqHint": "Pick one option.",
+        "textHint": "Type your answer.",
+        "textPlaceholder": "Your answer…",
+        "submit": "Submit attempt",
+        "submitting": "Submitting…",
+        "confirmSubmit": "Submit your attempt? You won't be able to change answers after this.",
+        "unanswered": "{count, plural, one {# task is unanswered} other {# tasks are unanswered}} — submit anyway?",
+        "errors": {
+          "generic": "We couldn't submit your attempt. Please try again.",
+          "alreadySubmitted": "This attempt has already been submitted."
+        }
+      },
+      "result": {
+        "title": "Attempt submitted",
+        "submittedAt": "Submitted {date}",
+        "autoScore": "Your auto-score: {score}/100",
+        "pending": "Awaiting reviewer grading.",
+        "graded": "Graded by the company.",
+        "totalScore": "Final score: {score}/100",
+        "passed": "Above the company's passing hint of {score}/100.",
+        "missed": "Below the company's passing hint of {score}/100."
+      }
+    }
+  },
   "admin": {
     "overview": "Overview",
     "users": "Users",
