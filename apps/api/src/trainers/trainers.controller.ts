@@ -1,4 +1,15 @@
-import { Body, Controller, Get, Param, Patch, Query, UseGuards, UsePipes } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Patch,
+  Query,
+  Res,
+  UseGuards,
+  UsePipes,
+} from '@nestjs/common';
+import type { Response } from 'express';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
@@ -7,6 +18,7 @@ import { CurrentUser, type AuthUser } from '../auth/current-user.decorator';
 import { updateTrainerProfileSchema, type UpdateTrainerProfileInput } from '@trainova/shared';
 import { ZodValidationPipe } from '../common/zod-validation.pipe';
 import { TrainersService } from './trainers.service';
+import { renderTrainerCvPdf } from './cv.renderer';
 
 @ApiTags('trainers')
 @Controller('trainers')
@@ -48,5 +60,18 @@ export class TrainersController {
   @Get(':slug')
   findBySlug(@Param('slug') slug: string) {
     return this.trainers.findBySlug(slug);
+  }
+
+  @Get(':slug/cv.pdf')
+  async cv(@Param('slug') slug: string, @Res() res: Response) {
+    // @Res() (no passthrough) puts this handler in library-specific mode,
+    // which disables @Header() — set every header imperatively instead.
+    const profile = await this.trainers.findBySlug(slug);
+    const fileName = `${slug}.pdf`;
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `inline; filename="${fileName}"`);
+    res.setHeader('Cache-Control', 'public, max-age=300');
+    const stream = renderTrainerCvPdf(profile);
+    stream.pipe(res);
   }
 }

@@ -197,6 +197,22 @@
     "rate": "سعر الساعة",
     "noResults": "لا يوجد مدربون مطابقون لفلترتك."
   },
+  "trainerProfile": {
+    "verified": "موثّق",
+    "downloadCv": "تنزيل السيرة الذاتية (PDF)",
+    "website": "الموقع",
+    "about": "نبذة",
+    "skills": "المهارات",
+    "portfolio": "الأعمال",
+    "certifications": "الشهادات",
+    "rate": "سعر الساعة",
+    "hour": "س",
+    "availability": "الإتاحة",
+    "skillsCount": "المهارات",
+    "memberSince": "عضو منذ",
+    "responseWithin": "يرد خلال {hours} ساعة",
+    "untitled": "بدون عنوان"
+  },
   "profile": {
     "trainer": {
       "title": "ملفي الشخصي",
