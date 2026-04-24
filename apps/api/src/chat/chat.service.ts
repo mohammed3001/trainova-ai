@@ -7,12 +7,40 @@ export class ChatService {
   constructor(private readonly prisma: PrismaService) {}
 
   async listConversations(userId: string) {
+    // Explicit nested `select` on `messages` so admin redaction metadata
+    // (`redactedById`, `redactReason`) is never surfaced to participants
+    // via the last-message preview. `redactedAt` stays — the client needs
+    // it to render "[redacted]" instead of the body.
     return this.prisma.conversation.findMany({
       where: { participants: { some: { userId } } },
       orderBy: { updatedAt: 'desc' },
-      include: {
-        participants: { include: { user: { select: { id: true, name: true, role: true } } } },
-        messages: { take: 1, orderBy: { createdAt: 'desc' } },
+      select: {
+        id: true,
+        requestId: true,
+        lockedAt: true,
+        createdAt: true,
+        updatedAt: true,
+        participants: {
+          select: {
+            userId: true,
+            conversationId: true,
+            lastReadAt: true,
+            user: { select: { id: true, name: true, role: true } },
+          },
+        },
+        messages: {
+          take: 1,
+          orderBy: { createdAt: 'desc' },
+          select: {
+            id: true,
+            conversationId: true,
+            senderId: true,
+            body: true,
+            type: true,
+            redactedAt: true,
+            createdAt: true,
+          },
+        },
       },
     });
   }

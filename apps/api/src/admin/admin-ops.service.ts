@@ -121,7 +121,11 @@ export class AdminOpsService {
 
     return this.prisma.$transaction(async (tx) => {
       const patch: Prisma.JobRequestUpdateInput = { status };
-      if (status === 'OPEN' && current.status === 'DRAFT') patch.publishedAt = new Date();
+      // Stamp `publishedAt` the first time a request becomes OPEN, regardless
+      // of the source state. An admin may push IN_REVIEW → OPEN or reopen a
+      // CLOSED request that was never published in the first place; in both
+      // cases the public listing needs a sort key.
+      if (status === 'OPEN' && !current.publishedAt) patch.publishedAt = new Date();
       if (status === 'CLOSED' || status === 'ARCHIVED') {
         patch.closedAt = new Date();
       } else {
