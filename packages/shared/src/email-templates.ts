@@ -48,7 +48,7 @@ export const EMAIL_TEMPLATE_SPECS: Record<EmailTemplateKey, EmailTemplateSpec> =
     key: 'RESET_PASSWORD',
     description: 'Sent when the user requests a password reset.',
     requiredVariables: ['name', 'resetUrl'],
-    optionalVariables: ['expiresInHours'],
+    optionalVariables: ['expiresInMinutes'],
   },
   WELCOME: {
     key: 'WELCOME',
@@ -60,7 +60,7 @@ export const EMAIL_TEMPLATE_SPECS: Record<EmailTemplateKey, EmailTemplateSpec> =
     key: 'TEST_ASSIGNED',
     description: 'Sent when a company assigns an evaluation to a trainer.',
     requiredVariables: ['trainerName', 'testTitle', 'companyName', 'startUrl'],
-    optionalVariables: ['dueAt'],
+    optionalVariables: ['timeLimitMin'],
   },
   APPLICATION_STATUS_CHANGED: {
     key: 'APPLICATION_STATUS_CHANGED',

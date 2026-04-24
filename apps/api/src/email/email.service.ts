@@ -78,6 +78,7 @@ export class EmailService implements OnModuleInit {
       {
         name: params.name,
         verifyUrl: params.verifyUrl,
+        expiresInHours: '24',
       },
       () => renderVerifyEmail(params),
     );
@@ -91,6 +92,7 @@ export class EmailService implements OnModuleInit {
       {
         name: params.name,
         resetUrl: params.resetUrl,
+        expiresInMinutes: String(params.expiresInMinutes),
       },
       () => renderResetPassword(params),
     );
@@ -116,6 +118,7 @@ export class EmailService implements OnModuleInit {
         testTitle: params.testTitle,
         companyName: params.companyName,
         startUrl: params.takeUrl,
+        timeLimitMin: params.timeLimitMin != null ? String(params.timeLimitMin) : '',
       },
       () => renderTestAssigned(params),
     );
