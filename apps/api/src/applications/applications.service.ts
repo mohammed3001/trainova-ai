@@ -96,20 +96,26 @@ export class ApplicationsService {
       },
     });
 
-    const withCompany = await this.prisma.jobRequest.findUnique({
-      where: { id: input.requestId },
-      select: {
-        slug: true,
-        title: true,
-        company: { select: { ownerId: true } },
-      },
-    });
-    const trainerUser = await this.prisma.user.findUnique({
-      where: { id: trainerId },
-      select: { name: true },
-    });
-    if (withCompany?.company.ownerId) {
-      try {
+    // Best-effort notify the company owner. Must include the supporting
+    // lookups inside the try/catch — otherwise a transient DB hiccup on
+    // either findUnique would bubble a 500 to the trainer even though the
+    // Application row is already committed, and a retry would collide on
+    // the unique (requestId, trainerId) constraint and surface the
+    // misleading "Already applied" ConflictException.
+    try {
+      const withCompany = await this.prisma.jobRequest.findUnique({
+        where: { id: input.requestId },
+        select: {
+          slug: true,
+          title: true,
+          company: { select: { ownerId: true } },
+        },
+      });
+      const trainerUser = await this.prisma.user.findUnique({
+        where: { id: trainerId },
+        select: { name: true },
+      });
+      if (withCompany?.company.ownerId) {
         await this.notifications.emit({
           userId: withCompany.company.ownerId,
           type: 'application.received',
@@ -120,9 +126,9 @@ export class ApplicationsService {
             meta: { applicationId: created.id, requestSlug: withCompany.slug },
           },
         });
-      } catch {
-        /* swallow — application already persisted, notification is best-effort */
       }
+    } catch {
+      /* swallow — application already persisted, notification is best-effort */
     }
     return created;
   }

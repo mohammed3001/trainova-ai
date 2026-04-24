@@ -117,8 +117,14 @@ export function NotificationsBell({ locale: localeProp, initialUnread = 0 }: Pro
         if (cancelled) return;
         socketRef.current = s;
         s.on('notification:new', (n: NotificationNewEvent) => {
-          setItems((prev) => (prev.some((x) => x.id === n.id) ? prev : [n, ...prev].slice(0, 50)));
-          setUnread((u) => u + 1);
+          // Dedupe against what's already buffered — the REST fetch and the
+          // socket event race on first open, and we don't want the badge
+          // to drift upward for a notification we already counted.
+          setItems((prev) => {
+            if (prev.some((x) => x.id === n.id)) return prev;
+            setUnread((u) => u + 1);
+            return [n, ...prev].slice(0, 50);
+          });
         });
       } catch {
         /* silent — UI still works via REST */
