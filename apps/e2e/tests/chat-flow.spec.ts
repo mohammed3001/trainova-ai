@@ -124,7 +124,7 @@ test.describe('Chat flow — shortlist → start chat → exchange → read rece
     try {
       await page.goto(`/en/company/requests/${requestId}/applications/${applicationId}`);
 
-      const startBtn = page.getByTestId('start-chat');
+      const startBtn = page.getByTestId('company-message-trainer');
       await expect(startBtn).toBeVisible();
 
       await Promise.all([
