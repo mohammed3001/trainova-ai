@@ -394,48 +394,67 @@ export class AdminFinanceService {
       );
     }
 
-    const attempt = await this.prisma.payout.count({
-      where: { milestoneId: payout.milestoneId, userId: payout.userId },
-    });
-
-    const transfer = await this.stripe.createTransfer({
-      amountCents: payout.amountCents,
-      currency: payout.currency,
-      destinationAccountId: connect.stripeAccountId,
-      description: `Admin retry — payout ${payout.id}`,
-      idempotencyKey: `retry-${payout.id}-${attempt}`,
-      metadata: {
-        adminRetry: 'true',
-        previousPayoutId: payout.id,
-        milestoneId: payout.milestoneId ?? '',
+    // Each click of "Retry" must produce a unique Stripe idempotency key —
+    // otherwise Stripe replays the result of the first attempt and silently
+    // returns the stale transfer id even when the underlying problem (e.g.
+    // insufficient platform balance) has since been fixed. Counting the
+    // existing ADMIN_RETRY_PAYOUT audit logs for this payout gives us a
+    // monotonic attempt number that increments by exactly one per retry.
+    const previousAttempts = await this.prisma.auditLog.count({
+      where: {
+        action: FINANCE_AUDIT_ACTIONS.ADMIN_RETRY_PAYOUT,
+        entityType: 'Payout',
+        entityId: payout.id,
       },
     });
+    const attempt = previousAttempts + 1;
 
-    await this.prisma.$transaction(async (tx) => {
-      await tx.payout.update({
-        where: { id: payout.id },
-        data: {
-          stripeTransferId: transfer.id,
-          status: 'PENDING',
-          failureMessage: null,
-        },
-      });
-      await tx.auditLog.create({
-        data: {
-          actorId: actor.actorId,
-          action: FINANCE_AUDIT_ACTIONS.ADMIN_RETRY_PAYOUT,
-          entityType: 'Payout',
-          entityId: payout.id,
-          ip: actor.ip ?? null,
-          diff: {
-            payoutId: payout.id,
-            previousStatus: payout.status,
+    // Run the Stripe transfer inside the DB transaction so the payout row
+    // and audit row only commit if Stripe accepted the call. Idempotency
+    // key embeds the attempt counter so a retry after a transient DB
+    // failure replays as a no-op against Stripe.
+    await this.prisma.$transaction(
+      async (tx) => {
+        const transfer = await this.stripe.createTransfer({
+          amountCents: payout.amountCents,
+          currency: payout.currency,
+          destinationAccountId: connect.stripeAccountId,
+          description: `Admin retry — payout ${payout.id} attempt ${attempt}`,
+          idempotencyKey: `retry-${payout.id}-${attempt}`,
+          metadata: {
+            adminRetry: 'true',
+            previousPayoutId: payout.id,
+            milestoneId: payout.milestoneId ?? '',
+            attempt: String(attempt),
+          },
+        });
+        await tx.payout.update({
+          where: { id: payout.id },
+          data: {
             stripeTransferId: transfer.id,
-            amountCents: payout.amountCents,
-          } as Prisma.InputJsonValue,
-        },
-      });
-    });
+            status: 'PENDING',
+            failureMessage: null,
+          },
+        });
+        await tx.auditLog.create({
+          data: {
+            actorId: actor.actorId,
+            action: FINANCE_AUDIT_ACTIONS.ADMIN_RETRY_PAYOUT,
+            entityType: 'Payout',
+            entityId: payout.id,
+            ip: actor.ip ?? null,
+            diff: {
+              payoutId: payout.id,
+              previousStatus: payout.status,
+              stripeTransferId: transfer.id,
+              amountCents: payout.amountCents,
+              attempt,
+            } as Prisma.InputJsonValue,
+          },
+        });
+      },
+      { timeout: 30_000 },
+    );
 
     return { ok: true };
   }
