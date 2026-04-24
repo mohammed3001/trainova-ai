@@ -36,6 +36,9 @@ export default async function AdminDashboard() {
           <Link className="btn-ghost" href={`/${locale}/admin/requests`}>
             {t('admin.requests')}
           </Link>
+          <Link className="btn-ghost" href={`/${locale}/admin/ads`}>
+            {t('admin.ads.title')}
+          </Link>
         </nav>
       </header>
 

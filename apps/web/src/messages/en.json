@@ -690,6 +690,132 @@
       }
     }
   },
+  "billing": {
+    "companyTitle": "Billing & Subscription",
+    "companySubtitle": "Manage your workspace plan, billing details, and invoices.",
+    "currentPlan": "Current plan",
+    "unknownTier": "Active plan",
+    "status": "Status",
+    "cancelScheduled": "cancels at period end",
+    "renewsOn": "renews on",
+    "openPortal": "Open billing portal",
+    "cancelCta": "Cancel plan",
+    "availablePlans": "Available plans",
+    "noPlansYet": "No plans are configured yet.",
+    "free": "Free",
+    "perMonth": "per month",
+    "selectCta": "Select plan",
+    "confirmCta": "Subscribe securely",
+    "confirmTitle": "Subscribe to {tier}",
+    "confirmHint": "Your card is tokenised by Stripe. We never see full card numbers.",
+    "notConfigured": "This tier is not yet connected to Stripe — it will be available shortly.",
+    "currentBadge": "Current plan",
+    "subscribedOk": "Subscription activated.",
+    "cancelledOk": "Cancellation scheduled — access stays until the end of this period.",
+    "noActiveCompany": "You are on the free workspace tier.",
+    "noActiveTrainer": "You are on the free trainer tier.",
+    "errors": {
+      "subscribeFailed": "We couldn't start the subscription. Please try again.",
+      "cancelFailed": "We couldn't cancel the subscription. Please try again.",
+      "portalFailed": "Stripe billing portal is not reachable right now."
+    }
+  },
+  "contracts": {
+    "listTitle": "Contracts",
+    "listSubtitle": "Escrow-backed milestones with your accepted trainers.",
+    "listEmpty": "No contracts yet. Create one from an accepted application.",
+    "newTitle": "New contract",
+    "newSubtitle": "Define milestones and fund them through Stripe escrow.",
+    "newNeedsApplication": "Open an accepted application and click \"Create contract\" to start here.",
+    "backToDashboard": "Back to dashboard",
+    "backToList": "Back to contracts",
+    "total": "Total",
+    "milestones": "Milestones",
+    "fee": "Platform fee",
+    "currencyLabel": "Currency",
+    "trainerUnknown": "Trainer",
+    "companyUnknown": "Company",
+    "counterparty": "Counterparty",
+    "statusLabel": "Status",
+    "createdAt": "Created",
+    "milestonesTitle": "Milestones",
+    "milestoneNumber": "Milestone #{n}",
+    "totalLabel": "Total",
+    "fields": {
+      "title": "Contract title",
+      "description": "Description",
+      "currency": "Currency",
+      "platformFee": "Platform fee"
+    },
+    "placeholders": {
+      "title": "e.g. RLHF fine-tuning for customer-support bot",
+      "description": "Scope, deliverables, constraints, and communication cadence.",
+      "milestoneTitle": "e.g. Phase 1 — dataset review"
+    },
+    "milestoneFields": {
+      "title": "Title",
+      "description": "Description",
+      "amount": "Amount",
+      "remove": "Remove milestone",
+      "add": "Add milestone"
+    },
+    "createCta": "Create contract",
+    "fundCta": "Fund",
+    "fundConfirmCta": "Charge & hold in escrow",
+    "fundConfirmTitle": "Fund milestone ({amount})",
+    "fundConfirmHint": "Funds are held by the platform until you explicitly release them.",
+    "fundedOk": "Milestone funded. Funds are held in escrow.",
+    "releaseCta": "Release to trainer",
+    "releasedOk": "Milestone released to the trainer.",
+    "refundCta": "Refund",
+    "refundPrompt": "Reason for refund (optional)",
+    "refundedOk": "Milestone refunded.",
+    "errors": {
+      "titleRequired": "A contract title of at least 4 characters is required.",
+      "milestoneTitleRequired": "Each milestone needs a title of at least 2 characters.",
+      "milestoneMinAmount": "Milestones must be at least $1.00.",
+      "createFailed": "We couldn't create the contract.",
+      "fundFailed": "We couldn't fund this milestone.",
+      "releaseFailed": "We couldn't release this milestone.",
+      "refundFailed": "We couldn't refund this milestone."
+    }
+  },
+  "payments": {
+    "trainerTitle": "Earnings & payouts",
+    "trainerSubtitle": "Track escrow, payouts, and upgrade your trainer visibility.",
+    "earningsTitle": "Earnings",
+    "pending": "Pending release",
+    "available": "Available",
+    "paidOut": "Paid out",
+    "totalEarned": "Total earned",
+    "connectTitle": "Stripe Connect",
+    "connectSubtitle": "Complete onboarding to receive payouts directly to your bank.",
+    "chargesEnabled": "Charges enabled",
+    "payoutsEnabled": "Payouts enabled",
+    "detailsSubmitted": "Details submitted",
+    "country": "Country",
+    "yes": "Yes",
+    "no": "No",
+    "startOnboardCta": "Start Stripe onboarding",
+    "resumeOnboardCta": "Resume onboarding",
+    "refreshStatusCta": "Refresh status",
+    "refreshedOk": "Stripe status refreshed.",
+    "contractsTitle": "Active contracts",
+    "contractsEmpty": "No active contracts yet.",
+    "companyUnknown": "Company",
+    "viewDashboard": "View dashboard",
+    "payoutsTitle": "Payout history",
+    "payoutsEmpty": "No payouts yet.",
+    "payoutDate": "Initiated",
+    "payoutAmount": "Amount",
+    "payoutStatus": "Status",
+    "payoutArrived": "Arrived",
+    "plansTitle": "Premium visibility",
+    "errors": {
+      "onboardFailed": "We couldn't start the Stripe onboarding flow.",
+      "refreshFailed": "We couldn't refresh the Stripe status."
+    }
+  },
   "admin": {
     "overview": "Overview",
     "users": "Users",
@@ -703,6 +829,133 @@
       "trainers": "Trainers",
       "requestsOpen": "Open requests",
       "applications": "Applications"
+    },
+    "ads": {
+      "title": "Ad campaigns",
+      "subtitle": "Review, approve and moderate self-serve ad campaigns.",
+      "tabs": {
+        "pending": "Pending review",
+        "all": "All campaigns"
+      },
+      "empty": "No campaigns match this filter.",
+      "actions": {
+        "approve": "Approve",
+        "reject": "Reject",
+        "pause": "Pause",
+        "resume": "Resume",
+        "confirmReject": "Reject this campaign?"
+      },
+      "rejectReasonLabel": "Reason (shown to advertiser)",
+      "approvedBy": "Approved by admin on {at}",
+      "rejectedReason": "Rejected: {reason}"
+    }
+  },
+  "ads": {
+    "title": "Ad campaigns",
+    "subtitle": "Promote your company and open roles across Trainova. Set a budget, pick placements, and Trainova only charges per real impression or click.",
+    "badge": "Monetisation",
+    "disclosure": "All sponsored placements carry a visible 'Sponsored' label and link only to https:// destinations after review.",
+    "empty": {
+      "title": "No campaigns yet",
+      "body": "Create your first campaign to reach trainers and companies actively searching Trainova.",
+      "cta": "Create a campaign"
+    },
+    "status": {
+      "DRAFT": "Draft",
+      "PENDING_REVIEW": "Pending review",
+      "APPROVED": "Approved",
+      "ACTIVE": "Active",
+      "PAUSED": "Paused",
+      "REJECTED": "Rejected",
+      "ENDED": "Ended"
+    },
+    "pricing": {
+      "CPM": "Cost per 1 000 impressions (CPM)",
+      "CPC": "Cost per click (CPC)",
+      "FLAT": "Flat sponsorship fee"
+    },
+    "placement": {
+      "HOMEPAGE_HERO": "Homepage hero",
+      "SIDEBAR_SEARCH": "Search sidebar",
+      "FEATURED_TRAINER": "Featured trainer",
+      "FEATURED_COMPANY": "Featured company",
+      "SEARCH_RESULT": "Promoted search result",
+      "CATEGORY_SPONSOR": "Category sponsor",
+      "NEWSLETTER": "Newsletter",
+      "NATIVE_LISTING": "Native listing"
+    },
+    "creativeType": {
+      "BANNER": "Banner",
+      "SPONSORED_LISTING": "Sponsored listing",
+      "FEATURED_TRAINER": "Featured trainer",
+      "CATEGORY_SPONSOR": "Category sponsor",
+      "NATIVE": "Native"
+    },
+    "list": {
+      "header": "Your campaigns",
+      "create": "New campaign",
+      "spentOf": "{spent} spent of {budget}",
+      "impressionsLabel": "Impressions",
+      "clicksLabel": "Clicks",
+      "ctrLabel": "CTR",
+      "creatives": "Creatives ({count})"
+    },
+    "detail": {
+      "backToList": "Back to campaigns",
+      "performanceTitle": "Performance",
+      "budgetTitle": "Budget & top-up",
+      "creativesTitle": "Creatives",
+      "addCreative": "Add creative",
+      "submitForReview": "Submit for review",
+      "pause": "Pause",
+      "resume": "Resume",
+      "delete": "Delete campaign",
+      "confirmDelete": "Delete this campaign? Any remaining budget is forfeit.",
+      "topupCta": "Top up budget",
+      "rejectionReason": "Rejection reason",
+      "noCreatives": "No creatives yet — add one before submitting for review.",
+      "remainingBudget": "Remaining budget"
+    },
+    "campaign": {
+      "name": "Campaign name",
+      "pricingModel": "Pricing model",
+      "cpm": "CPM (cents per 1 000 impressions)",
+      "cpc": "CPC (cents per click)",
+      "flat": "Flat fee (cents)",
+      "frequencyCap": "Frequency cap per visitor per day",
+      "targetingCountries": "Target countries (ISO-2)",
+      "targetingLocales": "Target locales",
+      "targetingSkills": "Target skill ids",
+      "startDate": "Start date",
+      "endDate": "End date",
+      "commaHint": "Comma-separated"
+    },
+    "creative": {
+      "headline": "Headline",
+      "body": "Body (optional)",
+      "ctaLabel": "CTA label (optional)",
+      "ctaUrl": "Destination URL",
+      "assetUrl": "Image URL (https, optional)",
+      "placements": "Placements",
+      "weight": "Weight (1 – 10)",
+      "active": "Active",
+      "save": "Save creative",
+      "remove": "Remove"
+    },
+    "topup": {
+      "title": "Top up campaign budget",
+      "amount": "Amount (cents)",
+      "paymentMethodId": "Saved payment method id",
+      "hint": "Use your billing page to add a card first — the saved pm_… id goes here.",
+      "submit": "Charge & credit budget",
+      "success": "Top up in progress. Your budget updates as soon as Stripe confirms."
+    },
+    "errors": {
+      "createFailed": "We couldn't create the campaign.",
+      "updateFailed": "We couldn't update the campaign.",
+      "submitFailed": "We couldn't submit the campaign.",
+      "topupFailed": "We couldn't start the top up.",
+      "creativeFailed": "We couldn't save the creative."
     }
   },
   "chat": {

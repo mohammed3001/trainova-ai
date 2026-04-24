@@ -54,6 +54,12 @@ model User {
   emailVerificationTokens EmailVerificationToken[]
   passwordResetTokens     PasswordResetToken[]
   modelCalls              ModelCall[]
+  stripeConnectAccount    StripeConnectAccount?
+  contractsAsTrainer      Contract[]                @relation("ContractTrainer")
+  payouts                 Payout[]
+  subscriptions           Subscription[]
+  adCampaignsOwned        AdCampaign[]              @relation("AdCampaignOwner")
+  adCampaignsReviewed     AdCampaign[]              @relation("AdCampaignReviewer")
 
   @@index([role, status])
 }
@@ -136,6 +142,7 @@ model Company {
   requests         JobRequest[]
   adCampaigns      AdCampaign[]
   modelConnections ModelConnection[]
+  contracts        Contract[]
 
   @@index([slug])
 }
@@ -440,6 +447,7 @@ model Application {
   attempts    TestAttempt[]
   attachments ApplicationAttachment[]
   modelCalls  ModelCall[]
+  contracts   Contract[]
 
   @@unique([requestId, trainerId])
   @@index([trainerId])
@@ -649,67 +657,375 @@ model Subscription {
   status               String    @default("ACTIVE")
   currentPeriodStart   DateTime?
   currentPeriodEnd     DateTime?
-  stripeSubscriptionId String?
+  stripeSubscriptionId String?   @unique
+  stripeCustomerId     String?
   cancelAtPeriodEnd    Boolean   @default(false)
   createdAt            DateTime  @default(now())
   updatedAt            DateTime  @updatedAt
 
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   @@index([userId])
 }
 
-model AdCampaign {
-  id        String    @id @default(cuid())
-  companyId String?
-  name      String
-  budget    Int
-  startDate DateTime?
-  endDate   DateTime?
-  status    String    @default("ACTIVE")
-  targeting Json?
-  createdAt DateTime  @default(now())
+// =========================
+// Payments & Contracts (T4.C)
+// =========================
 
-  company   Company?     @relation(fields: [companyId], references: [id], onDelete: SetNull)
-  creatives AdCreative[]
+enum StripeConnectStatus {
+  NONE
+  PENDING
+  ACTIVE
+  RESTRICTED
+}
+
+/// Per-trainer Stripe Express Connect account used to receive payouts
+/// when milestones are released. Onboarding is initiated by the trainer
+/// via an Account Link; status is synced from the `account.updated`
+/// webhook (see `apps/api/src/payments/webhook.controller.ts`).
+model StripeConnectAccount {
+  id                String              @id @default(cuid())
+  userId            String              @unique
+  stripeAccountId   String              @unique
+  status            StripeConnectStatus @default(PENDING)
+  chargesEnabled    Boolean             @default(false)
+  payoutsEnabled    Boolean             @default(false)
+  detailsSubmitted  Boolean             @default(false)
+  country           String?
+  defaultCurrency   String?
+  lastSyncedAt      DateTime?
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+enum ContractStatus {
+  DRAFT
+  ACTIVE
+  COMPLETED
+  CANCELLED
+  DISPUTED
+}
+
+enum MilestoneStatus {
+  PENDING
+  FUNDED
+  RELEASED
+  REFUNDED
+  CANCELLED
+}
+
+enum PaymentIntentStatus {
+  REQUIRES_PAYMENT_METHOD
+  REQUIRES_CONFIRMATION
+  REQUIRES_ACTION
+  PROCESSING
+  REQUIRES_CAPTURE
+  SUCCEEDED
+  CANCELED
+  FAILED
+}
+
+enum PayoutStatus {
+  PENDING
+  IN_TRANSIT
+  PAID
+  FAILED
+  CANCELLED
+}
+
+/// A binding agreement between a company and trainer derived from an
+/// accepted application. Composed of one or more milestones that move
+/// money through escrow (PaymentIntent → held on platform → Transfer to
+/// Connect account on release).
+model Contract {
+  id                 String         @id @default(cuid())
+  applicationId      String
+  companyId          String
+  trainerId          String
+  title              String
+  description        String?
+  currency           String         @default("USD")
+  totalAmountCents   Int
+  platformFeeBps     Int            @default(1000) // 10% default commission
+  status             ContractStatus @default(DRAFT)
+  acceptedAt         DateTime?
+  completedAt        DateTime?
+  cancelledAt        DateTime?
+  createdAt          DateTime       @default(now())
+  updatedAt          DateTime       @updatedAt
+
+  application Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  company     Company     @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  trainer     User        @relation("ContractTrainer", fields: [trainerId], references: [id], onDelete: Cascade)
+  milestones  Milestone[]
+
+  @@index([companyId, status])
+  @@index([trainerId, status])
+  @@index([applicationId])
+}
+
+/// An individual payment milestone within a contract. State machine:
+/// PENDING → FUNDED (PaymentIntent succeeded, money held on platform)
+/// → RELEASED (Transfer to trainer Connect account + Payout queued)
+/// OR → REFUNDED (funds returned to company).
+model Milestone {
+  id             String          @id @default(cuid())
+  contractId     String
+  title          String
+  description    String?
+  amountCents    Int
+  order          Int             @default(0)
+  dueDate        DateTime?
+  status         MilestoneStatus @default(PENDING)
+  fundedAt       DateTime?
+  releasedAt     DateTime?
+  refundedAt     DateTime?
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+
+  contract       Contract        @relation(fields: [contractId], references: [id], onDelete: Cascade)
+  paymentIntents PaymentIntent[]
+  payouts        Payout[]
+
+  @@index([contractId, order])
+}
+
+/// Tracks a Stripe PaymentIntent used to fund a milestone. Mirrors
+/// Stripe state via webhooks; idempotent by `stripePaymentIntentId`.
+model PaymentIntent {
+  id                    String              @id @default(cuid())
+  milestoneId           String
+  stripePaymentIntentId String              @unique
+  clientSecret          String?
+  amountCents           Int
+  currency              String              @default("USD")
+  status                PaymentIntentStatus @default(REQUIRES_PAYMENT_METHOD)
+  receiptUrl            String?
+  failureMessage        String?
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  milestone Milestone @relation(fields: [milestoneId], references: [id], onDelete: Cascade)
+
+  @@index([milestoneId])
+}
+
+/// A transfer from the platform to a trainer's Connect account when a
+/// milestone is released. Mirrors Stripe Transfer state via webhooks.
+model Payout {
+  id                String       @id @default(cuid())
+  userId            String
+  milestoneId       String?
+  stripeTransferId  String?      @unique
+  stripePayoutId    String?      @unique
+  amountCents       Int
+  currency          String       @default("USD")
+  status            PayoutStatus @default(PENDING)
+  failureMessage    String?
+  arrivedAt         DateTime?
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  milestone Milestone? @relation(fields: [milestoneId], references: [id], onDelete: SetNull)
+
+  @@index([userId, createdAt])
+  @@index([milestoneId])
+}
+
+/// Idempotency store for incoming Stripe webhook events — every
+/// handled event id is recorded so replays become no-ops.
+model StripeWebhookEvent {
+  id              String   @id @default(cuid())
+  stripeEventId   String   @unique
+  type            String
+  processedAt     DateTime?
+  errorMessage    String?
+  payload         Json
+  createdAt       DateTime @default(now())
+
+  @@index([type, createdAt])
+}
+
+enum AdCampaignStatus {
+  DRAFT
+  PENDING_REVIEW
+  APPROVED
+  ACTIVE
+  PAUSED
+  REJECTED
+  ENDED
+}
+
+enum AdPricingModel {
+  CPM
+  CPC
+  FLAT
+}
+
+enum AdPlacement {
+  HOMEPAGE_HERO
+  SIDEBAR_SEARCH
+  FEATURED_TRAINER
+  FEATURED_COMPANY
+  SEARCH_RESULT
+  CATEGORY_SPONSOR
+  NEWSLETTER
+  NATIVE_LISTING
+}
+
+enum AdCreativeType {
+  BANNER
+  SPONSORED_LISTING
+  FEATURED_TRAINER
+  CATEGORY_SPONSOR
+  NATIVE
+}
+
+enum AdTopupStatus {
+  PENDING
+  SUCCEEDED
+  FAILED
+  REFUNDED
+}
+
+// Why a campaign entered the PAUSED state. Used by creditBudget() to decide
+// whether a successful top-up should auto-resume the campaign: only the
+// BUDGET_EXHAUSTED auto-pause is safe to reverse, manual admin/owner pauses
+// must stay paused until explicitly resumed.
+enum AdPauseReason {
+  BUDGET_EXHAUSTED
+  ADMIN
+  OWNER
+}
+
+model AdCampaign {
+  id                 String           @id @default(cuid())
+  ownerId            String
+  companyId          String?
+  name               String
+  pricingModel       AdPricingModel   @default(CPM)
+  // Unit prices in the smallest currency unit (cents). Exactly one is required
+  // based on `pricingModel`; see `ads.service#create`.
+  cpmCents           Int?
+  cpcCents           Int?
+  flatFeeCents       Int?
+  // Running totals — kept on the row so serve() can enforce budget cheaply
+  // (no aggregate query per request).
+  budgetCents        Int              @default(0)
+  // Spent-to-date in whole cents (display-facing, floor of the microcent
+  // accumulator) and in microcents (1/1000 of a cent) for lossless sub-cent
+  // CPM accrual. CPM charges are fractional per impression, so the sub-cent
+  // accumulator prevents Math.floor(cpmCents/1000) from zeroing out for every
+  // rate below $10 / 1000 (e.g. cpmCents=500 → 500 microcents/impression).
+  spentCents         Int              @default(0)
+  spentMicroCents    BigInt           @default(0)
+  status             AdCampaignStatus @default(DRAFT)
+  pausedReason       AdPauseReason?
+  rejectionReason    String?
+  reviewedById       String?
+  reviewedAt         DateTime?
+  targetingCountries String[]         @default([])
+  targetingLocales   String[]         @default([])
+  targetingSkillIds  String[]         @default([])
+  // Hard cap of impressions charged per `sessionHash` within 24h window.
+  frequencyCapPerDay Int?
+  startDate          DateTime?
+  endDate            DateTime?
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
+
+  owner       User           @relation("AdCampaignOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  reviewer    User?          @relation("AdCampaignReviewer", fields: [reviewedById], references: [id], onDelete: SetNull)
+  company     Company?       @relation(fields: [companyId], references: [id], onDelete: SetNull)
+  creatives   AdCreative[]
+  impressions AdImpression[]
+  clicks      AdClick[]
+  topups      AdTopup[]
+
+  @@index([ownerId])
+  @@index([status])
+  @@index([companyId])
 }
 
 model AdCreative {
-  id         String   @id @default(cuid())
-  campaignId String
-  type       String // BANNER | SPONSORED_LISTING | FEATURED_TRAINER | CATEGORY_SPONSOR
-  assetUrl   String?
-  headline   String
-  body       String?
-  ctaUrl     String?
-  placements String[] @default([])
-  createdAt  DateTime @default(now())
+  id              String         @id @default(cuid())
+  campaignId      String
+  type            AdCreativeType @default(NATIVE)
+  assetUrl        String?
+  headline        String
+  body            String?
+  ctaLabel        String?
+  ctaUrl          String
+  placements      AdPlacement[]  @default([])
+  weight          Int            @default(1)
+  isActive        Boolean        @default(true)
+  impressionCount Int            @default(0)
+  clickCount      Int            @default(0)
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
 
   campaign    AdCampaign     @relation(fields: [campaignId], references: [id], onDelete: Cascade)
   impressions AdImpression[]
   clicks      AdClick[]
+
+  @@index([campaignId])
 }
 
 model AdImpression {
-  id         String   @id @default(cuid())
-  creativeId String
-  placement  String?
-  meta       Json?
-  createdAt  DateTime @default(now())
+  id           String      @id @default(cuid())
+  creativeId   String
+  campaignId   String
+  placement    AdPlacement
+  locale       String?
+  country      String?
+  sessionHash  String?
+  userId       String?
+  chargedCents Int         @default(0)
+  createdAt    DateTime    @default(now())
 
   creative AdCreative @relation(fields: [creativeId], references: [id], onDelete: Cascade)
+  campaign AdCampaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
 
-  @@index([creativeId])
+  @@index([creativeId, createdAt])
+  @@index([campaignId, createdAt])
+  @@index([sessionHash, createdAt])
 }
 
 model AdClick {
-  id         String   @id @default(cuid())
-  creativeId String
-  placement  String?
-  meta       Json?
-  createdAt  DateTime @default(now())
+  id           String      @id @default(cuid())
+  creativeId   String
+  campaignId   String
+  placement    AdPlacement
+  locale       String?
+  country      String?
+  sessionHash  String?
+  userId       String?
+  chargedCents Int         @default(0)
+  createdAt    DateTime    @default(now())
 
   creative AdCreative @relation(fields: [creativeId], references: [id], onDelete: Cascade)
+  campaign AdCampaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
 
-  @@index([creativeId])
+  @@index([creativeId, createdAt])
+  @@index([campaignId, createdAt])
+}
+
+model AdTopup {
+  id                    String        @id @default(cuid())
+  campaignId            String
+  amountCents           Int
+  currency              String        @default("usd")
+  stripePaymentIntentId String?       @unique
+  status                AdTopupStatus @default(PENDING)
+  createdAt             DateTime      @default(now())
+  updatedAt             DateTime      @updatedAt
+
+  campaign AdCampaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+
+  @@index([campaignId])
 }
 
 // =========================

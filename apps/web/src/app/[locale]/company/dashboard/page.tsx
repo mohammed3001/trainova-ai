@@ -47,6 +47,9 @@ export default async function CompanyDashboard() {
             <Link href={`/${locale}/company/models`} className="btn-secondary">
               {t('company.models.title')}
             </Link>
+            <Link href={`/${locale}/company/ads`} className="btn-secondary">
+              {t('ads.title')}
+            </Link>
             <Link href={`/${locale}/company/profile`} className="btn-secondary">
               {t('profile.company.editCta')}
             </Link>

@@ -690,6 +690,132 @@
       }
     }
   },
+  "billing": {
+    "companyTitle": "الفواتير والاشتراك",
+    "companySubtitle": "أدر خطة مساحة عملك وبيانات الفوترة والفواتير.",
+    "currentPlan": "الخطة الحالية",
+    "unknownTier": "خطة نشطة",
+    "status": "الحالة",
+    "cancelScheduled": "ستُلغى في نهاية الدورة",
+    "renewsOn": "تُجدّد في",
+    "openPortal": "فتح بوابة الفوترة",
+    "cancelCta": "إلغاء الخطة",
+    "availablePlans": "الخطط المتاحة",
+    "noPlansYet": "لا توجد خطط مُعدَّة حتى الآن.",
+    "free": "مجاني",
+    "perMonth": "شهرياً",
+    "selectCta": "اختيار الخطة",
+    "confirmCta": "اشترك بأمان",
+    "confirmTitle": "الاشتراك في {tier}",
+    "confirmHint": "يتم تشفير بطاقتك عبر Stripe؛ لا نحفظ أرقام البطاقات الكاملة.",
+    "notConfigured": "هذه الخطة غير مربوطة بـ Stripe بعد — ستُتاح قريباً.",
+    "currentBadge": "الخطة الحالية",
+    "subscribedOk": "تم تفعيل الاشتراك.",
+    "cancelledOk": "تم جدولة الإلغاء — الوصول مستمر حتى نهاية الدورة.",
+    "noActiveCompany": "أنت على الخطة المجانية لمساحة العمل.",
+    "noActiveTrainer": "أنت على الخطة المجانية للمدرب.",
+    "errors": {
+      "subscribeFailed": "تعذّر بدء الاشتراك. حاول مجدداً.",
+      "cancelFailed": "تعذّر إلغاء الاشتراك. حاول مجدداً.",
+      "portalFailed": "بوابة Stripe للفوترة غير متاحة حالياً."
+    }
+  },
+  "contracts": {
+    "listTitle": "العقود",
+    "listSubtitle": "مراحل مالية محمية بضمان داخل المنصة مع المدربين المقبولين.",
+    "listEmpty": "لا توجد عقود بعد. أنشئ عقداً من تقديم مقبول.",
+    "newTitle": "عقد جديد",
+    "newSubtitle": "حدّد المراحل وموّلها عبر ضمان Stripe.",
+    "newNeedsApplication": "افتح تقديماً مقبولاً وانقر «إنشاء عقد» للبدء هنا.",
+    "backToDashboard": "العودة إلى لوحة التحكم",
+    "backToList": "العودة إلى العقود",
+    "total": "الإجمالي",
+    "milestones": "المراحل",
+    "fee": "عمولة المنصة",
+    "currencyLabel": "العملة",
+    "trainerUnknown": "مدرب",
+    "companyUnknown": "شركة",
+    "counterparty": "الطرف الآخر",
+    "statusLabel": "الحالة",
+    "createdAt": "تم الإنشاء",
+    "milestonesTitle": "المراحل",
+    "milestoneNumber": "المرحلة #{n}",
+    "totalLabel": "الإجمالي",
+    "fields": {
+      "title": "عنوان العقد",
+      "description": "الوصف",
+      "currency": "العملة",
+      "platformFee": "عمولة المنصة"
+    },
+    "placeholders": {
+      "title": "مثال: ضبط RLHF لروبوت دعم العملاء",
+      "description": "النطاق والمخرجات والقيود وتواتر التواصل.",
+      "milestoneTitle": "مثال: المرحلة 1 — مراجعة البيانات"
+    },
+    "milestoneFields": {
+      "title": "العنوان",
+      "description": "الوصف",
+      "amount": "المبلغ",
+      "remove": "حذف المرحلة",
+      "add": "إضافة مرحلة"
+    },
+    "createCta": "إنشاء العقد",
+    "fundCta": "تمويل",
+    "fundConfirmCta": "ادفع واحتفظ بالضمان",
+    "fundConfirmTitle": "تمويل المرحلة ({amount})",
+    "fundConfirmHint": "تحتفظ المنصة بالمبلغ حتى تصدر أمر الإفراج.",
+    "fundedOk": "تم تمويل المرحلة. المبلغ محتفظ به كضمان.",
+    "releaseCta": "الإفراج للمدرب",
+    "releasedOk": "تم الإفراج عن المرحلة للمدرب.",
+    "refundCta": "استرداد",
+    "refundPrompt": "سبب الاسترداد (اختياري)",
+    "refundedOk": "تم استرداد المرحلة.",
+    "errors": {
+      "titleRequired": "يجب أن يكون عنوان العقد 4 أحرف على الأقل.",
+      "milestoneTitleRequired": "كل مرحلة يجب أن تحمل عنواناً من حرفين على الأقل.",
+      "milestoneMinAmount": "قيمة كل مرحلة لا تقل عن 1.00 دولار.",
+      "createFailed": "تعذّر إنشاء العقد.",
+      "fundFailed": "تعذّر تمويل هذه المرحلة.",
+      "releaseFailed": "تعذّر الإفراج عن هذه المرحلة.",
+      "refundFailed": "تعذّر استرداد هذه المرحلة."
+    }
+  },
+  "payments": {
+    "trainerTitle": "الأرباح والتحويلات",
+    "trainerSubtitle": "تابع الضمان والتحويلات ورفع ظهورك كمدرب.",
+    "earningsTitle": "الأرباح",
+    "pending": "بانتظار الإفراج",
+    "available": "متاح",
+    "paidOut": "تمّ تحويله",
+    "totalEarned": "إجمالي الأرباح",
+    "connectTitle": "Stripe Connect",
+    "connectSubtitle": "أكمل التحقق لاستلام التحويلات إلى بنكك مباشرة.",
+    "chargesEnabled": "قبول الدفع مُفعّل",
+    "payoutsEnabled": "التحويلات مُفعّلة",
+    "detailsSubmitted": "البيانات مُرسَلة",
+    "country": "الدولة",
+    "yes": "نعم",
+    "no": "لا",
+    "startOnboardCta": "ابدأ التحقق مع Stripe",
+    "resumeOnboardCta": "استكمال التحقق",
+    "refreshStatusCta": "تحديث الحالة",
+    "refreshedOk": "تم تحديث حالة Stripe.",
+    "contractsTitle": "العقود النشطة",
+    "contractsEmpty": "لا توجد عقود نشطة بعد.",
+    "companyUnknown": "شركة",
+    "viewDashboard": "عرض اللوحة",
+    "payoutsTitle": "سجل التحويلات",
+    "payoutsEmpty": "لا توجد تحويلات بعد.",
+    "payoutDate": "تاريخ البدء",
+    "payoutAmount": "المبلغ",
+    "payoutStatus": "الحالة",
+    "payoutArrived": "وصل في",
+    "plansTitle": "ظهور مميّز",
+    "errors": {
+      "onboardFailed": "تعذّر بدء تدفق التحقق مع Stripe.",
+      "refreshFailed": "تعذّر تحديث حالة Stripe."
+    }
+  },
   "admin": {
     "overview": "نظرة عامة",
     "users": "المستخدمون",
@@ -703,6 +829,133 @@
       "trainers": "المدربون",
       "requestsOpen": "الطلبات المفتوحة",
       "applications": "التقديمات"
+    },
+    "ads": {
+      "title": "الحملات الإعلانية",
+      "subtitle": "راجع واعتمد أو ارفض الحملات الإعلانية الذاتية الخدمة.",
+      "tabs": {
+        "pending": "بانتظار المراجعة",
+        "all": "جميع الحملات"
+      },
+      "empty": "لا توجد حملات مطابقة لهذا الفلتر.",
+      "actions": {
+        "approve": "اعتماد",
+        "reject": "رفض",
+        "pause": "إيقاف",
+        "resume": "استئناف",
+        "confirmReject": "هل تريد رفض هذه الحملة؟"
+      },
+      "rejectReasonLabel": "السبب (يُعرض للمعلن)",
+      "approvedBy": "اعتُمدت من الإدارة في {at}",
+      "rejectedReason": "مرفوضة: {reason}"
+    }
+  },
+  "ads": {
+    "title": "الحملات الإعلانية",
+    "subtitle": "روّج لشركتك وطلباتك عبر Trainova. اضبط الميزانية واختر مواضع العرض، ويتم الخصم فقط عند ظهور أو نقرة فعلية.",
+    "badge": "المنصّة",
+    "disclosure": "كل المواضع المموّلة تحمل وسم «إعلان» ظاهرًا ولا تُوجّه إلا إلى روابط https بعد المراجعة.",
+    "empty": {
+      "title": "لا توجد حملات بعد",
+      "body": "أنشئ حملتك الأولى للوصول إلى المدربين والشركات النشطة على Trainova.",
+      "cta": "إنشاء حملة"
+    },
+    "status": {
+      "DRAFT": "مسودة",
+      "PENDING_REVIEW": "بانتظار المراجعة",
+      "APPROVED": "معتمدة",
+      "ACTIVE": "نشطة",
+      "PAUSED": "موقوفة",
+      "REJECTED": "مرفوضة",
+      "ENDED": "منتهية"
+    },
+    "pricing": {
+      "CPM": "تكلفة كل 1000 ظهور (CPM)",
+      "CPC": "تكلفة النقرة (CPC)",
+      "FLAT": "رعاية ثابتة"
+    },
+    "placement": {
+      "HOMEPAGE_HERO": "بطل الصفحة الرئيسية",
+      "SIDEBAR_SEARCH": "الشريط الجانبي للبحث",
+      "FEATURED_TRAINER": "مدرب مميّز",
+      "FEATURED_COMPANY": "شركة مميّزة",
+      "SEARCH_RESULT": "نتيجة بحث مروَّجة",
+      "CATEGORY_SPONSOR": "راعي فئة",
+      "NEWSLETTER": "النشرة البريدية",
+      "NATIVE_LISTING": "إدراج أصيل"
+    },
+    "creativeType": {
+      "BANNER": "بانر",
+      "SPONSORED_LISTING": "إدراج ممول",
+      "FEATURED_TRAINER": "مدرب مميّز",
+      "CATEGORY_SPONSOR": "راعي فئة",
+      "NATIVE": "أصيل"
+    },
+    "list": {
+      "header": "حملاتك",
+      "create": "حملة جديدة",
+      "spentOf": "{spent} من أصل {budget}",
+      "impressionsLabel": "الظهور",
+      "clicksLabel": "النقرات",
+      "ctrLabel": "نسبة النقر",
+      "creatives": "التصاميم ({count})"
+    },
+    "detail": {
+      "backToList": "عودة إلى الحملات",
+      "performanceTitle": "الأداء",
+      "budgetTitle": "الميزانية والشحن",
+      "creativesTitle": "التصاميم",
+      "addCreative": "إضافة تصميم",
+      "submitForReview": "إرسال للمراجعة",
+      "pause": "إيقاف",
+      "resume": "استئناف",
+      "delete": "حذف الحملة",
+      "confirmDelete": "حذف هذه الحملة؟ الميزانية المتبقية تُفقد.",
+      "topupCta": "شحن الميزانية",
+      "rejectionReason": "سبب الرفض",
+      "noCreatives": "لا يوجد تصاميم — أضف واحدًا قبل إرسال الحملة للمراجعة.",
+      "remainingBudget": "الميزانية المتبقية"
+    },
+    "campaign": {
+      "name": "اسم الحملة",
+      "pricingModel": "نموذج التسعير",
+      "cpm": "CPM (سنت لكل 1000 ظهور)",
+      "cpc": "CPC (سنت لكل نقرة)",
+      "flat": "رعاية ثابتة (سنت)",
+      "frequencyCap": "الحد الأقصى للظهور لكل زائر يوميًا",
+      "targetingCountries": "الدول المستهدفة (ISO-2)",
+      "targetingLocales": "اللغات المستهدفة",
+      "targetingSkills": "مهارات مستهدفة (معرّفات)",
+      "startDate": "تاريخ البدء",
+      "endDate": "تاريخ الانتهاء",
+      "commaHint": "افصل بينها بفاصلة"
+    },
+    "creative": {
+      "headline": "العنوان",
+      "body": "النص (اختياري)",
+      "ctaLabel": "نص الزر (اختياري)",
+      "ctaUrl": "رابط الوجهة",
+      "assetUrl": "رابط الصورة (https، اختياري)",
+      "placements": "المواضع",
+      "weight": "الوزن (1 – 10)",
+      "active": "فعّال",
+      "save": "حفظ التصميم",
+      "remove": "حذف"
+    },
+    "topup": {
+      "title": "شحن ميزانية الحملة",
+      "amount": "المبلغ (سنت)",
+      "paymentMethodId": "معرّف وسيلة الدفع المحفوظة",
+      "hint": "أضف بطاقتك من صفحة الفوترة أولًا — ومعرّف pm_… المحفوظ يُوضع هنا.",
+      "submit": "خصم وشحن الميزانية",
+      "success": "الشحن جارٍ. تُحدَّث الميزانية فور تأكيد Stripe."
+    },
+    "errors": {
+      "createFailed": "تعذّر إنشاء الحملة.",
+      "updateFailed": "تعذّر تحديث الحملة.",
+      "submitFailed": "تعذّر إرسال الحملة.",
+      "topupFailed": "تعذّر بدء عملية الشحن.",
+      "creativeFailed": "تعذّر حفظ التصميم."
     }
   },
   "chat": {
