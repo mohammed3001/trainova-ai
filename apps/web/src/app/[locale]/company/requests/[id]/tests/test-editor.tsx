@@ -379,6 +379,7 @@ export function TestEditor({
                 </label>
                 {task.type === 'MCQ' ? (
                   <McqEditor
+                    taskIndex={index}
                     options={task.options}
                     answerKey={task.answerKey}
                     onChange={(options, answerKey) =>
@@ -446,10 +447,12 @@ export function TestEditor({
 }
 
 function McqEditor({
+  taskIndex,
   options,
   answerKey,
   onChange,
 }: {
+  taskIndex: number;
   options: string[];
   answerKey: string | null;
   onChange: (options: string[], answerKey: string | null) => void;
@@ -484,7 +487,7 @@ function McqEditor({
         <div key={i} className="flex items-center gap-2">
           <input
             type="radio"
-            name={`answer-${options.length}-${i}`}
+            name={`answer-task-${taskIndex}`}
             checked={opt !== '' && answerKey === opt}
             disabled={opt === ''}
             onChange={() => onChange(options, opt)}

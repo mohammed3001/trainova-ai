@@ -36,15 +36,15 @@ export function AssignTestButton({
     try {
       const res = await fetch(`/api/proxy/tests?requestId=${requestId}`);
       if (!res.ok) {
+        // Leave `tests` null so the next open retries the fetch instead
+        // of cementing an empty-state UI from a transient failure.
         setError(t('company.tests.errors.generic'));
-        setTests([]);
         return;
       }
       const data = (await res.json()) as TestOption[];
       setTests(data);
     } catch {
       setError(t('company.tests.errors.generic'));
-      setTests([]);
     } finally {
       setLoadingTests(false);
     }

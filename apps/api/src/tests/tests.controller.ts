@@ -97,10 +97,12 @@ export class TestsController {
     return this.service.findOneForUser(user.id, user.role, id);
   }
 
+  // Ownership is enforced inside findOneForEditor so admin/super-admin roles
+  // can still load the editor payload. Using @Roles('COMPANY_OWNER') here
+  // would 403 them at the guard before the service check runs.
   @Get(':id/edit')
   @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('COMPANY_OWNER')
+  @UseGuards(JwtAuthGuard)
   findOneForEditor(@CurrentUser() user: AuthUser, @Param('id') id: string) {
     return this.service.findOneForEditor(user.id, user.role, id);
   }
