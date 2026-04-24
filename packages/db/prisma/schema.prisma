@@ -434,6 +434,7 @@ model TestAttempt {
   application Application?      @relation(fields: [applicationId], references: [id], onDelete: SetNull)
   responses   TestTaskResponse[]
 
+  @@unique([testId, trainerId, applicationId])
   @@index([trainerId])
 }
 
