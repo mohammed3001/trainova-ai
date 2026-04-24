@@ -1,6 +1,23 @@
 import { z } from 'zod';
 import { applicationFormSchema } from './application-form';
 
+/**
+ * Robust string→boolean coercion for query params + form fields.
+ * Unlike `z.coerce.boolean()` (which does `Boolean(value)` and treats
+ * every non-empty string as true, including "false"), this schema
+ * explicitly parses common truthy/falsy string representations.
+ */
+export const stringBoolean = z.preprocess((value) => {
+  if (typeof value === 'boolean') return value;
+  if (typeof value === 'number') return value !== 0;
+  if (typeof value === 'string') {
+    const v = value.trim().toLowerCase();
+    if (['true', '1', 'yes', 'on'].includes(v)) return true;
+    if (['false', '0', 'no', 'off', ''].includes(v)) return false;
+  }
+  return value;
+}, z.boolean());
+
 export const registerSchema = z.object({
   email: z.string().email(),
   password: z.string().min(8).max(128),
@@ -576,7 +593,7 @@ export const upsertFaqEntrySchema = z.object({
   question: z.string().min(1).max(500),
   answer: z.string().min(1).max(10_000),
   order: z.coerce.number().int().min(0).max(10_000).default(0),
-  published: z.coerce.boolean().default(true),
+  published: stringBoolean.default(true),
 });
 export type UpsertFaqEntryInput = z.infer<typeof upsertFaqEntrySchema>;
 
@@ -584,7 +601,7 @@ export const adminListFaqQuerySchema = z.object({
   locale: cmsLocaleSchema.optional(),
   section: z.string().max(80).optional(),
   q: z.string().max(200).optional(),
-  published: z.coerce.boolean().optional(),
+  published: stringBoolean.optional(),
   limit: z.coerce.number().int().min(1).max(200).optional(),
   cursor: z.string().max(64).optional(),
 });
@@ -599,7 +616,7 @@ export const upsertFeatureFlagSchema = z.object({
     .max(120)
     .regex(/^[a-z0-9]+(?:[._-][a-z0-9]+)*$/, 'use snake_case / kebab-case keys'),
   description: z.string().max(1000).nullable().optional(),
-  enabled: z.coerce.boolean(),
+  enabled: stringBoolean,
   payload: z.record(z.unknown()).nullable().optional(),
 });
 export type UpsertFeatureFlagInput = z.infer<typeof upsertFeatureFlagSchema>;
