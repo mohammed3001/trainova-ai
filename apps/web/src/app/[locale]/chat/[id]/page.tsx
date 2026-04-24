@@ -64,6 +64,7 @@ export default async function ChatRoomPage({
         ) : null}
       </div>
       <ChatRoom
+        key={conversation.id}
         conversationId={conversation.id}
         currentUserId={me.id}
         otherName={otherName}

@@ -298,7 +298,10 @@ function groupByDay(messages: ChatMessage[], locale: string): DayGroup[] {
   const out: DayGroup[] = [];
   for (const m of messages) {
     const d = new Date(m.createdAt);
-    const key = d.toISOString().slice(0, 10);
+    // Group by local-date parts so the key stays aligned with the label
+    // (which uses toLocaleDateString). A UTC-based key produces split
+    // groups with identical labels for users in non-UTC timezones.
+    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
     const label = d.toLocaleDateString(locale === 'ar' ? 'ar' : 'en', {
       day: 'numeric',
       month: 'short',
