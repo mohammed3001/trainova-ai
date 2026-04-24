@@ -486,3 +486,120 @@ export const adminAnalyticsRangeSchema = z.object({
   days: z.coerce.number().int().min(1).max(365).default(30),
 });
 export type AdminAnalyticsRange = z.infer<typeof adminAnalyticsRangeSchema>;
+
+// =========================================================================
+// T5.C CMS — pages + articles + categories + FAQ + feature flags
+// =========================================================================
+
+export const cmsLocaleSchema = z.enum(['en', 'ar']);
+export type CmsLocale = z.infer<typeof cmsLocaleSchema>;
+
+export const pageStatusSchema = z.enum(['DRAFT', 'PUBLISHED', 'ARCHIVED']);
+export type PageStatus = z.infer<typeof pageStatusSchema>;
+
+export const articleStatusSchema = z.enum(['DRAFT', 'PUBLISHED', 'ARCHIVED']);
+export type ArticleStatus = z.infer<typeof articleStatusSchema>;
+
+const slugField = z
+  .string()
+  .min(1)
+  .max(96)
+  .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, 'lowercase letters, digits, hyphens only');
+
+// -- Pages --------------------------------------------------------------
+
+export const upsertPageSchema = z.object({
+  slug: slugField,
+  locale: cmsLocaleSchema,
+  title: z.string().min(1).max(250),
+  content: z.string().max(200_000),
+  metaTitle: z.string().max(160).nullable().optional(),
+  metaDescription: z.string().max(320).nullable().optional(),
+  status: pageStatusSchema.default('DRAFT'),
+  kind: z.enum(['PAGE', 'LEGAL']).default('PAGE'),
+});
+export type UpsertPageInput = z.infer<typeof upsertPageSchema>;
+
+export const adminListPagesQuerySchema = z.object({
+  q: z.string().max(200).optional(),
+  locale: cmsLocaleSchema.optional(),
+  status: pageStatusSchema.optional(),
+  kind: z.enum(['PAGE', 'LEGAL']).optional(),
+  limit: z.coerce.number().int().min(1).max(100).optional(),
+  cursor: z.string().max(64).optional(),
+});
+export type AdminListPagesQuery = z.infer<typeof adminListPagesQuerySchema>;
+
+// -- Categories ---------------------------------------------------------
+
+export const upsertCategorySchema = z.object({
+  slug: slugField,
+  nameEn: z.string().min(1).max(150),
+  nameAr: z.string().min(1).max(150),
+  descriptionEn: z.string().max(2000).nullable().optional(),
+  descriptionAr: z.string().max(2000).nullable().optional(),
+  order: z.coerce.number().int().min(0).max(10_000).default(0),
+});
+export type UpsertCategoryInput = z.infer<typeof upsertCategorySchema>;
+
+// -- Articles -----------------------------------------------------------
+
+export const upsertArticleSchema = z.object({
+  slug: slugField,
+  locale: cmsLocaleSchema,
+  title: z.string().min(1).max(250),
+  excerpt: z.string().max(600).nullable().optional(),
+  content: z.string().max(500_000),
+  coverUrl: z.string().url().max(2048).nullable().optional(),
+  metaTitle: z.string().max(160).nullable().optional(),
+  metaDescription: z.string().max(320).nullable().optional(),
+  status: articleStatusSchema.default('DRAFT'),
+  categoryId: z.string().cuid().nullable().optional(),
+});
+export type UpsertArticleInput = z.infer<typeof upsertArticleSchema>;
+
+export const adminListArticlesQuerySchema = z.object({
+  q: z.string().max(200).optional(),
+  locale: cmsLocaleSchema.optional(),
+  status: articleStatusSchema.optional(),
+  categoryId: z.string().cuid().optional(),
+  limit: z.coerce.number().int().min(1).max(100).optional(),
+  cursor: z.string().max(64).optional(),
+});
+export type AdminListArticlesQuery = z.infer<typeof adminListArticlesQuerySchema>;
+
+// -- FAQ ----------------------------------------------------------------
+
+export const upsertFaqEntrySchema = z.object({
+  locale: cmsLocaleSchema,
+  section: z.string().min(1).max(80).default('GENERAL'),
+  question: z.string().min(1).max(500),
+  answer: z.string().min(1).max(10_000),
+  order: z.coerce.number().int().min(0).max(10_000).default(0),
+  published: z.coerce.boolean().default(true),
+});
+export type UpsertFaqEntryInput = z.infer<typeof upsertFaqEntrySchema>;
+
+export const adminListFaqQuerySchema = z.object({
+  locale: cmsLocaleSchema.optional(),
+  section: z.string().max(80).optional(),
+  q: z.string().max(200).optional(),
+  published: z.coerce.boolean().optional(),
+  limit: z.coerce.number().int().min(1).max(200).optional(),
+  cursor: z.string().max(64).optional(),
+});
+export type AdminListFaqQuery = z.infer<typeof adminListFaqQuerySchema>;
+
+// -- Feature flags ------------------------------------------------------
+
+export const upsertFeatureFlagSchema = z.object({
+  key: z
+    .string()
+    .min(1)
+    .max(120)
+    .regex(/^[a-z0-9]+(?:[._-][a-z0-9]+)*$/, 'use snake_case / kebab-case keys'),
+  description: z.string().max(1000).nullable().optional(),
+  enabled: z.coerce.boolean(),
+  payload: z.record(z.unknown()).nullable().optional(),
+});
+export type UpsertFeatureFlagInput = z.infer<typeof upsertFeatureFlagSchema>;

@@ -869,7 +869,12 @@
       "attempts": "Attempts",
       "conversations": "Chat moderation",
       "reports": "Reports",
-      "analytics": "Analytics"
+      "analytics": "Analytics",
+      "cmsPages": "CMS pages",
+      "cmsArticles": "Articles",
+      "cmsCategories": "Categories",
+      "cmsFaqs": "FAQ",
+      "featureFlags": "Feature flags"
     },
     "userRole": {
       "SUPER_ADMIN": "Super admin",
@@ -1203,6 +1208,170 @@
         "total": "Total: {n}"
       },
       "empty": "No activity in the selected window."
+    },
+    "jsonAccordion": "Raw row JSON",
+    "cms": {
+      "save": "Save",
+      "edit": "Edit",
+      "delete": "Delete",
+      "empty": "Nothing yet. Create the first entry to get started.",
+      "loadMore": "Load more",
+      "filter": {
+        "searchPlaceholder": "Search…",
+        "allLocales": "All locales",
+        "allStatuses": "All statuses",
+        "allKinds": "All kinds",
+        "apply": "Apply"
+      },
+      "pageStatus": {
+        "DRAFT": "Draft",
+        "PUBLISHED": "Published"
+      },
+      "pageKind": {
+        "PAGE": "Page",
+        "LEGAL": "Legal"
+      },
+      "articleStatus": {
+        "DRAFT": "Draft",
+        "PUBLISHED": "Published",
+        "ARCHIVED": "Archived"
+      },
+      "pages": {
+        "title": "Pages",
+        "subtitle": "Public pages, legal notices and static content.",
+        "new": "New page",
+        "edit": "Edit page",
+        "col": {
+          "title": "Title",
+          "slug": "Slug",
+          "locale": "Locale",
+          "kind": "Kind",
+          "status": "Status",
+          "updated": "Updated",
+          "actions": "Actions"
+        },
+        "field": {
+          "title": "Title",
+          "slug": "Slug",
+          "locale": "Locale",
+          "kind": "Kind",
+          "status": "Status",
+          "metaTitle": "SEO title",
+          "metaDescription": "SEO description",
+          "content": "Content (markdown / HTML)",
+          "contentHint": "Supports markdown and raw HTML."
+        }
+      },
+      "articles": {
+        "title": "Blog & articles",
+        "subtitle": "Editorial content surfaced on the public blog and SEO sitemap.",
+        "new": "New article",
+        "edit": "Edit article",
+        "noCategory": "— no category —",
+        "filter": {
+          "allCategories": "All categories"
+        },
+        "col": {
+          "title": "Title",
+          "slug": "Slug",
+          "locale": "Locale",
+          "status": "Status",
+          "category": "Category",
+          "published": "Published",
+          "actions": "Actions"
+        },
+        "field": {
+          "title": "Title",
+          "slug": "Slug",
+          "locale": "Locale",
+          "status": "Status",
+          "category": "Category",
+          "coverUrl": "Cover image URL",
+          "excerpt": "Excerpt",
+          "metaTitle": "SEO title",
+          "metaDescription": "SEO description",
+          "content": "Content (markdown / HTML)",
+          "contentHint": "Long-form body. Supports markdown and raw HTML."
+        }
+      },
+      "categories": {
+        "title": "Categories",
+        "subtitle": "Taxonomy used by articles and public listings.",
+        "new": "New category",
+        "edit": "Edit category",
+        "col": {
+          "nameEn": "Name (EN)",
+          "nameAr": "Name (AR)",
+          "slug": "Slug",
+          "order": "Order",
+          "articles": "Articles"
+        },
+        "field": {
+          "slug": "Slug",
+          "order": "Order",
+          "nameEn": "Name (EN)",
+          "nameAr": "Name (AR)",
+          "descriptionEn": "Description (EN)",
+          "descriptionAr": "Description (AR)"
+        }
+      },
+      "faqs": {
+        "title": "FAQ",
+        "subtitle": "Frequently asked questions grouped by section and locale.",
+        "new": "New FAQ entry",
+        "edit": "Edit FAQ entry",
+        "col": {
+          "question": "Question",
+          "section": "Section",
+          "locale": "Locale",
+          "order": "Order",
+          "published": "State"
+        },
+        "field": {
+          "locale": "Locale",
+          "section": "Section",
+          "order": "Order",
+          "question": "Question",
+          "answer": "Answer",
+          "published": "Published"
+        },
+        "filter": {
+          "allSections": "All sections",
+          "anyPublished": "Any state",
+          "published": "Published",
+          "unpublished": "Hidden"
+        },
+        "section": {
+          "GENERAL": "General",
+          "COMPANIES": "Companies",
+          "TRAINERS": "Trainers",
+          "PAYMENTS": "Payments",
+          "TESTS": "Tests",
+          "MODELS": "Models",
+          "ACCOUNT": "Account"
+        }
+      },
+      "featureFlags": {
+        "title": "Feature flags",
+        "subtitle": "Toggle platform features and roll out experiments.",
+        "new": "New flag",
+        "edit": "Edit flag",
+        "on": "On",
+        "off": "Off",
+        "col": {
+          "key": "Key",
+          "enabled": "State",
+          "description": "Description",
+          "updated": "Updated"
+        },
+        "field": {
+          "key": "Key",
+          "description": "Description",
+          "enabled": "Enabled",
+          "payload": "Payload (JSON)",
+          "payloadHint": "Optional JSON object passed to the client (e.g. rollout %, variant)."
+        }
+      }
     }
   },
   "ads": {
