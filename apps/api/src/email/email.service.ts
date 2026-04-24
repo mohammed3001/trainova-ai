@@ -77,6 +77,29 @@ export class EmailService implements OnModuleInit {
   }
 
   /**
+   * Generic transactional/notification send. Derives a plaintext body by:
+   *   1. replacing block-level tags with newlines so adjacent sentences
+   *      don't run together,
+   *   2. stripping the rest of the tags,
+   *   3. decoding the five HTML entities that every template in this repo
+   *      actually emits via escapeHtml — without this step, user-supplied
+   *      titles round-trip as `&quot;Foo&quot;` in the plaintext fallback.
+   */
+  async sendRaw(to: string, subject: string, html: string): Promise<SendEmailResult> {
+    const text = html
+      .replace(/<\/?(p|div|br|h[1-6]|li|tr)[^>]*>/gi, '\n')
+      .replace(/<[^>]*>/g, '')
+      .replace(/&quot;/g, '"')
+      .replace(/&#39;/g, "'")
+      .replace(/&lt;/g, '<')
+      .replace(/&gt;/g, '>')
+      .replace(/&amp;/g, '&')
+      .replace(/\n{3,}/g, '\n\n')
+      .trim();
+    return this.provider.send({ to, subject, html, text });
+  }
+
+  /**
    * Normalize an arbitrary locale string to one of the supported locales.
    * Defaults to `en` for unknown inputs so callers can pass raw user locale.
    */

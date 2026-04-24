@@ -14,6 +14,7 @@ import { JobRequestsModule } from './job-requests/job-requests.module';
 import { ApplicationsModule } from './applications/applications.module';
 import { TestsModule } from './tests/tests.module';
 import { ChatModule } from './chat/chat.module';
+import { NotificationsModule } from './notifications/notifications.module';
 import { AdminModule } from './admin/admin.module';
 import { PublicModule } from './public/public.module';
 import { UploadsModule } from './uploads/uploads.module';
@@ -37,6 +38,7 @@ import { HealthController } from './health.controller';
     ApplicationsModule,
     TestsModule,
     ChatModule,
+    NotificationsModule,
     AdminModule,
     PublicModule,
     UploadsModule,

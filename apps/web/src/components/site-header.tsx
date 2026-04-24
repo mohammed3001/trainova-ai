@@ -3,6 +3,7 @@ import { getTranslations, getLocale } from 'next-intl/server';
 import { getToken, getRole } from '@/lib/session';
 import { authedFetch } from '@/lib/authed-fetch';
 import { LocaleSwitcher } from './locale-switcher';
+import { NotificationsBell } from './notifications/notifications-bell';
 
 export async function SiteHeader() {
   const t = await getTranslations('common');
@@ -10,11 +11,16 @@ export async function SiteHeader() {
   const locale = await getLocale();
   const token = await getToken();
   const role = await getRole();
-  const unread = token
-    ? await authedFetch<{ total: number }>('/chat/unread-count')
-        .then((r) => r.total)
-        .catch(() => 0)
-    : 0;
+  const [unread, notifUnread] = token
+    ? await Promise.all([
+        authedFetch<{ total: number }>('/chat/unread-count')
+          .then((r) => r.total)
+          .catch(() => 0),
+        authedFetch<{ count: number }>('/notifications/unread-count')
+          .then((r) => r.count)
+          .catch(() => 0),
+      ])
+    : [0, 0];
 
   const dashboardHref =
     role === 'COMPANY_OWNER'
@@ -44,6 +50,7 @@ export async function SiteHeader() {
           <LocaleSwitcher />
           {token ? (
             <>
+              <NotificationsBell locale={locale} initialUnread={notifUnread} />
               <Link
                 href={`/${locale}/chat`}
                 className="btn-ghost relative"
