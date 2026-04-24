@@ -9,6 +9,7 @@ import { ConfigService } from '@nestjs/config';
 import { Prisma } from '@trainova/db';
 import { PrismaService } from '../prisma/prisma.service';
 import { EmailService } from '../email/email.service';
+import { escapeHtml } from '../email/templates/layout';
 import { NotificationsService } from '../notifications/notifications.service';
 import {
   AUDIT_ACTIONS,
@@ -639,7 +640,14 @@ export class TestsService {
           },
           email: {
             subject: `Your Trainova AI test was graded`,
-            html: `<p>Your attempt on <strong>${attempt.test.title}</strong> has been graded.</p><p>Final score: <strong>${
+            // attempt.test.title is company-owner-controlled; every other
+            // email template in the codebase funnels user values through
+            // escapeHtml() before interpolating — follow the same pattern
+            // here so a crafted test title can't inject markup or phishing
+            // buttons into the trainer's inbox.
+            html: `<p>Your attempt on <strong>${escapeHtml(
+              attempt.test.title,
+            )}</strong> has been graded.</p><p>Final score: <strong>${
               updatedAttempt.totalScore ?? 0
             }/100</strong> — ${passed ? 'you passed.' : 'you did not pass this time.'}</p>`,
           },
