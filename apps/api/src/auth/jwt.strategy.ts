@@ -7,6 +7,7 @@ export interface JwtPayload {
   sub: string;
   email: string;
   role: string;
+  kind?: string;
 }
 
 @Injectable()
@@ -20,6 +21,10 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   }
 
   async validate(payload: JwtPayload) {
+    // ws-scoped tickets are only valid for the Socket.IO handshake; they must
+    // NEVER authenticate a REST call. Reject them here so a leaked ticket
+    // cannot be replayed against /api/... Bearer endpoints.
+    if (payload.kind === 'ws') throw new UnauthorizedException('Invalid token scope');
     const user = await this.prisma.user.findUnique({
       where: { id: payload.sub },
       select: { id: true, email: true, role: true, status: true },

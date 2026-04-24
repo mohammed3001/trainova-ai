@@ -8,6 +8,7 @@ import { StatusBadge, StatusActions } from '../status-controls';
 import { AssignTestButton } from '../assign-test-button';
 import { AttemptsCard } from './attempts-card';
 import { AnswersCard } from './answers-card';
+import { StartChatButton } from '@/components/chat/start-chat-button';
 
 interface Application {
   id: string;
@@ -97,6 +98,14 @@ export default async function ApplicationDetailPage({
           <StatusActions applicationId={app.id} currentStatus={app.status} />
           {app.status === 'APPLIED' || app.status === 'SHORTLISTED' ? (
             <AssignTestButton applicationId={app.id} requestId={id} />
+          ) : null}
+          {app.status === 'ACCEPTED' || app.status === 'SHORTLISTED' ? (
+            <StartChatButton
+              otherUserId={app.trainer.id}
+              requestId={id}
+              labelKey="messageTrainer"
+              dataTestId="company-message-trainer"
+            />
           ) : null}
         </div>
       </header>

@@ -502,5 +502,41 @@
       "requestsOpen": "Open requests",
       "applications": "Applications"
     }
+  },
+  "chat": {
+    "nav": "Messages",
+    "startChat": "Start chat",
+    "messageTrainer": "Message trainer",
+    "messageCompany": "Message company",
+    "starting": "Opening…",
+    "startFailed": "Couldn't start conversation",
+    "hub": {
+      "title": "Messages",
+      "subtitle": "Private threads with companies and trainers you're working with.",
+      "emptyTitle": "No conversations yet",
+      "emptyBody": "Once an application is shortlisted or accepted, you can message the other side from its detail page.",
+      "browseCta": "Browse open requests",
+      "unknownUser": "Unknown user",
+      "attachment": "📎 Attachment",
+      "noMessagesYet": "No messages yet"
+    },
+    "room": {
+      "back": "Back to messages",
+      "placeholder": "Write a message…",
+      "send": "Send",
+      "sending": "Sending…",
+      "sendFailed": "Failed to send. Try again.",
+      "live": "Live",
+      "offline": "Offline",
+      "typing": "{name} is typing",
+      "emptyHint": "This is the beginning of your conversation. Messages are private to participants.",
+      "notFound": "Conversation unavailable."
+    },
+    "role": {
+      "COMPANY_OWNER": "Company",
+      "TRAINER": "Trainer",
+      "ADMIN": "Admin",
+      "SUPER_ADMIN": "Admin"
+    }
   }
 }

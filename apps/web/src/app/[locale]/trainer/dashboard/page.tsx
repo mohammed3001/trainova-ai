@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation';
 import { getLocale, getTranslations } from 'next-intl/server';
 import { getRole, getToken } from '@/lib/session';
 import { authedFetch } from '@/lib/authed-fetch';
+import { StartChatButton } from '@/components/chat/start-chat-button';
 
 interface MeUser {
   name: string;
@@ -17,7 +18,7 @@ interface ApplicationRow {
     title: string;
     modelFamily: string | null;
     industry: string | null;
-    company: { name: string; slug: string };
+    company: { name: string; slug: string; ownerId: string };
   };
 }
 
@@ -92,6 +93,16 @@ export default async function TrainerDashboard() {
                       >
                         {t(`trainer.tests.dashboardRow.${testCta.ctaKey}`)}
                       </Link>
+                    </div>
+                  ) : null}
+                  {a.status === 'ACCEPTED' || a.status === 'SHORTLISTED' ? (
+                    <div className="flex items-center justify-end gap-3 border-t border-slate-100 pt-2">
+                      <StartChatButton
+                        otherUserId={a.request.company.ownerId}
+                        requestId={a.request.id}
+                        labelKey="messageCompany"
+                        dataTestId={`trainer-message-company-${a.id}`}
+                      />
                     </div>
                   ) : null}
                 </li>
