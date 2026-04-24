@@ -42,12 +42,29 @@ export default async function AdminDashboard() {
         </nav>
       </header>
 
-      <section className="grid grid-cols-2 gap-4 md:grid-cols-5">
-        <Kpi label={t('admin.kpi.users')} value={o.users} />
-        <Kpi label={t('admin.kpi.companies')} value={o.companies} />
-        <Kpi label={t('admin.kpi.trainers')} value={o.trainers} />
-        <Kpi label={t('admin.kpi.requestsOpen')} value={o.requestsOpen} />
-        <Kpi label={t('admin.kpi.applications')} value={o.applications} />
+      <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+        {cards.map((c) => (
+          <div key={c.href} data-testid="admin-kpi-card">
+            <Link
+              href={c.href}
+              className="group relative block overflow-hidden rounded-2xl border border-white/60 bg-white/70 p-5 shadow-sm backdrop-blur-md transition hover:-translate-y-0.5 hover:shadow-md"
+            >
+              <div
+                aria-hidden
+                className={`pointer-events-none absolute inset-0 bg-gradient-to-br ${c.accent}`}
+              />
+              <div className="relative">
+                <div className="text-xs font-semibold uppercase tracking-wider text-slate-600">
+                  {c.label}
+                </div>
+                <div className="mt-2 text-4xl font-bold text-slate-900 tabular-nums">
+                  {c.value.toLocaleString()}
+                </div>
+                {c.sub && <div className="mt-1 text-xs text-slate-500">{c.sub}</div>}
+              </div>
+            </Link>
+          </div>
+        ))}
       </section>
     </div>
   );
