@@ -290,34 +290,41 @@ export class AdminFinanceService {
       );
     }
 
-    await this.stripe.refundPaymentIntent({
-      paymentIntentId: lastPi.stripePaymentIntentId,
-      reason: input.reason,
-      idempotencyKey: `admin-refund-${milestone.id}`,
-    });
-
-    await this.prisma.$transaction(async (tx) => {
-      await tx.milestone.update({
-        where: { id: milestone.id },
-        data: { status: 'REFUNDED', refundedAt: new Date() },
-      });
-      await tx.auditLog.create({
-        data: {
-          actorId: actor.actorId,
-          action: FINANCE_AUDIT_ACTIONS.ADMIN_REFUND_MILESTONE,
-          entityType: 'Milestone',
-          entityId: milestone.id,
-          ip: actor.ip ?? null,
-          diff: {
-            milestoneId: milestone.id,
-            contractId: milestone.contractId,
-            amountCents: milestone.amountCents,
-            stripePaymentIntentId: lastPi.stripePaymentIntentId,
-            reason: input.reason,
-          } as Prisma.InputJsonValue,
-        },
-      });
-    });
+    // Run the Stripe refund inside the DB transaction so the milestone status
+    // and AuditLog row only commit if Stripe accepted the refund. The Stripe
+    // call is keyed on `admin-refund-${milestone.id}` so a retry after a DB
+    // failure replays as a no-op on Stripe's side and the second attempt's DB
+    // write commits cleanly.
+    await this.prisma.$transaction(
+      async (tx) => {
+        await this.stripe.refundPaymentIntent({
+          paymentIntentId: lastPi.stripePaymentIntentId,
+          reason: input.reason,
+          idempotencyKey: `admin-refund-${milestone.id}`,
+        });
+        await tx.milestone.update({
+          where: { id: milestone.id },
+          data: { status: 'REFUNDED', refundedAt: new Date() },
+        });
+        await tx.auditLog.create({
+          data: {
+            actorId: actor.actorId,
+            action: FINANCE_AUDIT_ACTIONS.ADMIN_REFUND_MILESTONE,
+            entityType: 'Milestone',
+            entityId: milestone.id,
+            ip: actor.ip ?? null,
+            diff: {
+              milestoneId: milestone.id,
+              contractId: milestone.contractId,
+              amountCents: milestone.amountCents,
+              stripePaymentIntentId: lastPi.stripePaymentIntentId,
+              reason: input.reason,
+            } as Prisma.InputJsonValue,
+          },
+        });
+      },
+      { timeout: 30_000 },
+    );
 
     return { ok: true };
   }
@@ -696,10 +703,14 @@ export class AdminFinanceService {
   }
 
   async deletePlan(actor: AdminActor, id: string): Promise<{ ok: true }> {
-    const subs = await this.prisma.subscription.count({ where: { planId: id } });
+    // Match listPlans which only counts active subscriptions, so the UI's
+    // "subscribers > 0 → disable delete" check stays consistent with the API.
+    const subs = await this.prisma.subscription.count({
+      where: { planId: id, status: { in: ['ACTIVE', 'TRIALING', 'PAST_DUE'] } },
+    });
     if (subs > 0) {
       throw new ConflictException(
-        `Cannot delete plan with ${subs} attached subscription(s); cancel them first`,
+        `Cannot delete plan with ${subs} active subscription(s); cancel them first`,
       );
     }
     const before = await this.prisma.plan.findUnique({ where: { id } });
