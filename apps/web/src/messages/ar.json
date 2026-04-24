@@ -281,6 +281,114 @@
         "empty": "لا تغييرات على الحالة بعد.",
         "changedStatus": "غيّر الحالة من {from} إلى {to}",
         "unknownActor": "مستخدم غير معروف"
+      },
+      "manageTests": "إدارة الاختبارات"
+    },
+    "tests": {
+      "title": "الاختبارات",
+      "empty": "لا توجد اختبارات بعد.",
+      "new": "اختبار جديد",
+      "edit": "تعديل",
+      "delete": "حذف",
+      "confirmDelete": "هل تريد حذف هذا الاختبار؟",
+      "confirmDeleteYes": "نعم، احذف",
+      "backToList": "العودة إلى الاختبارات",
+      "backToApplications": "العودة إلى الطلبات",
+      "meta": {
+        "tasks": "{count, plural, zero {لا مهام} one {مهمة} two {مهمتان} few {# مهام} many {# مهمة} other {# مهمة}}",
+        "attempts": "{count, plural, zero {لا محاولات} one {محاولة} two {محاولتان} few {# محاولات} many {# محاولة} other {# محاولة}}",
+        "timeLimit": "مهلة {minutes} دقيقة"
+      },
+      "errors": {
+        "generic": "حدث خطأ. يُرجى المحاولة مجددًا.",
+        "hasAttempts": "هذا الاختبار به محاولات ولا يمكن حذفه.",
+        "titleRequired": "يجب أن يكون العنوان 3 أحرف على الأقل.",
+        "noTasks": "أضف مهمة واحدة على الأقل.",
+        "promptRequired": "المهمة {n}: النص مطلوب.",
+        "mcqNeedsOptions": "المهمة {n}: يجب أن يحتوي سؤال الاختيار على خيارَيْن على الأقل.",
+        "mcqNeedsAnswer": "المهمة {n}: اختر الإجابة الصحيحة."
+      },
+      "editor": {
+        "createTitle": "اختبار جديد",
+        "editTitle": "تعديل الاختبار",
+        "fields": {
+          "title": "العنوان",
+          "description": "الوصف",
+          "timeLimitMin": "المهلة الزمنية (بالدقائق)",
+          "passingScore": "درجة النجاح",
+          "passingScoreHint": "تلميح للمراجعين — القرار النهائي يدويّ.",
+          "scoringMode": "نمط التصحيح"
+        },
+        "scoringMode": {
+          "auto": "تلقائي",
+          "manual": "يدوي",
+          "hybrid": "مختلط"
+        },
+        "tasks": {
+          "heading": "المهام",
+          "empty": "لا مهام بعد — أضف واحدة عبر الأزرار أعلاه.",
+          "addMcq": "+ اختيار من متعدّد",
+          "addText": "+ نصّي",
+          "addCode": "+ برمجي",
+          "prompt": "النص",
+          "options": "الخيارات",
+          "addOption": "+ خيار",
+          "removeOption": "حذف الخيار",
+          "markCorrect": "تحديد كإجابة صحيحة",
+          "rubricHint": "تلميح تصحيحي للمراجعين (مُخفيّ عن المدرّب)",
+          "rubricPlaceholder": "مثال: ابحث عن الإطار الصحيح لا الكلمات المفتاحية فقط.",
+          "maxScore": "الحد الأقصى",
+          "row": "المهمة {n} · {type}",
+          "remove": "حذف",
+          "moveUp": "أعلى",
+          "moveDown": "أسفل"
+        }
+      },
+      "assign": {
+        "button": "تعيين اختبار",
+        "pickButton": "عيِّن",
+        "success": "تم تعيين الاختبار. أُبلغ المدرّب بالبريد الإلكتروني.",
+        "popover": {
+          "title": "اختر اختبارًا لتعيينه",
+          "empty": "لا توجد اختبارات محفوظة — أنشئ واحدًا أولًا."
+        }
+      },
+      "attempts": {
+        "title": "محاولات الاختبار",
+        "empty": "لا محاولات بعد.",
+        "total": "الدرجة {score}/100",
+        "gradeCta": "تصحيح المحاولة",
+        "reviewCta": "مراجعة التصحيح",
+        "status": {
+          "in_progress": "قيد التنفيذ",
+          "submitted": "مُسلَّم — بانتظار التصحيح",
+          "graded": "مصحَّح",
+          "inProgress": "قيد التنفيذ"
+        }
+      },
+      "grading": {
+        "backToApplicant": "العودة إلى مقدِّم الطلب",
+        "currentTotal": "المجموع الحالي: {score}/100",
+        "passingHint": "تلميح النجاح: ≥ {score}",
+        "passingHintTooltip": "مقترح من مؤلف الاختبار؛ القرار لك.",
+        "reviewerNotes": "ملاحظات المراجع الداخلية",
+        "reviewerNotesHint": "لا تظهر للمدرّب.",
+        "submit": "حفظ التصحيح",
+        "alreadyGraded": "هذه المحاولة مصحَّحة مسبقًا.",
+        "taskHeading": "المهمة {n} · {type} · الحد الأقصى {max}",
+        "errors": {
+          "scoreRange": "يجب أن تكون الدرجة بين 0 و {max}."
+        },
+        "task": {
+          "auto": "تصحيح تلقائي {score}/{max}",
+          "manual": "درجة يدوية (0–{max})",
+          "comments": "ملاحظات للمدرّب (اختيارية)",
+          "correctOption": "الإجابة الصحيحة",
+          "noResponse": "(لا توجد إجابة)"
+        },
+        "result": {
+          "title": "تم حفظ التصحيح"
+        }
       }
     }
   },

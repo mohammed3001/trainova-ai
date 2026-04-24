@@ -4,6 +4,7 @@ import { getLocale, getTranslations } from 'next-intl/server';
 import { getRole, getToken } from '@/lib/session';
 import { authedFetch } from '@/lib/authed-fetch';
 import { StatusBadge, StatusActions } from './status-controls';
+import { AssignTestButton } from './assign-test-button';
 
 interface Application {
   id: string;
@@ -43,7 +44,16 @@ export default async function ApplicationsPage({
 
   return (
     <div className="space-y-6">
-      <h1 className="text-3xl font-bold text-slate-900">{t('company.applications.title')}</h1>
+      <div className="flex items-center justify-between gap-3">
+        <h1 className="text-3xl font-bold text-slate-900">{t('company.applications.title')}</h1>
+        <Link
+          href={`/${locale}/company/requests/${id}/tests`}
+          className="rounded-md border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50"
+          data-testid="manage-tests-link"
+        >
+          {t('company.applications.manageTests')}
+        </Link>
+      </div>
       {apps.length === 0 ? (
         <div className="card text-sm text-slate-500">{t('company.applications.empty')}</div>
       ) : (
@@ -67,8 +77,13 @@ export default async function ApplicationsPage({
                 {a.proposedRate ? `Proposed: $${a.proposedRate}/h · ` : ''}
                 {a.proposedTimelineDays ? `${a.proposedTimelineDays} days` : ''}
               </div>
-              <div className="flex items-center justify-between gap-3 border-t border-slate-100 pt-3">
-                <StatusActions applicationId={a.id} currentStatus={a.status} />
+              <div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 pt-3">
+                <div className="flex flex-wrap items-center gap-2">
+                  <StatusActions applicationId={a.id} currentStatus={a.status} />
+                  {a.status === 'APPLIED' || a.status === 'SHORTLISTED' ? (
+                    <AssignTestButton applicationId={a.id} requestId={id} />
+                  ) : null}
+                </div>
                 <Link
                   href={`/${locale}/company/requests/${id}/applications/${a.id}`}
                   className="text-xs font-medium text-brand-600 hover:text-brand-700"
