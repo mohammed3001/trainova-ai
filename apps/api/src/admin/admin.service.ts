@@ -283,7 +283,11 @@ export class AdminService {
     if (!target) throw new NotFoundException('User not found');
     if (target.status !== 'ACTIVE') throw new BadRequestException('User is not active');
 
-    await this.auth.forgotPassword(target.email, target.locale === 'ar' ? 'ar' : 'en');
+    // Use the internal `issuePasswordResetEmail` instead of the public
+    // `forgotPassword` — the public variant swallows all errors to prevent
+    // user enumeration, which would make this admin action silently succeed
+    // even when the email provider fails and leave a misleading audit entry.
+    await this.auth.issuePasswordResetEmail(target.id, target.locale === 'ar' ? 'ar' : 'en');
     await this.prisma.auditLog.create({
       data: {
         actorId: ctx.actorId,

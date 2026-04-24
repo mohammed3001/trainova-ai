@@ -3,6 +3,7 @@ import {
   ConflictException,
   UnauthorizedException,
   BadRequestException,
+  NotFoundException,
   Logger,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
@@ -194,40 +195,51 @@ export class AuthService {
   // ---------------------------------------------------------------------------
 
   /**
+   * Internal — issue a single-use 30-min reset token for `userId` and send the
+   * reset email. Errors propagate so callers (admin triggerPasswordReset) can
+   * observe real failures. The public `forgotPassword` wraps this in a
+   * swallowing try/catch so the external endpoint stays enumeration-safe.
+   */
+  async issuePasswordResetEmail(userId: string, locale: 'en' | 'ar'): Promise<void> {
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (!user) throw new NotFoundException('User not found');
+
+    await this.prisma.passwordResetToken.updateMany({
+      where: { userId: user.id, consumedAt: null },
+      data: { consumedAt: new Date() },
+    });
+
+    const { raw, hash } = issueOpaqueToken(32);
+    const expiresAt = new Date(Date.now() + RESET_TOKEN_TTL_MS);
+    await this.prisma.passwordResetToken.create({
+      data: { userId: user.id, tokenHash: hash, expiresAt },
+    });
+
+    const normalizedLocale = EmailService.normalizeLocale(locale || user.locale);
+    const resetUrl = this.buildAppUrl(
+      `/${normalizedLocale}/reset-password?token=${encodeURIComponent(raw)}`,
+    );
+    await this.email.sendResetPassword(user.email, {
+      locale: normalizedLocale,
+      name: user.name,
+      resetUrl,
+      expiresInMinutes: RESET_TOKEN_TTL_MIN,
+    });
+  }
+
+  /**
    * Public endpoint. Always returns success regardless of whether the email
    * matches a real user (no user-enumeration). If the user exists, a
-   * single-use 30-min token is issued and the reset email sent.
+   * single-use 30-min token is issued and the reset email sent. All
+   * token-issuance / email-provider errors are swallowed so the response
+   * stays neutral (no user enumeration via 200 vs 500 differential).
    */
   async forgotPassword(email: string, locale: 'en' | 'ar'): Promise<void> {
     const user = await this.prisma.user.findUnique({ where: { email } });
     if (!user) return;
     if (user.status !== 'ACTIVE') return;
-
-    // Swallow token-issuance / email-provider errors so the response stays
-    // neutral (no user enumeration via 200 vs 500 differential).
     try {
-      // Invalidate previous unconsumed reset tokens for this user.
-      await this.prisma.passwordResetToken.updateMany({
-        where: { userId: user.id, consumedAt: null },
-        data: { consumedAt: new Date() },
-      });
-
-      const { raw, hash } = issueOpaqueToken(32);
-      const expiresAt = new Date(Date.now() + RESET_TOKEN_TTL_MS);
-      await this.prisma.passwordResetToken.create({
-        data: { userId: user.id, tokenHash: hash, expiresAt },
-      });
-
-      const normalizedLocale = EmailService.normalizeLocale(locale || user.locale);
-      const resetUrl = this.buildAppUrl(
-        `/${normalizedLocale}/reset-password?token=${encodeURIComponent(raw)}`,
-      );
-      await this.email.sendResetPassword(user.email, {
-        locale: normalizedLocale,
-        name: user.name,
-        resetUrl,
-        expiresInMinutes: RESET_TOKEN_TTL_MIN,
-      });
+      await this.issuePasswordResetEmail(user.id, locale);
     } catch (err) {
       this.logger.error(`forgot-password email failed: ${(err as Error).message}`);
     }
