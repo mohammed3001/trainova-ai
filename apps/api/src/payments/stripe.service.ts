@@ -262,7 +262,13 @@ export class StripeService {
     );
   }
 
-  async cancelSubscription(subscriptionId: string): Promise<Stripe.Subscription> {
+  async cancelSubscription(
+    subscriptionId: string,
+    options: { immediate?: boolean } = {},
+  ): Promise<Stripe.Subscription> {
+    if (options.immediate) {
+      return this.client.subscriptions.cancel(subscriptionId);
+    }
     return this.client.subscriptions.update(subscriptionId, {
       cancel_at_period_end: true,
     });
