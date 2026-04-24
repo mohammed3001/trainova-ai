@@ -9,6 +9,7 @@ import {
 import { Server, Socket } from 'socket.io';
 import { createAdapter } from '@socket.io/redis-adapter';
 import Redis from 'ioredis';
+import { PrismaService } from '../prisma/prisma.service';
 
 interface JwtPayload {
   sub: string;
@@ -40,7 +41,10 @@ export class NotificationsGateway
   private pub?: Redis;
   private sub?: Redis;
 
-  constructor(private readonly jwt: JwtService) {}
+  constructor(
+    private readonly jwt: JwtService,
+    private readonly prisma: PrismaService,
+  ) {}
 
   async onModuleInit() {
     const url = process.env.REDIS_URL;
@@ -74,13 +78,25 @@ export class NotificationsGateway
     }
     try {
       const payload = await this.jwt.verifyAsync<JwtPayload>(token);
-      if (payload.kind && payload.kind !== 'ws') {
+      // Require the short-lived ws-ticket kind so long-lived REST access
+      // tokens cannot be swapped in to establish a WebSocket.
+      if (payload.kind !== 'ws') {
         socket.disconnect(true);
         return;
       }
-      socket.data.userId = payload.sub;
-      socket.data.role = payload.role;
-      socket.join(`user:${payload.sub}`);
+      // Mirror JwtStrategy.validate(): ensure the user still exists, is
+      // ACTIVE, and that the role in the token matches the DB.
+      const user = await this.prisma.user.findUnique({
+        where: { id: payload.sub },
+        select: { id: true, role: true, status: true },
+      });
+      if (!user || user.status !== 'ACTIVE' || user.role !== payload.role) {
+        socket.disconnect(true);
+        return;
+      }
+      socket.data.userId = user.id;
+      socket.data.role = user.role;
+      socket.join(`user:${user.id}`);
     } catch {
       socket.disconnect(true);
     }
