@@ -170,10 +170,17 @@ function SortableFieldRow({ field, index, onRemove, onUpdate }: FieldRowProps) {
   }
 
   function addOption() {
+    // Derive a collision-free value. Using length+1 breaks after a removal
+    // (remove option_1 from [option_1, option_2] -> add yields another
+    // "option_2" which the server's uniqueness check rejects). Instead, pick
+    // the smallest unused "option_N" for the current field.
+    const existing = new Set((field.options ?? []).map((o) => o.value));
+    let n = (field.options ?? []).length + 1;
+    while (existing.has(`option_${n}`)) n += 1;
     const next = [
       ...(field.options ?? []),
       {
-        value: `option_${(field.options ?? []).length + 1}`,
+        value: `option_${n}`,
         labelEn: '',
         labelAr: '',
       },
