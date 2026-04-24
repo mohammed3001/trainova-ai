@@ -1,4 +1,16 @@
-import { Body, Controller, Delete, Get, Param, Post, Query, Req, UseGuards, UsePipes } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  NotFoundException,
+  Param,
+  Post,
+  Query,
+  Req,
+  UseGuards,
+  UsePipes,
+} from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import type { Request } from 'express';
 import {
@@ -40,6 +52,13 @@ export class AdminSettingsController {
         ? (group as SettingGroup)
         : undefined;
     return this.settings.listForAdmin(g);
+  }
+
+  @Get(':key')
+  async getOne(@Param('key') key: string) {
+    const row = await this.settings.getByKey(key);
+    if (!row) throw new NotFoundException(`Setting not found: ${key}`);
+    return row;
   }
 
   @Post()

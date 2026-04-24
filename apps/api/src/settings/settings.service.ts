@@ -55,6 +55,11 @@ export class SettingsService {
     return rows.map((r) => this.toAdmin(r));
   }
 
+  async getByKey(key: string): Promise<AdminSetting | null> {
+    const row = await this.prisma.setting.findUnique({ where: { key } });
+    return row ? this.toAdmin(row) : null;
+  }
+
   async listPublic(): Promise<PublicSetting[]> {
     const rows = await this.prisma.setting.findMany({
       where: { isPublic: true },

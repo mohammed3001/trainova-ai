@@ -1279,6 +1279,7 @@
           "status": "Status",
           "category": "Category",
           "published": "Published",
+          "updated": "Updated",
           "actions": "Actions"
         },
         "field": {
