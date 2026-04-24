@@ -213,6 +213,31 @@
     "responseWithin": "Responds within {hours}h",
     "untitled": "Untitled"
   },
+  "applications": {
+    "attachments": {
+      "title": "Supporting attachments",
+      "help": "Attach a CV, writing sample or portfolio bundle so the company can evaluate your profile alongside the cover letter.",
+      "loading": "Loading attachments…",
+      "emptyTrainer": "No attachments yet. Upload files below — up to 5 × 10MB (PDF, ZIP, DOCX, PNG, JPG).",
+      "emptyCompany": "The applicant hasn't attached any supporting files.",
+      "download": "Download",
+      "downloading": "Preparing…",
+      "delete": "Remove",
+      "scanStatus": {
+        "pending": "Scanning",
+        "clean": "Ready",
+        "infected": "Quarantined"
+      },
+      "dropzone": {
+        "label": "Drop files to attach",
+        "help": "CV (PDF), writing samples, portfolio ZIP or screenshots."
+      },
+      "errors": {
+        "list": "Couldn't load attachments.",
+        "delete": "Couldn't remove this attachment."
+      }
+    }
+  },
   "profile": {
     "trainer": {
       "title": "My profile",

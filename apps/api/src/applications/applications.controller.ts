@@ -112,4 +112,11 @@ export class ApplicationsController {
   assignedTest(@CurrentUser() user: AuthUser, @Param('id') id: string) {
     return this.tests.getAssignedTestForApplication(user.id, user.role, id);
   }
+
+  @Get(':id/attachments')
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
+  attachments(@CurrentUser() user: AuthUser, @Param('id') id: string) {
+    return this.service.listAttachments(user.id, id);
+  }
 }
