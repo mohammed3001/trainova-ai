@@ -192,7 +192,11 @@ async function probeBedrock(input: ProbeInput): Promise<ProbeResult> {
         'Bedrock credentials must be in the form "accessKeyId:secretAccessKey[:sessionToken]"',
     };
   }
-  const [accessKeyId, secretAccessKey, sessionToken] = parts;
+  // STS session tokens often contain `:` characters — take the first two
+  // segments as the static key pair and rejoin the rest so we don't
+  // silently truncate the token.
+  const [accessKeyId, secretAccessKey, ...rest] = parts;
+  const sessionToken = rest.length > 0 ? rest.join(':') : undefined;
   if (!accessKeyId || !secretAccessKey) {
     return {
       ok: false,

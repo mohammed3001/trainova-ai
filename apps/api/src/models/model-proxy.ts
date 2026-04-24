@@ -396,7 +396,11 @@ async function invokeBedrock(
   if (parts.length < 2) {
     return fail(start, 'Bedrock credentials must be in the form "accessKeyId:secretAccessKey[:sessionToken]"');
   }
-  const [accessKeyId, secretAccessKey, sessionToken] = parts;
+  // Session tokens returned by STS frequently contain `:` characters, so
+  // take the first two segments as the key pair and rejoin the remainder
+  // as the session token (undefined when only a static key pair is given).
+  const [accessKeyId, secretAccessKey, ...rest] = parts;
+  const sessionToken = rest.length > 0 ? rest.join(':') : undefined;
   if (!accessKeyId || !secretAccessKey) {
     return fail(start, 'Bedrock credentials must contain both accessKeyId and secretAccessKey');
   }
@@ -555,24 +559,41 @@ function safeExtra(
   return out;
 }
 
-const OPENAI_PROTECTED = ['model', 'messages', 'prompt', 'input', 'max_tokens'] as const;
+// `stream` is blocked across all providers: letting a trainer flip the
+// upstream into SSE/chunked mode breaks `parseJsonSafe` and bypasses
+// `fetchWithTimeout` (which only guards header receipt, not body
+// streaming), producing garbled ModelCall audit rows.
+const OPENAI_PROTECTED = [
+  'model',
+  'messages',
+  'prompt',
+  'input',
+  'max_tokens',
+  'stream',
+] as const;
 const ANTHROPIC_PROTECTED = [
   'model',
   'messages',
   'system',
   'max_tokens',
   'anthropic_version',
+  'stream',
 ] as const;
-const HUGGINGFACE_PROTECTED = ['inputs', 'parameters'] as const;
+const HUGGINGFACE_PROTECTED = ['inputs', 'parameters', 'stream'] as const;
 const BEDROCK_CLAUDE_PROTECTED = [
   'anthropic_version',
   'max_tokens',
   'messages',
   'system',
+  'stream',
 ] as const;
-const BEDROCK_LLAMA_PROTECTED = ['prompt', 'max_gen_len'] as const;
-const BEDROCK_TITAN_PROTECTED = ['inputText', 'textGenerationConfig'] as const;
-const BEDROCK_GENERIC_PROTECTED = ['prompt'] as const;
+const BEDROCK_LLAMA_PROTECTED = ['prompt', 'max_gen_len', 'stream'] as const;
+const BEDROCK_TITAN_PROTECTED = [
+  'inputText',
+  'textGenerationConfig',
+  'stream',
+] as const;
+const BEDROCK_GENERIC_PROTECTED = ['prompt', 'stream'] as const;
 
 function bearerHeader(input: ProxyInvokeInput): Record<string, string> {
   if (input.authKind === 'none' || !input.credentials) return {};
