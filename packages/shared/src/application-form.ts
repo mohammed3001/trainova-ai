@@ -172,7 +172,11 @@ export function validateAnswers(
         }
         if (field.kind === 'url') {
           try {
-            new URL(str);
+            const parsed = new URL(str);
+            if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+              errors[field.id] = 'Only http and https URLs are allowed';
+              break;
+            }
           } catch {
             errors[field.id] = 'Invalid URL';
             break;
@@ -207,7 +211,11 @@ export function validateAnswers(
         break;
       }
       case 'boolean': {
-        out[field.id] = Boolean(raw);
+        if (typeof raw !== 'boolean') {
+          errors[field.id] = 'Must be true or false';
+          break;
+        }
+        out[field.id] = raw;
         break;
       }
       case 'single_select': {

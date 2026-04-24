@@ -66,7 +66,7 @@ function renderAnswer(
           if (!opt) return String(v);
           return locale === 'ar' ? opt.labelAr : opt.labelEn;
         })
-        .join('، ');
+        .join(locale === 'ar' ? '، ' : ', ');
       return labels;
     }
     case 'url':
