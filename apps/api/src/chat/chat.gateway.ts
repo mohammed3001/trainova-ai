@@ -83,13 +83,26 @@ export class ChatGateway
     }
     try {
       const payload = await this.jwt.verifyAsync<JwtPayload>(token);
-      if (payload.kind && payload.kind !== 'ws') {
+      // Require the short-lived ws-ticket kind so long-lived REST access
+      // tokens cannot be swapped in to establish a WebSocket.
+      if (payload.kind !== 'ws') {
         socket.disconnect(true);
         return;
       }
-      socket.data.userId = payload.sub;
-      socket.data.role = payload.role;
-      socket.join(`user:${payload.sub}`);
+      // Mirror JwtStrategy.validate(): ensure the user still exists, is
+      // ACTIVE, and that the role in the token matches the DB. Prevents
+      // a deactivated or role-changed account from holding a live socket.
+      const user = await this.prisma.user.findUnique({
+        where: { id: payload.sub },
+        select: { id: true, role: true, status: true },
+      });
+      if (!user || user.status !== 'ACTIVE' || user.role !== payload.role) {
+        socket.disconnect(true);
+        return;
+      }
+      socket.data.userId = user.id;
+      socket.data.role = user.role;
+      socket.join(`user:${user.id}`);
     } catch {
       socket.disconnect(true);
     }

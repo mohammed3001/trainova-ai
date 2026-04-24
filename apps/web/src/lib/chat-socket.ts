@@ -53,29 +53,34 @@ export async function getChatSocket(): Promise<Socket> {
   if (singleton && !singleton.disconnected) return singleton;
   if (connectPromise) return connectPromise;
   connectPromise = (async () => {
-    const token = await fetchTicket();
-    const s = io(API_URL, {
-      path: '/ws/chat',
-      transports: ['websocket', 'polling'],
-      auth: { token },
-      reconnection: true,
-      reconnectionAttempts: 5,
-    });
-    // Refresh ticket on auth error or reconnect.
-    s.on('connect_error', async (err) => {
-      if (String(err.message).toLowerCase().includes('auth')) {
-        try {
-          const fresh = await fetchTicket();
-          s.auth = { token: fresh };
-          s.connect();
-        } catch {
-          /* swallow; UI falls back to REST polling */
+    try {
+      const token = await fetchTicket();
+      const s = io(API_URL, {
+        path: '/ws/chat',
+        transports: ['websocket', 'polling'],
+        auth: { token },
+        reconnection: true,
+        reconnectionAttempts: 5,
+      });
+      // Refresh ticket on auth error or reconnect.
+      s.on('connect_error', async (err) => {
+        if (String(err.message).toLowerCase().includes('auth')) {
+          try {
+            const fresh = await fetchTicket();
+            s.auth = { token: fresh };
+            s.connect();
+          } catch {
+            /* swallow; UI falls back to REST polling */
+          }
         }
-      }
-    });
-    singleton = s;
-    connectPromise = null;
-    return s;
+      });
+      singleton = s;
+      return s;
+    } finally {
+      // Always clear so a transient fetchTicket failure does not permanently
+      // cache a rejected promise and block every future getChatSocket call.
+      connectPromise = null;
+    }
   })();
   return connectPromise;
 }
