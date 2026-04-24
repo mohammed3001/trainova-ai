@@ -1,6 +1,31 @@
 import Link from 'next/link';
+import type { Metadata } from 'next';
 import { getTranslations, getLocale } from 'next-intl/server';
 import { apiFetch } from '@/lib/api';
+import { JsonLd } from '@/components/json-ld';
+import {
+  absoluteUrl,
+  breadcrumbLd,
+  buildMetadata,
+  collectionPageLd,
+  siteUrl,
+} from '@/lib/seo';
+import type { Locale } from '@/i18n/config';
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: 'seo.requestsList' });
+  return buildMetadata({
+    title: t('title'),
+    description: t('description'),
+    path: '/requests',
+    locale: locale as Locale,
+  });
+}
 
 interface RequestItem {
   id: string;
@@ -25,8 +50,19 @@ export default async function RequestsPage() {
     total: 0,
   }));
 
+  const pageUrl = absoluteUrl('/requests', locale as Locale);
+  const seoT = await getTranslations({ locale, namespace: 'seo.requestsList' });
+  const ld = [
+    collectionPageLd({ name: seoT('title'), description: seoT('description'), url: pageUrl }),
+    breadcrumbLd([
+      { name: t('common.appName'), url: `${siteUrl()}/${locale}` },
+      { name: seoT('title'), url: pageUrl },
+    ]),
+  ];
+
   return (
     <div className="space-y-6">
+      <JsonLd data={ld} />
       <div>
         <h1 className="text-3xl font-bold text-slate-900">{t('requests.listTitle')}</h1>
         <p className="text-sm text-slate-500">{data.total} results</p>
