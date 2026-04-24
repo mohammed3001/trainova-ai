@@ -18,10 +18,10 @@ interface Task {
 interface Response {
   id: string;
   taskId: string;
-  answer: unknown;
+  response: unknown;
   autoScore: number | null;
   manualScore: number | null;
-  reviewerNotes: string | null;
+  comments: string | null;
   createdAt: string;
 }
 
@@ -223,12 +223,12 @@ export default async function AdminAttemptDetailPage({
                     dir="ltr"
                     className="mt-2 max-h-60 overflow-auto whitespace-pre-wrap rounded-lg bg-slate-950 p-3 text-[12px] text-slate-100"
                   >
-                    {renderAnswer(r.answer)}
+                    {renderAnswer(r.response)}
                   </pre>
-                  {r.reviewerNotes ? (
+                  {r.comments ? (
                     <div className="mt-2 rounded-lg border border-amber-200 bg-amber-50/70 p-2 text-xs text-amber-800">
                       <div className="font-semibold">Reviewer notes (admin view)</div>
-                      <div className="whitespace-pre-wrap">{r.reviewerNotes}</div>
+                      <div className="whitespace-pre-wrap">{r.comments}</div>
                     </div>
                   ) : null}
                 </li>

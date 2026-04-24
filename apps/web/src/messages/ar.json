@@ -974,7 +974,7 @@
       "status": {
         "DRAFT": "مسودة",
         "OPEN": "مفتوح",
-        "PAUSED": "متوقف",
+        "IN_REVIEW": "قيد المراجعة",
         "CLOSED": "مغلق",
         "ARCHIVED": "مؤرشف"
       },

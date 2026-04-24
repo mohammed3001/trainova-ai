@@ -6,7 +6,7 @@ interface Row {
   id: string;
   slug: string;
   title: string;
-  status: 'DRAFT' | 'OPEN' | 'PAUSED' | 'CLOSED' | 'ARCHIVED';
+  status: 'DRAFT' | 'OPEN' | 'IN_REVIEW' | 'CLOSED' | 'ARCHIVED';
   featured: boolean;
   publishedAt: string | null;
   closedAt: string | null;
@@ -24,12 +24,12 @@ interface Page {
   nextCursor: string | null;
 }
 
-const STATUSES = ['DRAFT', 'OPEN', 'PAUSED', 'CLOSED', 'ARCHIVED'] as const;
+const STATUSES = ['DRAFT', 'OPEN', 'IN_REVIEW', 'CLOSED', 'ARCHIVED'] as const;
 
 const STATUS_STYLE: Record<Row['status'], string> = {
   DRAFT: 'bg-slate-50 text-slate-700 ring-slate-200',
   OPEN: 'bg-emerald-50 text-emerald-700 ring-emerald-200',
-  PAUSED: 'bg-amber-50 text-amber-700 ring-amber-200',
+  IN_REVIEW: 'bg-amber-50 text-amber-700 ring-amber-200',
   CLOSED: 'bg-slate-200/70 text-slate-700 ring-slate-300',
   ARCHIVED: 'bg-slate-100 text-slate-500 ring-slate-200',
 };
