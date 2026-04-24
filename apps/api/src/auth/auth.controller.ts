@@ -1,5 +1,6 @@
 import { Body, Controller, Get, HttpCode, Post, UseGuards, UsePipes } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { JwtService } from '@nestjs/jwt';
 import { Throttle } from '@nestjs/throttler';
 import {
   forgotPasswordSchema,
@@ -23,7 +24,30 @@ import { ZodValidationPipe } from '../common/zod-validation.pipe';
 @ApiTags('auth')
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly auth: AuthService) {}
+  constructor(
+    private readonly auth: AuthService,
+    private readonly jwt: JwtService,
+  ) {}
+
+  /**
+   * Issues a short-lived (60s) JWT a browser client can present to the
+   * Socket.IO gateway. The access token stays in an HttpOnly cookie and is
+   * not readable from JS, so the client asks this endpoint for a scoped
+   * ticket via the Next proxy (which adds the Bearer) and hands it to
+   * `io({ auth: { token } })`. Ticket payload is `kind: 'ws'` so a leaked
+   * ticket can't be replayed against the REST API.
+   */
+  @Post('ws-ticket')
+  @HttpCode(200)
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
+  async wsTicket(@CurrentUser() user: AuthUser) {
+    const token = await this.jwt.signAsync(
+      { sub: user.id, email: user.email, role: user.role, kind: 'ws' },
+      { expiresIn: '60s' },
+    );
+    return { token };
+  }
 
   // Per-endpoint rate limits override the global 120/min default bucket.
   // Windows are 1 minute. Keys are per client IP (ThrottlerGuard default).

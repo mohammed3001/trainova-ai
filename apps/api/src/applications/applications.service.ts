@@ -44,7 +44,15 @@ export class ApplicationsService {
             modelFamily: true,
             industry: true,
             status: true,
-            company: { select: { name: true, slug: true, logoUrl: true, verified: true } },
+            company: {
+              select: {
+                name: true,
+                slug: true,
+                logoUrl: true,
+                verified: true,
+                ownerId: true,
+              },
+            },
           },
         },
       },
