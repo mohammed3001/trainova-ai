@@ -828,7 +828,10 @@
       "companies": "الشركات",
       "trainers": "المدربون",
       "requestsOpen": "الطلبات المفتوحة",
-      "applications": "التقديمات"
+      "applications": "التقديمات",
+      "usersSub": "{active} نشط · {suspended} موقوف",
+      "pendingVerifications": "طلبات توثيق معلّقة",
+      "verifiedOf": "{verified} موثّق"
     },
     "ads": {
       "title": "الحملات الإعلانية",
@@ -848,6 +851,99 @@
       "rejectReasonLabel": "السبب (يُعرض للمعلن)",
       "approvedBy": "اعتُمدت من الإدارة في {at}",
       "rejectedReason": "مرفوضة: {reason}"
+    },
+    "generatedAt": "تم التوليد في",
+    "common": {
+      "verified": "موثّق",
+      "unverified": "غير موثّق"
+    },
+    "nav": {
+      "title": "لوحة الأدمن",
+      "overview": "نظرة عامة",
+      "users": "المستخدمون",
+      "companies": "الشركات",
+      "trainers": "المدربون",
+      "verification": "التوثيق",
+      "requests": "الطلبات"
+    },
+    "userRole": {
+      "SUPER_ADMIN": "أدمن أعلى",
+      "ADMIN": "أدمن",
+      "COMPANY_OWNER": "مالك شركة",
+      "COMPANY_MEMBER": "عضو شركة",
+      "TRAINER": "مدرب"
+    },
+    "userStatus": {
+      "ACTIVE": "نشط",
+      "SUSPENDED": "موقوف",
+      "PENDING": "قيد الانتظار"
+    },
+    "trainers": {
+      "title": "المدربون",
+      "subtitle": "توثيق المهارات وإدارة ملفات المدربين.",
+      "searchPlaceholder": "ابحث بالاسم أو المعرّف أو العنوان…",
+      "empty": "لا يوجد مدربون مطابقون للفلاتر الحالية.",
+      "noSkills": "لا توجد مهارات مسجّلة بعد.",
+      "action": {
+        "verify": "توثيق المدرب",
+        "unverify": "إلغاء التوثيق",
+        "viewPublic": "عرض الملف العام"
+      },
+      "confirm": {
+        "verify": "اعتبار هذا المدرب موثّقًا؟",
+        "unverify": "إلغاء توثيق هذا المدرب؟"
+      },
+      "section": {
+        "profile": "الملف",
+        "user": "حساب المستخدم",
+        "skills": "المهارات",
+        "portfolio": "نماذج الأعمال"
+      },
+      "field": {
+        "rate": "السعر بالساعة",
+        "availability": "التوافر",
+        "languages": "اللغات"
+      }
+    },
+    "verification": {
+      "title": "قائمة التوثيق",
+      "subtitle": "راجع طلبات توثيق الهوية والأهلية من الشركات والمدربين.",
+      "empty": "لا يوجد شيء للمراجعة الآن.",
+      "noDocuments": "لم تُرفق مستندات مع هذا الطلب.",
+      "approveHint": "الموافقة تعلّم الملف المستهدف كموثّق.",
+      "rejectionReasonLabel": "السبب الذي سيظهر لمقدّم الطلب",
+      "viewTarget": "فتح الملف المستهدف",
+      "targetDeleted": "الملف المستهدف لم يعد موجودًا",
+      "status": {
+        "PENDING": "قيد الانتظار",
+        "APPROVED": "مقبول",
+        "REJECTED": "مرفوض"
+      },
+      "targetType": {
+        "ALL": "كل الأنواع",
+        "COMPANY": "شركة",
+        "TRAINER": "مدرب"
+      },
+      "col": {
+        "documents": "المستندات",
+        "reviewer": "المراجع",
+        "reviewedAt": "تاريخ المراجعة"
+      },
+      "section": {
+        "submitter": "مقدّم الطلب",
+        "documents": "المستندات الداعمة",
+        "notes": "ملاحظات مقدّم الطلب",
+        "rejectionReason": "سبب الرفض",
+        "review": "المراجعة"
+      },
+      "action": {
+        "approve": "قبول",
+        "reject": "رفض"
+      },
+      "confirm": {
+        "approve": "قبول طلب التوثيق؟ سيُعتبر الملف المستهدف موثّقًا.",
+        "reject": "رفض طلب التوثيق؟ سيظهر السبب لمقدّم الطلب."
+      }
     }
   },
   "ads": {

@@ -54,12 +54,18 @@ model User {
   emailVerificationTokens EmailVerificationToken[]
   passwordResetTokens     PasswordResetToken[]
   modelCalls              ModelCall[]
+<<<<<<< HEAD
   stripeConnectAccount    StripeConnectAccount?
   contractsAsTrainer      Contract[]                @relation("ContractTrainer")
   payouts                 Payout[]
   subscriptions           Subscription[]
   adCampaignsOwned        AdCampaign[]              @relation("AdCampaignOwner")
   adCampaignsReviewed     AdCampaign[]              @relation("AdCampaignReviewer")
+||||||| parent of 49b8637 (feat(admin): Tier 5.A — admin panel phase 1 (users + companies + trainers + verification))
+=======
+  verificationRequestsSubmitted VerificationRequest[] @relation("VerificationSubmitter")
+  verificationRequestsReviewed  VerificationRequest[] @relation("VerificationReviewer")
+>>>>>>> 49b8637 (feat(admin): Tier 5.A — admin panel phase 1 (users + companies + trainers + verification))
 
   @@index([role, status])
 }
@@ -1052,4 +1058,41 @@ model Setting {
   value     Json
   group     String   @default("general")
   updatedAt DateTime @updatedAt
+}
+
+// =========================
+// Verification (trainers + companies)
+// =========================
+
+enum VerificationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum VerificationTargetType {
+  COMPANY
+  TRAINER
+}
+
+model VerificationRequest {
+  id              String                 @id @default(cuid())
+  submitterId     String
+  targetType      VerificationTargetType
+  targetId        String
+  status          VerificationStatus     @default(PENDING)
+  documents       Json                   @default("[]")
+  notes           String?
+  reviewerId      String?
+  reviewedAt      DateTime?
+  rejectionReason String?
+  createdAt       DateTime               @default(now())
+  updatedAt       DateTime               @updatedAt
+
+  submitter User  @relation("VerificationSubmitter", fields: [submitterId], references: [id], onDelete: Cascade)
+  reviewer  User? @relation("VerificationReviewer", fields: [reviewerId], references: [id], onDelete: SetNull)
+
+  @@index([status, createdAt])
+  @@index([targetType, targetId])
+  @@index([submitterId])
 }

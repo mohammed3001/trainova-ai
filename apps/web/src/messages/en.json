@@ -828,7 +828,10 @@
       "companies": "Companies",
       "trainers": "Trainers",
       "requestsOpen": "Open requests",
-      "applications": "Applications"
+      "applications": "Applications",
+      "usersSub": "{active} active · {suspended} suspended",
+      "pendingVerifications": "Pending verifications",
+      "verifiedOf": "{verified} verified"
     },
     "ads": {
       "title": "Ad campaigns",
@@ -848,6 +851,99 @@
       "rejectReasonLabel": "Reason (shown to advertiser)",
       "approvedBy": "Approved by admin on {at}",
       "rejectedReason": "Rejected: {reason}"
+    },
+    "generatedAt": "Generated at",
+    "common": {
+      "verified": "Verified",
+      "unverified": "Unverified"
+    },
+    "nav": {
+      "title": "Admin panel",
+      "overview": "Overview",
+      "users": "Users",
+      "companies": "Companies",
+      "trainers": "Trainers",
+      "verification": "Verification",
+      "requests": "Requests"
+    },
+    "userRole": {
+      "SUPER_ADMIN": "Super admin",
+      "ADMIN": "Admin",
+      "COMPANY_OWNER": "Company owner",
+      "COMPANY_MEMBER": "Company member",
+      "TRAINER": "Trainer"
+    },
+    "userStatus": {
+      "ACTIVE": "Active",
+      "SUSPENDED": "Suspended",
+      "PENDING": "Pending"
+    },
+    "trainers": {
+      "title": "Trainers",
+      "subtitle": "Verify skills and manage trainer profiles.",
+      "searchPlaceholder": "Search by name, slug, or headline…",
+      "empty": "No trainers match the current filters.",
+      "noSkills": "No skills listed yet.",
+      "action": {
+        "verify": "Verify trainer",
+        "unverify": "Remove verification",
+        "viewPublic": "View public profile"
+      },
+      "confirm": {
+        "verify": "Mark this trainer as verified?",
+        "unverify": "Remove verification from this trainer?"
+      },
+      "section": {
+        "profile": "Profile",
+        "user": "User account",
+        "skills": "Skills",
+        "portfolio": "Portfolio"
+      },
+      "field": {
+        "rate": "Hourly rate",
+        "availability": "Availability",
+        "languages": "Languages"
+      }
+    },
+    "verification": {
+      "title": "Verification queue",
+      "subtitle": "Review identity and legitimacy submissions from companies and trainers.",
+      "empty": "Nothing to review right now.",
+      "noDocuments": "No documents were attached to this request.",
+      "approveHint": "Approving marks the target profile as verified.",
+      "rejectionReasonLabel": "Reason shown to the submitter",
+      "viewTarget": "Open target profile",
+      "targetDeleted": "Target profile no longer exists",
+      "status": {
+        "PENDING": "Pending",
+        "APPROVED": "Approved",
+        "REJECTED": "Rejected"
+      },
+      "targetType": {
+        "ALL": "All target types",
+        "COMPANY": "Company",
+        "TRAINER": "Trainer"
+      },
+      "col": {
+        "documents": "Documents",
+        "reviewer": "Reviewer",
+        "reviewedAt": "Reviewed"
+      },
+      "section": {
+        "submitter": "Submitter",
+        "documents": "Supporting documents",
+        "notes": "Submitter notes",
+        "rejectionReason": "Rejection reason",
+        "review": "Review"
+      },
+      "action": {
+        "approve": "Approve",
+        "reject": "Reject"
+      },
+      "confirm": {
+        "approve": "Approve this verification request? The target profile will be marked as verified.",
+        "reject": "Reject this verification request? The submitter will see the reason."
+      }
     }
   },
   "ads": {

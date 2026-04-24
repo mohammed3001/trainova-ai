@@ -253,3 +253,82 @@ export const startConversationSchema = z.object({
   requestId: z.string().cuid().optional(),
 });
 export type StartConversationInput = z.infer<typeof startConversationSchema>;
+
+// =========================================================================
+// Admin (T5.A)
+// =========================================================================
+
+export const adminListUsersQuerySchema = z.object({
+  q: z.string().max(200).optional(),
+  role: z.enum(['SUPER_ADMIN', 'ADMIN', 'COMPANY_OWNER', 'COMPANY_MEMBER', 'TRAINER']).optional(),
+  status: z.enum(['ACTIVE', 'SUSPENDED', 'PENDING']).optional(),
+  limit: z.coerce.number().int().min(1).max(100).optional(),
+  cursor: z.string().max(64).optional(),
+});
+export type AdminListUsersQuery = z.infer<typeof adminListUsersQuerySchema>;
+
+export const adminSetUserRoleSchema = z.object({
+  role: z.enum(['SUPER_ADMIN', 'ADMIN', 'COMPANY_OWNER', 'COMPANY_MEMBER', 'TRAINER']),
+});
+export type AdminSetUserRoleInput = z.infer<typeof adminSetUserRoleSchema>;
+
+export const adminSetUserStatusSchema = z.object({
+  status: z.enum(['ACTIVE', 'SUSPENDED', 'PENDING']),
+});
+export type AdminSetUserStatusInput = z.infer<typeof adminSetUserStatusSchema>;
+
+export const adminListCompaniesQuerySchema = z.object({
+  q: z.string().max(200).optional(),
+  verified: z
+    .union([z.boolean(), z.enum(['true', 'false']).transform((v) => v === 'true')])
+    .optional(),
+  limit: z.coerce.number().int().min(1).max(100).optional(),
+  cursor: z.string().max(64).optional(),
+});
+export type AdminListCompaniesQuery = z.infer<typeof adminListCompaniesQuerySchema>;
+
+export const adminListTrainersQuerySchema = z.object({
+  q: z.string().max(200).optional(),
+  verified: z
+    .union([z.boolean(), z.enum(['true', 'false']).transform((v) => v === 'true')])
+    .optional(),
+  limit: z.coerce.number().int().min(1).max(100).optional(),
+  cursor: z.string().max(64).optional(),
+});
+export type AdminListTrainersQuery = z.infer<typeof adminListTrainersQuerySchema>;
+
+export const adminSetVerifiedSchema = z.object({
+  verified: z.boolean(),
+});
+export type AdminSetVerifiedInput = z.infer<typeof adminSetVerifiedSchema>;
+
+// Verification (submitter side)
+
+export const verificationDocumentSchema = z.object({
+  objectKey: z.string().min(1).max(500),
+  title: z.string().min(1).max(200),
+  mimeType: z.string().min(1).max(200),
+  sizeBytes: z.number().int().nonnegative().optional(),
+});
+export type VerificationDocument = z.infer<typeof verificationDocumentSchema>;
+
+export const submitVerificationSchema = z.object({
+  targetType: z.enum(['COMPANY', 'TRAINER']),
+  documents: z.array(verificationDocumentSchema).min(1).max(10),
+  notes: z.string().max(2000).optional(),
+});
+export type SubmitVerificationInput = z.infer<typeof submitVerificationSchema>;
+
+export const adminListVerificationQuerySchema = z.object({
+  status: z.enum(['PENDING', 'APPROVED', 'REJECTED']).optional(),
+  targetType: z.enum(['COMPANY', 'TRAINER']).optional(),
+  limit: z.coerce.number().int().min(1).max(100).optional(),
+  cursor: z.string().max(64).optional(),
+});
+export type AdminListVerificationQuery = z.infer<typeof adminListVerificationQuerySchema>;
+
+export const reviewVerificationSchema = z.object({
+  decision: z.enum(['APPROVE', 'REJECT']),
+  rejectionReason: z.string().max(2000).optional(),
+});
+export type ReviewVerificationInput = z.infer<typeof reviewVerificationSchema>;
