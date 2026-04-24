@@ -178,12 +178,17 @@ export class WorkbenchService {
       result,
     );
 
+    // Sanitize the live response with the same redaction used for the
+    // persisted audit row. If an upstream endpoint echoes credential-bearing
+    // fields (e.g. `authorization`, `api_key`) in its response body, we
+    // must not leak them to the trainer in real time — and the live view
+    // must match what the audit trail will show.
     return {
       id: row.id,
       createdAt: row.createdAt.toISOString(),
       operation: input.operation,
       outputText: result.outputText,
-      raw: result.raw,
+      raw: result.raw == null ? null : this.redact(result.raw),
       status: result.status,
       latencyMs: result.latencyMs,
       tokensIn: result.tokensIn,
