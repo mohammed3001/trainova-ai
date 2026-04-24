@@ -26,6 +26,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     { href: `/${locale}/admin/cms/categories`, label: t('admin.nav.cmsCategories') },
     { href: `/${locale}/admin/cms/faqs`, label: t('admin.nav.cmsFaqs') },
     { href: `/${locale}/admin/cms/feature-flags`, label: t('admin.nav.featureFlags') },
+    { href: `/${locale}/admin/settings`, label: t('admin.nav.settings') },
   ];
 
   return (

@@ -7,3 +7,4 @@ export * from './workbench';
 export * from './payments';
 export * from './ads';
 export * from './email-templates';
+export * from './platform-settings';

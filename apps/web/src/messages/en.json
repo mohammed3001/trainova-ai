@@ -874,7 +874,8 @@
       "cmsArticles": "Articles",
       "cmsCategories": "Categories",
       "cmsFaqs": "FAQ",
-      "featureFlags": "Feature flags"
+      "featureFlags": "Feature flags",
+      "settings": "Settings"
     },
     "userRole": {
       "SUPER_ADMIN": "Super admin",
@@ -1371,6 +1372,39 @@
           "payload": "Payload (JSON)",
           "payloadHint": "Optional JSON object passed to the client (e.g. rollout %, variant)."
         }
+      }
+    },
+    "settings": {
+      "title": "Platform settings",
+      "subtitle": "Brand, locales, currencies, fees, integrations, and security knobs in one place.",
+      "newCustomKey": "New custom key",
+      "edit": "Edit",
+      "save": "Save",
+      "notSet": "not set",
+      "public": "Public",
+      "private": "Private",
+      "editTitle": "Edit setting · {key}",
+      "knownKeyHint": "This key is registered in the platform schema — value type and group are fixed.",
+      "group": {
+        "branding": "Branding",
+        "locale": "Locales",
+        "currency": "Currencies",
+        "fees": "Fees & commissions",
+        "integrations": "Integrations",
+        "security": "Security",
+        "email": "Email",
+        "general": "General",
+        "custom": "Custom keys"
+      },
+      "field": {
+        "key": "Key",
+        "value": "Value",
+        "valueJsonHint": "Enter valid JSON — array, object, string, number, or boolean.",
+        "group": "Group",
+        "description": "Description",
+        "isPublic": "Expose via /public/settings (no auth)",
+        "knownKey": "Registered platform key — values are validated.",
+        "customKey": "Custom key — only exposed publicly if you check the box below."
       }
     },
     "emailTemplates": {

@@ -874,7 +874,8 @@
       "cmsArticles": "المقالات",
       "cmsCategories": "الأقسام",
       "cmsFaqs": "الأسئلة الشائعة",
-      "featureFlags": "رايات الميزات"
+      "featureFlags": "رايات الميزات",
+      "settings": "الإعدادات"
     },
     "userRole": {
       "SUPER_ADMIN": "أدمن أعلى",
@@ -1371,6 +1372,39 @@
           "payload": "Payload (JSON)",
           "payloadHint": "كائن JSON اختياري يُمرَّر للعميل (مثلاً نسبة الإطلاق أو المتغيّر)."
         }
+      }
+    },
+    "settings": {
+      "title": "إعدادات المنصة",
+      "subtitle": "الهوية واللغات والعملات والرسوم والتكاملات والأمان في مكان واحد.",
+      "newCustomKey": "مفتاح مخصص جديد",
+      "edit": "تعديل",
+      "save": "حفظ",
+      "notSet": "غير محدد",
+      "public": "عام",
+      "private": "خاص",
+      "editTitle": "تعديل الإعداد · {key}",
+      "knownKeyHint": "هذا المفتاح مُسجّل في مخطط المنصة — نوع القيمة والمجموعة ثابتان.",
+      "group": {
+        "branding": "الهوية",
+        "locale": "اللغات",
+        "currency": "العملات",
+        "fees": "الرسوم والعمولات",
+        "integrations": "التكاملات",
+        "security": "الأمان",
+        "email": "البريد",
+        "general": "عام",
+        "custom": "مفاتيح مخصصة"
+      },
+      "field": {
+        "key": "المفتاح",
+        "value": "القيمة",
+        "valueJsonHint": "أدخل JSON صحيحاً — مصفوفة، كائن، نص، رقم، أو منطقي.",
+        "group": "المجموعة",
+        "description": "الوصف",
+        "isPublic": "إتاحة عبر /public/settings (بدون مصادقة)",
+        "knownKey": "مفتاح منصة مُسجّل — تُفحص القيم.",
+        "customKey": "مفتاح مخصص — يُتاح علناً فقط عند تفعيل الخيار أدناه."
       }
     },
     "emailTemplates": {

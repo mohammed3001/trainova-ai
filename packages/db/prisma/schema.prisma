@@ -1065,10 +1065,19 @@ model Page {
 }
 
 model Setting {
-  key       String   @id
-  value     Json
-  group     String   @default("general")
-  updatedAt DateTime @updatedAt
+  key         String   @id
+  value       Json
+  group       String   @default("general")
+  /// When true, the key + value is exposed via `/public/settings` for the marketing
+  /// site and client layout (branding, locales, currencies). Admin-only keys (API
+  /// credentials, fee basis points, etc.) must keep this `false`.
+  isPublic    Boolean  @default(false)
+  description String?
+  updatedAt   DateTime @updatedAt
+  updatedBy   String?
+
+  @@index([group])
+  @@index([isPublic])
 }
 
 // =========================
