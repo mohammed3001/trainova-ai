@@ -320,3 +320,157 @@ export const reviewVerificationSchema = z.object({
   rejectionReason: z.string().max(2000).optional(),
 });
 export type ReviewVerificationInput = z.infer<typeof reviewVerificationSchema>;
+
+// =========================================================================
+// Admin — T5.B (requests · tests · chat moderation · reports · analytics)
+// =========================================================================
+
+export const jobRequestStatusEnum = z.enum([
+  'DRAFT',
+  'OPEN',
+  'IN_REVIEW',
+  'CLOSED',
+  'ARCHIVED',
+]);
+
+export const adminListRequestsQuerySchema = z.object({
+  q: z.string().max(200).optional(),
+  status: jobRequestStatusEnum.optional(),
+  companyId: z.string().cuid().optional(),
+  featured: z
+    .union([z.boolean(), z.enum(['true', 'false']).transform((v) => v === 'true')])
+    .optional(),
+  limit: z.coerce.number().int().min(1).max(100).optional(),
+  cursor: z.string().max(64).optional(),
+});
+export type AdminListRequestsQuery = z.infer<typeof adminListRequestsQuerySchema>;
+
+export const adminSetRequestStatusSchema = z.object({
+  status: jobRequestStatusEnum,
+  reason: z.string().max(1000).optional(),
+});
+export type AdminSetRequestStatusInput = z.infer<typeof adminSetRequestStatusSchema>;
+
+export const adminSetRequestFeaturedSchema = z.object({
+  featured: z.boolean(),
+});
+export type AdminSetRequestFeaturedInput = z.infer<typeof adminSetRequestFeaturedSchema>;
+
+export const adminListTestsQuerySchema = z.object({
+  q: z.string().max(200).optional(),
+  companyId: z.string().cuid().optional(),
+  requestId: z.string().cuid().optional(),
+  scoringMode: z.enum(['AUTO', 'MANUAL', 'HYBRID']).optional(),
+  limit: z.coerce.number().int().min(1).max(100).optional(),
+  cursor: z.string().max(64).optional(),
+});
+export type AdminListTestsQuery = z.infer<typeof adminListTestsQuerySchema>;
+
+export const adminListAttemptsQuerySchema = z.object({
+  testId: z.string().cuid().optional(),
+  trainerId: z.string().cuid().optional(),
+  status: z.enum(['IN_PROGRESS', 'SUBMITTED', 'GRADED', 'EXPIRED']).optional(),
+  limit: z.coerce.number().int().min(1).max(100).optional(),
+  cursor: z.string().max(64).optional(),
+});
+export type AdminListAttemptsQuery = z.infer<typeof adminListAttemptsQuerySchema>;
+
+export const adminListConversationsQuerySchema = z.object({
+  q: z.string().max(200).optional(),
+  lockedOnly: z
+    .union([z.boolean(), z.enum(['true', 'false']).transform((v) => v === 'true')])
+    .optional(),
+  hasReports: z
+    .union([z.boolean(), z.enum(['true', 'false']).transform((v) => v === 'true')])
+    .optional(),
+  limit: z.coerce.number().int().min(1).max(100).optional(),
+  cursor: z.string().max(64).optional(),
+});
+export type AdminListConversationsQuery = z.infer<typeof adminListConversationsQuerySchema>;
+
+export const adminLockConversationSchema = z.object({
+  locked: z.boolean(),
+  reason: z.string().max(1000).optional(),
+});
+export type AdminLockConversationInput = z.infer<typeof adminLockConversationSchema>;
+
+export const adminRedactMessageSchema = z.object({
+  reason: z.string().min(1).max(1000),
+});
+export type AdminRedactMessageInput = z.infer<typeof adminRedactMessageSchema>;
+
+// Reports (user-submitted moderation reports)
+
+export const reportTargetTypeEnum = z.enum([
+  'USER',
+  'COMPANY',
+  'TRAINER',
+  'REQUEST',
+  'APPLICATION',
+  'MESSAGE',
+  'CONVERSATION',
+  'REVIEW',
+  'TEST',
+  'OTHER',
+]);
+
+export const reportCategoryEnum = z.enum([
+  'SPAM',
+  'HARASSMENT',
+  'INAPPROPRIATE',
+  'FRAUD',
+  'IMPERSONATION',
+  'COPYRIGHT',
+  'SAFETY',
+  'OTHER',
+]);
+
+export const reportStatusEnum = z.enum(['OPEN', 'INVESTIGATING', 'RESOLVED', 'DISMISSED']);
+
+export const reportResolutionEnum = z.enum([
+  'NO_ACTION',
+  'WARNING_ISSUED',
+  'CONTENT_REMOVED',
+  'USER_SUSPENDED',
+  'USER_BANNED',
+  'ESCALATED',
+]);
+
+export const createReportSchema = z.object({
+  targetType: reportTargetTypeEnum,
+  targetId: z.string().min(1).max(64),
+  category: reportCategoryEnum,
+  reason: z.string().min(5).max(2000),
+  evidenceUrls: z.array(z.string().url()).max(10).default([]),
+});
+export type CreateReportInput = z.infer<typeof createReportSchema>;
+
+export const adminListReportsQuerySchema = z.object({
+  status: reportStatusEnum.optional(),
+  targetType: reportTargetTypeEnum.optional(),
+  category: reportCategoryEnum.optional(),
+  reporterId: z.string().cuid().optional(),
+  limit: z.coerce.number().int().min(1).max(100).optional(),
+  cursor: z.string().max(64).optional(),
+});
+export type AdminListReportsQuery = z.infer<typeof adminListReportsQuerySchema>;
+
+export const reviewReportSchema = z
+  .object({
+    status: reportStatusEnum,
+    resolution: reportResolutionEnum.optional(),
+    resolverNotes: z.string().max(2000).optional(),
+  })
+  .refine(
+    (val) =>
+      (val.status !== 'RESOLVED' && val.status !== 'DISMISSED') || val.resolution != null,
+    { message: 'Resolution is required when closing a report', path: ['resolution'] },
+  );
+export type ReviewReportInput = z.infer<typeof reviewReportSchema>;
+
+// Analytics
+
+export const adminAnalyticsRangeSchema = z.object({
+  days: z.coerce.number().int().min(1).max(365).default(30),
+});
+export type AdminAnalyticsRange = z.infer<typeof adminAnalyticsRangeSchema>;

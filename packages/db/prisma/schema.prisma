@@ -55,6 +55,8 @@ model User {
   passwordResetTokens     PasswordResetToken[]
   verificationRequestsSubmitted VerificationRequest[] @relation("VerificationSubmitter")
   verificationRequestsReviewed  VerificationRequest[] @relation("VerificationReviewer")
+  reportsFiled      Report[] @relation("ReportReporter")
+  reportsResolved   Report[] @relation("ReportResolver")
 
   @@index([role, status])
 }
@@ -462,14 +464,19 @@ model TestTaskResponse {
 // =========================
 
 model Conversation {
-  id         String   @id @default(cuid())
-  requestId  String?
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  id          String    @id @default(cuid())
+  requestId   String?
+  lockedAt    DateTime?
+  lockedById  String?
+  lockReason  String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 
   request      JobRequest?               @relation(fields: [requestId], references: [id], onDelete: SetNull)
   participants ConversationParticipant[]
   messages     Message[]
+
+  @@index([lockedAt])
 }
 
 model ConversationParticipant {
@@ -487,17 +494,21 @@ model ConversationParticipant {
 }
 
 model Message {
-  id             String   @id @default(cuid())
+  id             String    @id @default(cuid())
   conversationId String
   senderId       String
   body           String
-  type           String   @default("TEXT") // TEXT | FILE | SYSTEM
-  createdAt      DateTime @default(now())
+  type           String    @default("TEXT") // TEXT | FILE | SYSTEM
+  redactedAt     DateTime?
+  redactedById   String?
+  redactReason   String?
+  createdAt      DateTime  @default(now())
 
   conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
   sender       User         @relation("MessageSender", fields: [senderId], references: [id], onDelete: Cascade)
 
   @@index([conversationId, createdAt])
+  @@index([redactedAt])
 }
 
 // =========================
@@ -683,4 +694,72 @@ model VerificationRequest {
   @@index([status, createdAt])
   @@index([targetType, targetId])
   @@index([submitterId])
+}
+
+// =========================
+// Moderation (reports & resolution)
+// =========================
+
+enum ReportTargetType {
+  USER
+  COMPANY
+  TRAINER
+  REQUEST
+  APPLICATION
+  MESSAGE
+  CONVERSATION
+  REVIEW
+  TEST
+  OTHER
+}
+
+enum ReportCategory {
+  SPAM
+  HARASSMENT
+  INAPPROPRIATE
+  FRAUD
+  IMPERSONATION
+  COPYRIGHT
+  SAFETY
+  OTHER
+}
+
+enum ReportStatus {
+  OPEN
+  INVESTIGATING
+  RESOLVED
+  DISMISSED
+}
+
+enum ReportResolution {
+  NO_ACTION
+  WARNING_ISSUED
+  CONTENT_REMOVED
+  USER_SUSPENDED
+  USER_BANNED
+  ESCALATED
+}
+
+model Report {
+  id            String             @id @default(cuid())
+  reporterId    String
+  targetType    ReportTargetType
+  targetId      String
+  category      ReportCategory
+  reason        String
+  evidenceUrls  String[]           @default([])
+  status        ReportStatus       @default(OPEN)
+  resolution    ReportResolution?
+  resolverId    String?
+  resolvedAt    DateTime?
+  resolverNotes String?
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+
+  reporter User  @relation("ReportReporter", fields: [reporterId], references: [id], onDelete: Cascade)
+  resolver User? @relation("ReportResolver", fields: [resolverId], references: [id], onDelete: SetNull)
+
+  @@index([status, createdAt])
+  @@index([targetType, targetId])
+  @@index([reporterId])
 }
