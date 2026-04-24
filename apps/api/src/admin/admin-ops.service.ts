@@ -112,7 +112,13 @@ export class AdminOpsService {
     return this.prisma.$transaction(async (tx) => {
       const patch: Prisma.JobRequestUpdateInput = { status };
       if (status === 'OPEN' && current.status === 'DRAFT') patch.publishedAt = new Date();
-      if (status === 'CLOSED' || status === 'ARCHIVED') patch.closedAt = new Date();
+      if (status === 'CLOSED' || status === 'ARCHIVED') {
+        patch.closedAt = new Date();
+      } else {
+        // Reopening from CLOSED / ARCHIVED must clear closedAt so the UI
+        // doesn't show a stale "Closed: <date>" next to an OPEN badge.
+        patch.closedAt = null;
+      }
       const updated = await tx.jobRequest.update({
         where: { id },
         data: patch,
