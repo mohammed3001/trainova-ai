@@ -2,6 +2,7 @@ import { ForbiddenException, Injectable, NotFoundException, forwardRef, Inject }
 import { PrismaService } from '../prisma/prisma.service';
 import type { SendMessageInput, StartConversationInput } from '@trainova/shared';
 import { ChatGateway } from './chat.gateway';
+import { NotificationsService } from '../notifications/notifications.service';
 
 export interface ConversationSummary {
   id: string;
@@ -30,6 +31,7 @@ export class ChatService {
     private readonly prisma: PrismaService,
     @Inject(forwardRef(() => ChatGateway))
     private readonly gateway: ChatGateway,
+    private readonly notifications: NotificationsService,
   ) {}
 
   async listConversations(userId: string): Promise<ConversationSummary[]> {
@@ -250,6 +252,30 @@ export class ChatService {
       message,
       participants.map((p) => p.userId),
     );
+
+    // In-app notification for every recipient who is not the sender. We emit
+    // one Notification row per recipient so the bell/unread-count aggregates
+    // correctly even if the socket push is missed (e.g. offline user).
+    const senderName = message.sender?.name ?? 'Someone';
+    const preview = message.body.slice(0, 140);
+    for (const p of participants) {
+      if (p.userId === userId) continue;
+      await this.notifications.emit({
+        userId: p.userId,
+        type: 'chat.message',
+        payload: {
+          title: `New message from ${senderName}`,
+          body: preview,
+          href: `/chat/${input.conversationId}`,
+          meta: {
+            conversationId: input.conversationId,
+            messageId: message.id,
+            senderId: userId,
+          },
+        },
+      });
+    }
+
     return message;
   }
 

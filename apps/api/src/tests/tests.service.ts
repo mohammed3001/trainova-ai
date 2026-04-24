@@ -9,6 +9,7 @@ import { ConfigService } from '@nestjs/config';
 import { Prisma } from '@trainova/db';
 import { PrismaService } from '../prisma/prisma.service';
 import { EmailService } from '../email/email.service';
+import { NotificationsService } from '../notifications/notifications.service';
 import {
   AUDIT_ACTIONS,
   type CreateTestInput,
@@ -30,6 +31,7 @@ export class TestsService {
     private readonly prisma: PrismaService,
     private readonly email: EmailService,
     private readonly config: ConfigService,
+    private readonly notifications: NotificationsService,
   ) {}
 
   // =========================================================================
@@ -393,6 +395,38 @@ export class TestsService {
       }
 
       return updatedAttempt;
+    }).then(async (result) => {
+      // Notify the company owner that a test was submitted and awaits review.
+      if (attempt.applicationId) {
+        const app = await this.prisma.application.findUnique({
+          where: { id: attempt.applicationId },
+          include: {
+            trainer: { select: { name: true } },
+            request: {
+              select: {
+                slug: true,
+                title: true,
+                company: { select: { ownerId: true } },
+              },
+            },
+          },
+        });
+        if (app?.request.company.ownerId) {
+          await this.notifications.emit({
+            userId: app.request.company.ownerId,
+            type: 'test.submitted',
+            payload: {
+              title: `Test submitted for "${app.request.title}"`,
+              body: `${app.trainer?.name ?? 'A trainer'} submitted the evaluation. ${
+                hasManualTask ? 'Manual grading required.' : `Auto-score: ${autoPercent}%.`
+              }`,
+              href: `/company/requests/${app.request.slug}/applications/${app.id}`,
+              meta: { applicationId: app.id, attemptId, testId: attempt.testId },
+            },
+          });
+        }
+      }
+      return result;
     });
   }
 
@@ -564,6 +598,44 @@ export class TestsService {
 
       return updated;
     });
+
+    // Notify trainer that the test was graded.
+    if (updatedAttempt) {
+      const app = attempt.applicationId
+        ? await this.prisma.application.findUnique({
+            where: { id: attempt.applicationId },
+            include: {
+              request: { select: { slug: true, title: true } },
+            },
+          })
+        : null;
+      const passed =
+        updatedAttempt.totalScore != null &&
+        updatedAttempt.totalScore >= attempt.test.passingScore;
+      await this.notifications.emit({
+        userId: attempt.trainerId,
+        type: 'test.graded',
+        payload: {
+          title: `Your test was graded${app?.request.title ? ` — "${app.request.title}"` : ''}`,
+          body: `Final score: ${updatedAttempt.totalScore ?? 0}/100 — ${
+            passed ? 'passed.' : 'did not pass.'
+          }`,
+          href: app ? `/trainer/applications/${app.id}/test` : '/trainer/dashboard',
+          meta: {
+            attemptId,
+            applicationId: attempt.applicationId,
+            totalScore: updatedAttempt.totalScore,
+            passed,
+          },
+        },
+        email: {
+          subject: `Your Trainova AI test was graded`,
+          html: `<p>Your attempt on <strong>${attempt.test.title}</strong> has been graded.</p><p>Final score: <strong>${
+            updatedAttempt.totalScore ?? 0
+          }/100</strong> — ${passed ? 'you passed.' : 'you did not pass this time.'}</p>`,
+        },
+      });
+    }
 
     return updatedAttempt;
   }
