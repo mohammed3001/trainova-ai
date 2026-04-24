@@ -144,7 +144,12 @@ function buildOpenAiBody(input: ProxyInvokeInput): Record<string, unknown> {
     if (input.call.temperature != null) base.temperature = input.call.temperature;
     if (input.call.maxTokens != null) base.max_tokens = input.call.maxTokens;
   }
-  return { ...base, ...safeExtra(input.call.extra, OPENAI_PROTECTED) };
+  // Spread `base` AFTER `extra` so proxy-controlled fields (model, messages,
+  // temperature, max_tokens, …) always win over trainer-supplied values. The
+  // denylist is a defense in depth for fields we also set in `base`; for
+  // fields we don't set (e.g. `top_p`, `stop`, `logit_bias`) trainers can
+  // still customise via `extra`.
+  return { ...safeExtra(input.call.extra, OPENAI_PROTECTED), ...base };
 }
 
 function extractOpenAiOutput(op: ModelCallOperation, json: unknown): string | null {
@@ -194,8 +199,8 @@ async function invokeAnthropic(
         ? messages
         : [{ role: 'user', content: input.call.prompt ?? '' }],
     ...(system ? { system } : {}),
-    ...(input.call.temperature != null ? { temperature: input.call.temperature } : {}),
     ...safeExtra(input.call.extra, ANTHROPIC_PROTECTED),
+    ...(input.call.temperature != null ? { temperature: input.call.temperature } : {}),
   };
 
   const res = await fetchWithTimeout(url, {
@@ -281,6 +286,8 @@ async function invokeHuggingFace(
     },
     ...safeExtra(input.call.extra, HUGGINGFACE_PROTECTED),
   };
+  // `parameters` is in the denylist so the trainer cannot override the
+  // temperature/max_new_tokens we set from the validated input.
 
   const res = await fetchWithTimeout(input.endpointUrl, {
     method: 'POST',
@@ -485,16 +492,16 @@ function buildBedrockBody(input: ProxyInvokeInput): Record<string, unknown> {
           ? messages
           : [{ role: 'user', content: input.call.prompt ?? '' }],
       ...(system ? { system } : {}),
-      ...(input.call.temperature != null ? { temperature: input.call.temperature } : {}),
       ...safeExtra(input.call.extra, BEDROCK_CLAUDE_PROTECTED),
+      ...(input.call.temperature != null ? { temperature: input.call.temperature } : {}),
     };
   }
   if (modelId.includes('meta.llama')) {
     return {
       prompt: input.call.prompt ?? messagesToPrompt(input.call.messages),
       max_gen_len: input.call.maxTokens ?? 512,
-      ...(input.call.temperature != null ? { temperature: input.call.temperature } : {}),
       ...safeExtra(input.call.extra, BEDROCK_LLAMA_PROTECTED),
+      ...(input.call.temperature != null ? { temperature: input.call.temperature } : {}),
     };
   }
   if (modelId.includes('amazon.titan')) {
@@ -570,12 +577,20 @@ function safeExtra(
 // upstream into SSE/chunked mode breaks `parseJsonSafe` and bypasses
 // `fetchWithTimeout` (which only guards header receipt, not body
 // streaming), producing garbled ModelCall audit rows.
+// `stream` is blocked across all providers (see note above). `n` /
+// `num_return_sequences` / `numResults` are cost-amplifiers — a trainer
+// setting `n: 128` would produce 128× the output tokens on the company's
+// API key. `temperature` is controlled by `base` (Zod-validated, capped at
+// 2) and must not be overridable.
 const OPENAI_PROTECTED = [
   'model',
   'messages',
   'prompt',
   'input',
   'max_tokens',
+  'n',
+  'best_of',
+  'temperature',
   'stream',
 ] as const;
 const ANTHROPIC_PROTECTED = [
@@ -584,6 +599,7 @@ const ANTHROPIC_PROTECTED = [
   'system',
   'max_tokens',
   'anthropic_version',
+  'temperature',
   'stream',
 ] as const;
 const HUGGINGFACE_PROTECTED = ['inputs', 'parameters', 'stream'] as const;
@@ -592,12 +608,19 @@ const BEDROCK_CLAUDE_PROTECTED = [
   'max_tokens',
   'messages',
   'system',
+  'temperature',
   'stream',
 ] as const;
-const BEDROCK_LLAMA_PROTECTED = ['prompt', 'max_gen_len', 'stream'] as const;
+const BEDROCK_LLAMA_PROTECTED = [
+  'prompt',
+  'max_gen_len',
+  'temperature',
+  'stream',
+] as const;
 const BEDROCK_TITAN_PROTECTED = [
   'inputText',
   'textGenerationConfig',
+  'numResults',
   'stream',
 ] as const;
 const BEDROCK_GENERIC_PROTECTED = ['prompt', 'stream'] as const;
