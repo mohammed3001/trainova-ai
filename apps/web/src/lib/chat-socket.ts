@@ -46,11 +46,13 @@ async function fetchTicket(): Promise<string> {
 }
 
 export async function getChatSocket(): Promise<Socket> {
-  // Existence check (not `connected`) prevents creating duplicate sockets
-  // while the handshake is still in flight — especially under React 18
-  // Strict Mode which double-invokes effects. Callers already listen for
-  // the `connect` event to learn when the socket is usable.
-  if (singleton && !singleton.disconnected) return singleton;
+  // Existence check (not `connected`/`disconnected`) — a Socket.IO client
+  // is `disconnected` until the handshake finishes, so checking either
+  // flag here would create a duplicate socket for every caller that
+  // arrives during the initial connect window (which React 18 Strict Mode
+  // reliably reproduces by double-invoking effects). Callers already
+  // listen for the `connect` event to learn when the socket is usable.
+  if (singleton) return singleton;
   if (connectPromise) return connectPromise;
   connectPromise = (async () => {
     try {

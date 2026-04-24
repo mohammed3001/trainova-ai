@@ -55,6 +55,35 @@ export function ChatRoom({
     let cancelled = false;
     let socket: Socket | null = null;
 
+    // The socket is a shared singleton (see chat-socket.ts), so we have to
+    // remove listeners by reference in cleanup — `socket.off('event')` with
+    // no handler would wipe every listener for that event across the app,
+    // which would silently break any other mounted chat-aware surface
+    // (e.g. the header unread badge).
+    const onConnect = () => {
+      setConnected(true);
+      socket?.emit('conversation:join', { conversationId });
+    };
+    const onDisconnect = () => setConnected(false);
+    const onMessage = (m: ChatMessage) => {
+      if (m.conversationId !== conversationId) return;
+      setMessages((prev) => (prev.some((x) => x.id === m.id) ? prev : [...prev, m]));
+      // Opportunistically mark read since we're looking at the thread.
+      if (m.senderId !== currentUserId) void markRead(conversationId);
+    };
+    const onTyping = ({
+      conversationId: cid,
+      userId,
+      typing,
+    }: {
+      conversationId: string;
+      userId: string;
+      typing: boolean;
+    }) => {
+      if (cid !== conversationId || userId === currentUserId) return;
+      setOtherTyping(typing);
+    };
+
     (async () => {
       try {
         socket = await getChatSocket();
@@ -66,28 +95,11 @@ export function ChatRoom({
         // comes back — otherwise message:new/typing/presence silently stop
         // arriving after a network blip even though the green "Live" dot
         // lights back up.
-        const joinRoom = () => socket?.emit('conversation:join', { conversationId });
-        socket.on('connect', () => {
-          setConnected(true);
-          joinRoom();
-        });
-        socket.on('disconnect', () => setConnected(false));
-        joinRoom();
-
-        socket.on('message:new', (m: ChatMessage) => {
-          if (m.conversationId !== conversationId) return;
-          setMessages((prev) => (prev.some((x) => x.id === m.id) ? prev : [...prev, m]));
-          // Opportunistically mark read since we're looking at the thread.
-          if (m.senderId !== currentUserId) void markRead(conversationId);
-        });
-
-        socket.on(
-          'typing',
-          ({ conversationId: cid, userId, typing }: { conversationId: string; userId: string; typing: boolean }) => {
-            if (cid !== conversationId || userId === currentUserId) return;
-            setOtherTyping(typing);
-          },
-        );
+        socket.on('connect', onConnect);
+        socket.on('disconnect', onDisconnect);
+        socket.on('message:new', onMessage);
+        socket.on('typing', onTyping);
+        socket.emit('conversation:join', { conversationId });
       } catch (e) {
         // Realtime unavailable; UI still works via REST.
         console.warn('chat socket init failed', e);
@@ -98,10 +110,10 @@ export function ChatRoom({
       cancelled = true;
       if (socket) {
         socket.emit('conversation:leave', { conversationId });
-        socket.off('message:new');
-        socket.off('typing');
-        socket.off('connect');
-        socket.off('disconnect');
+        socket.off('connect', onConnect);
+        socket.off('disconnect', onDisconnect);
+        socket.off('message:new', onMessage);
+        socket.off('typing', onTyping);
       }
     };
   }, [conversationId, currentUserId]);
