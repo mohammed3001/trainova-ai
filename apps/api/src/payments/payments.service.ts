@@ -472,19 +472,19 @@ export class PaymentsService {
 
   async getEarningsSummary(userId: string): Promise<TrainerEarningsSummary> {
     const [fundedPending, released, payouts] = await Promise.all([
-      this.prisma.milestone.aggregate({
-        _sum: { amountCents: true },
+      this.prisma.milestone.findMany({
         where: {
           status: 'FUNDED',
           contract: { trainerId: userId },
         },
+        select: { amountCents: true, contract: { select: { platformFeeBps: true } } },
       }),
-      this.prisma.milestone.aggregate({
-        _sum: { amountCents: true },
+      this.prisma.milestone.findMany({
         where: {
           status: 'RELEASED',
           contract: { trainerId: userId },
         },
+        select: { amountCents: true, contract: { select: { platformFeeBps: true } } },
       }),
       this.prisma.payout.aggregate({
         _sum: { amountCents: true },
@@ -492,14 +492,26 @@ export class PaymentsService {
       }),
     ]);
 
-    const releasedTotal = released._sum.amountCents ?? 0;
+    // Net-to-trainer = gross milestone amount minus platform fee (same
+    // calculation used when funds are released in releaseMilestone).
+    // Payouts are recorded at net, so `available = releasedNet - paidOutNet`.
+    const netFromMilestones = (
+      rows: { amountCents: number; contract: { platformFeeBps: number } }[],
+    ) =>
+      rows.reduce((acc, r) => {
+        const fee = Math.floor((r.amountCents * r.contract.platformFeeBps) / 10_000);
+        return acc + (r.amountCents - fee);
+      }, 0);
+
+    const pendingNet = netFromMilestones(fundedPending);
+    const releasedNet = netFromMilestones(released);
     const paidOut = payouts._sum.amountCents ?? 0;
     return {
       currency: 'USD',
-      pendingCents: fundedPending._sum.amountCents ?? 0,
-      availableCents: Math.max(0, releasedTotal - paidOut),
+      pendingCents: pendingNet,
+      availableCents: Math.max(0, releasedNet - paidOut),
       paidOutCents: paidOut,
-      totalEarnedCents: releasedTotal,
+      totalEarnedCents: releasedNet,
     };
   }
 
