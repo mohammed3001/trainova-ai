@@ -875,6 +875,7 @@
       "cmsCategories": "Categories",
       "cmsFaqs": "FAQ",
       "featureFlags": "Feature flags",
+      "finance": "Finance",
       "settings": "Settings"
     },
     "userRole": {
@@ -1406,6 +1407,141 @@
         "isPublic": "Expose via /public/settings (no auth)",
         "knownKey": "Registered platform key — values are validated.",
         "customKey": "Custom key — only exposed publicly if you check the box below."
+      }
+    },
+    "finance": {
+      "title": "Finance",
+      "subtitle": "Escrow contracts, milestone refunds, trainer payouts, subscriptions, and pricing plans — every change audit-logged.",
+      "empty": "Nothing here yet.",
+      "viewAll": "View all",
+      "next": "Next",
+      "filter": {
+        "allStatuses": "All statuses",
+        "apply": "Apply"
+      },
+      "tabs": {
+        "contracts": "Contracts",
+        "payouts": "Payouts",
+        "subscriptions": "Subscriptions",
+        "plans": "Plans"
+      },
+      "overview": {
+        "escrowHeld": "Escrow held",
+        "released": "Released",
+        "platformFee": "Platform fees",
+        "refunded": "Refunded",
+        "payoutsPaid": "Payouts paid",
+        "payoutsPending": "Payouts pending",
+        "payoutsFailed": "Payouts failed",
+        "activeSubscriptions": "Active subscriptions",
+        "monthlyRevenue": "Monthly revenue (last 12 months)",
+        "gross": "Gross",
+        "fee": "Fee",
+        "refunds": "Refunds",
+        "recentContracts": "Recent contracts",
+        "recentPayouts": "Recent payouts"
+      },
+      "contractStatus": {
+        "PENDING": "Pending",
+        "ACTIVE": "Active",
+        "COMPLETED": "Completed",
+        "CANCELLED": "Cancelled",
+        "DISPUTED": "Disputed"
+      },
+      "milestoneStatus": {
+        "PENDING": "Pending",
+        "FUNDED": "Funded",
+        "RELEASED": "Released",
+        "REFUNDED": "Refunded",
+        "CANCELLED": "Cancelled"
+      },
+      "payoutStatus": {
+        "PENDING": "Pending",
+        "PAID": "Paid",
+        "FAILED": "Failed",
+        "CANCELLED": "Cancelled"
+      },
+      "contracts": {
+        "title": "Contracts",
+        "subtitle": "Browse every escrow contract. Drill in to refund individual milestones.",
+        "searchPlaceholder": "Search by contract title, company, trainer…",
+        "milestones": "Milestones",
+        "due": "Due",
+        "paymentIntents": "Payment intents",
+        "payouts": "Payouts",
+        "refundReason": "Refund reason",
+        "refundReasonPlaceholder": "Why is this milestone being refunded?",
+        "refundButton": "Refund milestone",
+        "refundConfirm": "Refund {amount} to the company? This calls Stripe and is logged to the audit trail.",
+        "col": {
+          "title": "Title",
+          "company": "Company",
+          "trainer": "Trainer",
+          "amount": "Amount",
+          "status": "Status",
+          "milestones": "Milestones",
+          "actions": "Actions",
+          "open": "Open"
+        }
+      },
+      "payouts": {
+        "title": "Payouts",
+        "subtitle": "Trainer transfers via Stripe Connect. Retry failed transfers or cancel pending ones.",
+        "searchPlaceholder": "Search by trainer name or email…",
+        "retry": "Retry",
+        "retryConfirm": "Retry this payout? Stripe will create a new transfer.",
+        "cancel": "Cancel",
+        "cancelConfirm": "Cancel this pending payout?",
+        "col": {
+          "trainer": "Trainer",
+          "contract": "Contract",
+          "amount": "Amount",
+          "status": "Status",
+          "created": "Created",
+          "actions": "Actions"
+        }
+      },
+      "subscriptions": {
+        "title": "Subscriptions",
+        "subtitle": "Active recurring billing across companies and trainers.",
+        "searchPlaceholder": "Search by user name or email…",
+        "cancel": "Cancel",
+        "confirm": "Confirm",
+        "dismiss": "Dismiss",
+        "cancelConfirm": "Cancel this subscription? The user will lose access according to your selection.",
+        "cancelAtPeriodEnd": "Cancels at period end",
+        "immediate": "Immediate (skip period end)",
+        "reasonPlaceholder": "Reason (optional)",
+        "col": {
+          "user": "User",
+          "plan": "Plan",
+          "status": "Status",
+          "period": "Current period",
+          "actions": "Actions"
+        }
+      },
+      "plans": {
+        "title": "Plans",
+        "subtitle": "Manage company and trainer pricing plans. Plans with active subscriptions cannot be deleted.",
+        "create": "Create plan",
+        "edit": "Edit",
+        "remove": "Delete",
+        "save": "Save",
+        "createTitle": "New plan",
+        "editTitle": "Edit plan",
+        "deleteConfirm": "Delete this plan? This cannot be undone.",
+        "companyHeader": "Company plans",
+        "trainerHeader": "Trainer plans",
+        "col": {
+          "audience": "Audience",
+          "tier": "Tier",
+          "monthly": "Monthly",
+          "yearly": "Yearly",
+          "subs": "Subscribers",
+          "actions": "Actions",
+          "stripePriceId": "Stripe price ID",
+          "features": "Features"
+        }
       }
     },
     "emailTemplates": {

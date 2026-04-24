@@ -875,6 +875,7 @@
       "cmsCategories": "الأقسام",
       "cmsFaqs": "الأسئلة الشائعة",
       "featureFlags": "رايات الميزات",
+      "finance": "المالية",
       "settings": "الإعدادات"
     },
     "userRole": {
@@ -1406,6 +1407,141 @@
         "isPublic": "إتاحة عبر /public/settings (بدون مصادقة)",
         "knownKey": "مفتاح منصة مُسجّل — تُفحص القيم.",
         "customKey": "مفتاح مخصص — يُتاح علناً فقط عند تفعيل الخيار أدناه."
+      }
+    },
+    "finance": {
+      "title": "المالية",
+      "subtitle": "عقود الضمان، استرداد المراحل، تحويلات المدربين، الاشتراكات، وخطط التسعير — كل تغيير مسجّل في سجل التدقيق.",
+      "empty": "لا يوجد بعد.",
+      "viewAll": "عرض الكل",
+      "next": "التالي",
+      "filter": {
+        "allStatuses": "كل الحالات",
+        "apply": "تطبيق"
+      },
+      "tabs": {
+        "contracts": "العقود",
+        "payouts": "التحويلات",
+        "subscriptions": "الاشتراكات",
+        "plans": "الخطط"
+      },
+      "overview": {
+        "escrowHeld": "محتجز في الضمان",
+        "released": "مُفرَج عنه",
+        "platformFee": "عمولات المنصة",
+        "refunded": "مُسترَد",
+        "payoutsPaid": "تحويلات مدفوعة",
+        "payoutsPending": "تحويلات قيد المعالجة",
+        "payoutsFailed": "تحويلات فاشلة",
+        "activeSubscriptions": "اشتراكات نشطة",
+        "monthlyRevenue": "الإيرادات الشهرية (آخر 12 شهراً)",
+        "gross": "الإجمالي",
+        "fee": "العمولة",
+        "refunds": "المرتجعات",
+        "recentContracts": "آخر العقود",
+        "recentPayouts": "آخر التحويلات"
+      },
+      "contractStatus": {
+        "PENDING": "قيد الانتظار",
+        "ACTIVE": "نشط",
+        "COMPLETED": "مكتمل",
+        "CANCELLED": "ملغى",
+        "DISPUTED": "متنازع عليه"
+      },
+      "milestoneStatus": {
+        "PENDING": "قيد الانتظار",
+        "FUNDED": "مموَّل",
+        "RELEASED": "مُفرَج عنه",
+        "REFUNDED": "مُسترَد",
+        "CANCELLED": "ملغى"
+      },
+      "payoutStatus": {
+        "PENDING": "قيد المعالجة",
+        "PAID": "مدفوع",
+        "FAILED": "فشل",
+        "CANCELLED": "ملغى"
+      },
+      "contracts": {
+        "title": "العقود",
+        "subtitle": "تصفّح كل عقد ضمان. ادخل للتفاصيل لاسترداد المراحل المموَّلة.",
+        "searchPlaceholder": "ابحث بعنوان العقد، الشركة، أو المدرب…",
+        "milestones": "المراحل",
+        "due": "تاريخ الاستحقاق",
+        "paymentIntents": "نوايا الدفع",
+        "payouts": "التحويلات",
+        "refundReason": "سبب الاسترداد",
+        "refundReasonPlaceholder": "لماذا يتم استرداد هذه المرحلة؟",
+        "refundButton": "استرداد المرحلة",
+        "refundConfirm": "استرداد {amount} للشركة؟ سيتم استدعاء Stripe وتسجيل العملية في سجل التدقيق.",
+        "col": {
+          "title": "العنوان",
+          "company": "الشركة",
+          "trainer": "المدرب",
+          "amount": "المبلغ",
+          "status": "الحالة",
+          "milestones": "المراحل",
+          "actions": "إجراءات",
+          "open": "فتح"
+        }
+      },
+      "payouts": {
+        "title": "التحويلات",
+        "subtitle": "تحويلات المدربين عبر Stripe Connect. أعد محاولة التحويلات الفاشلة أو ألغِ المعلّقة.",
+        "searchPlaceholder": "ابحث باسم المدرب أو بريده…",
+        "retry": "إعادة المحاولة",
+        "retryConfirm": "إعادة محاولة هذا التحويل؟ سيُنشئ Stripe تحويلاً جديداً.",
+        "cancel": "إلغاء",
+        "cancelConfirm": "إلغاء هذا التحويل المعلّق؟",
+        "col": {
+          "trainer": "المدرب",
+          "contract": "العقد",
+          "amount": "المبلغ",
+          "status": "الحالة",
+          "created": "تاريخ الإنشاء",
+          "actions": "إجراءات"
+        }
+      },
+      "subscriptions": {
+        "title": "الاشتراكات",
+        "subtitle": "الاشتراكات الدورية النشطة للشركات والمدربين.",
+        "searchPlaceholder": "ابحث باسم المستخدم أو بريده…",
+        "cancel": "إلغاء",
+        "confirm": "تأكيد",
+        "dismiss": "إخفاء",
+        "cancelConfirm": "إلغاء هذا الاشتراك؟ سيفقد المستخدم الوصول حسب اختيارك.",
+        "cancelAtPeriodEnd": "يُلغى في نهاية الفترة",
+        "immediate": "فوري (تجاوز نهاية الفترة)",
+        "reasonPlaceholder": "السبب (اختياري)",
+        "col": {
+          "user": "المستخدم",
+          "plan": "الخطة",
+          "status": "الحالة",
+          "period": "الفترة الحالية",
+          "actions": "إجراءات"
+        }
+      },
+      "plans": {
+        "title": "الخطط",
+        "subtitle": "إدارة خطط تسعير الشركات والمدربين. لا يمكن حذف الخطط ذات الاشتراكات النشطة.",
+        "create": "خطة جديدة",
+        "edit": "تعديل",
+        "remove": "حذف",
+        "save": "حفظ",
+        "createTitle": "خطة جديدة",
+        "editTitle": "تعديل الخطة",
+        "deleteConfirm": "حذف هذه الخطة؟ لا يمكن التراجع عن هذه العملية.",
+        "companyHeader": "خطط الشركات",
+        "trainerHeader": "خطط المدربين",
+        "col": {
+          "audience": "الجمهور",
+          "tier": "الفئة",
+          "monthly": "شهري",
+          "yearly": "سنوي",
+          "subs": "المشتركون",
+          "actions": "إجراءات",
+          "stripePriceId": "Stripe price ID",
+          "features": "الميزات"
+        }
       }
     },
     "emailTemplates": {
