@@ -93,7 +93,10 @@ export function renderTrainerCvPdf(t: TrainerCvPayload): Readable {
 
   if (t.verified) {
     doc.moveDown(0.3);
-    doc.fillColor(brand).fontSize(9).text('✓ Verified trainer on Trainova AI');
+    // PDFKit's built-in Helvetica is WinAnsi-only; characters outside 1252
+    // (e.g. U+2713 check mark) either crash .text() or drop silently. Stick
+    // to ASCII/bullet for reliable rendering.
+    doc.fillColor(brand).fontSize(9).text('• Verified trainer on Trainova AI');
   }
 
   doc.moveDown(0.6);
@@ -137,7 +140,7 @@ export function renderTrainerCvPdf(t: TrainerCvPayload): Readable {
   if (t.hourlyRateMin != null || t.hourlyRateMax != null) {
     rateParts.push(`Rate: $${t.hourlyRateMin ?? 0}–$${t.hourlyRateMax ?? 0} / hr`);
   }
-  if (t.responseTimeHours != null) rateParts.push(`Response: ≤ ${t.responseTimeHours}h`);
+  if (t.responseTimeHours != null) rateParts.push(`Response: <= ${t.responseTimeHours}h`);
   if (t.availability) rateParts.push(`Availability: ${t.availability}`);
   if (rateParts.length) {
     doc.fillColor(ink).font('Helvetica-Bold').fontSize(12).text('Engagement');
