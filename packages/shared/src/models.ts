@@ -106,29 +106,18 @@ export const modelConnectionUpdateSchema = modelConnectionInputSchema
     credentials: z.string().max(8192).optional(),
   })
   .superRefine((value, ctx) => {
-    // Mirror the create-time provider contracts on PATCH so a request that
-    // *changes* provider (or pushes an endpointUrl alongside an existing
-    // provider) is still validated. We only enforce a rule when the
-    // relevant field is actually present in the patch — otherwise the
-    // partial update would never be acceptable.
-    if (
-      value.provider &&
-      ['OPENAI_COMPATIBLE', 'RAW_HTTPS', 'HUGGINGFACE'].includes(value.provider) &&
-      value.endpointUrl === null
-    ) {
-      ctx.addIssue({
-        code: 'custom',
-        path: ['endpointUrl'],
-        message: 'endpointUrl is required for this provider',
-      });
-    }
-    if (value.provider === 'BEDROCK' && value.region === null) {
-      ctx.addIssue({
-        code: 'custom',
-        path: ['region'],
-        message: 'region is required for Bedrock',
-      });
-    }
+    // We intentionally do NOT try to enforce "endpointUrl is required for
+    // provider X" / "region is required for Bedrock" at the schema level
+    // here. `.partial()` means those fields arrive as `string | undefined`,
+    // so on a patch we only ever see what the caller explicitly sent —
+    // we have no visibility into the stored row. The true contract
+    // (`merged state must satisfy the provider's rules`) is therefore
+    // enforced on the server after merging the patch with the existing
+    // connection: see `ModelsService.update()` in the API, which rejects
+    // merges that would leave a required field unset.
+    //
+    // What we CAN catch purely from the patch: invalid authKind/provider
+    // pairings, because both values are present in `value` when set.
     if (value.authKind === 'aws_sigv4' && value.provider && value.provider !== 'BEDROCK') {
       ctx.addIssue({
         code: 'custom',

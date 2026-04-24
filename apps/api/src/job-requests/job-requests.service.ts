@@ -1,8 +1,8 @@
-import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { Prisma } from '@trainova/db';
 import { PrismaService } from '../prisma/prisma.service';
 import { randomSuffix, slugify } from '../common/slug.util';
-import type { CreateJobRequestInput } from '@trainova/shared';
+import type { CreateJobRequestInput, UpdateJobRequestInput } from '@trainova/shared';
 
 @Injectable()
 export class JobRequestsService {
@@ -71,6 +71,10 @@ export class JobRequestsService {
     const company = await this.prisma.company.findUnique({ where: { ownerId } });
     if (!company) throw new ForbiddenException('No company');
 
+    if (input.modelConnectionId) {
+      await this.assertOwnedConnection(company.id, input.modelConnectionId);
+    }
+
     const slug = await this.uniqueSlug(input.title);
     const skillRows = input.skills?.length
       ? await this.prisma.skill.findMany({ where: { slug: { in: input.skills } }, select: { id: true } })
@@ -97,10 +101,49 @@ export class JobRequestsService {
         applicationSchema: input.applicationSchema
           ? (input.applicationSchema as Prisma.InputJsonValue)
           : Prisma.DbNull,
+        modelConnectionId: input.modelConnectionId ?? null,
         skills: skillRows.length ? { create: skillRows.map((s) => ({ skillId: s.id })) } : undefined,
       },
       include: { skills: { include: { skill: true } } },
     });
+  }
+
+  async update(ownerId: string, id: string, patch: UpdateJobRequestInput) {
+    const request = await this.prisma.jobRequest.findUnique({
+      where: { id },
+      include: { company: { select: { id: true, ownerId: true } } },
+    });
+    if (!request) throw new NotFoundException('Request not found');
+    if (request.company.ownerId !== ownerId) throw new ForbiddenException('Not your request');
+
+    const data: Record<string, unknown> = {};
+    if (patch.modelConnectionId !== undefined) {
+      if (patch.modelConnectionId === null) {
+        data.modelConnectionId = null;
+      } else {
+        await this.assertOwnedConnection(request.company.id, patch.modelConnectionId);
+        data.modelConnectionId = patch.modelConnectionId;
+      }
+    }
+
+    return this.prisma.jobRequest.update({
+      where: { id },
+      data,
+      include: { skills: { include: { skill: true } } },
+    });
+  }
+
+  private async assertOwnedConnection(companyId: string, connectionId: string) {
+    const conn = await this.prisma.modelConnection.findUnique({
+      where: { id: connectionId },
+      select: { companyId: true, deletedAt: true },
+    });
+    if (!conn || conn.deletedAt) {
+      throw new NotFoundException('model connection not found');
+    }
+    if (conn.companyId !== companyId) {
+      throw new BadRequestException('model connection belongs to a different company');
+    }
   }
 
   async applications(ownerId: string, requestId: string) {

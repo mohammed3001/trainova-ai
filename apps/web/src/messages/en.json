@@ -186,7 +186,10 @@
       "budgetMin": "Budget min (USD)",
       "budgetMax": "Budget max (USD)",
       "workType": "Work type",
-      "skills": "Required skills"
+      "skills": "Required skills",
+      "modelConnection": "Attached model (optional)",
+      "modelConnectionNone": "— No model attached —",
+      "modelConnectionHint": "Shortlisted trainers will get live access to this model through the workbench."
     }
   },
   "trainers": {
@@ -590,6 +593,58 @@
         "totalScore": "Final score: {score}/100",
         "passed": "Above the company's passing hint of {score}/100.",
         "missed": "Below the company's passing hint of {score}/100."
+      }
+    },
+    "workbench": {
+      "back": "Back to my applications",
+      "eyebrow": "Model Workbench",
+      "subtitle": "Interact live with the company's model — every call is logged for review.",
+      "applicationStatus": "Status",
+      "noModel": "No model attached",
+      "empty": {
+        "title": "Workbench not available",
+        "body": "We couldn't load workbench context for this application."
+      },
+      "dashboardRow": {
+        "body": "A live model is attached — open the workbench to run evaluation calls.",
+        "cta": "Open workbench"
+      },
+      "composer": {
+        "title": "Compose a call",
+        "operation": "Operation",
+        "temperature": "Temperature",
+        "maxTokens": "Max tokens",
+        "system": "System (optional)",
+        "systemPlaceholder": "You are a concise assistant…",
+        "user": "User message",
+        "userPlaceholder": "Your prompt…",
+        "input": "Input text",
+        "inputPlaceholder": "Text to embed",
+        "submit": "Run",
+        "submitting": "Running…",
+        "hint": "Credentials never leave the server. Each call is persisted for the company's audit trail."
+      },
+      "operations": {
+        "chat": "Chat",
+        "complete": "Complete",
+        "embed": "Embed",
+        "custom": "Custom"
+      },
+      "result": {
+        "title": "Latest response",
+        "raw": "Raw response"
+      },
+      "history": {
+        "title": "Recent calls",
+        "empty": "You haven't run any calls yet.",
+        "requestPreview": "Request",
+        "responsePreview": "Response"
+      },
+      "reasons": {
+        "noModel": "The company hasn't attached a live model to this request yet.",
+        "disabled": "The company has disabled this connection.",
+        "inactive": "This connection hasn't been activated yet.",
+        "notShortlisted": "Workbench access opens after the company shortlists your application."
       }
     }
   },

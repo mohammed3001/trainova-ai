@@ -18,9 +18,19 @@ interface ApplicationRow {
     title: string;
     modelFamily: string | null;
     industry: string | null;
+    modelConnectionId?: string | null;
     company: { name: string; slug: string; ownerId: string };
   };
 }
+
+const WORKBENCH_ACCESS_STATUSES = new Set([
+  'SHORTLISTED',
+  'TEST_ASSIGNED',
+  'TEST_SUBMITTED',
+  'INTERVIEW',
+  'OFFERED',
+  'ACCEPTED',
+]);
 
 export default async function TrainerDashboard() {
   const t = await getTranslations();
@@ -103,6 +113,20 @@ export default async function TrainerDashboard() {
                         labelKey="messageCompany"
                         dataTestId={`trainer-message-company-${a.id}`}
                       />
+                    </div>
+                  ) : null}
+                  {a.request.modelConnectionId && WORKBENCH_ACCESS_STATUSES.has(a.status) ? (
+                    <div className="flex items-center justify-between gap-3 border-t border-slate-100 pt-2">
+                      <div className="text-xs text-slate-600">
+                        {t('trainer.workbench.dashboardRow.body')}
+                      </div>
+                      <Link
+                        href={`/${locale}/trainer/applications/${a.id}/workbench`}
+                        className="btn-secondary"
+                        data-testid={`trainer-workbench-cta-${a.id}`}
+                      >
+                        {t('trainer.workbench.dashboardRow.cta')}
+                      </Link>
                     </div>
                   ) : null}
                 </li>
