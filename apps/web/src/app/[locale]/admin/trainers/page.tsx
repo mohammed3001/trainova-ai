@@ -5,14 +5,13 @@ import { VerifiedBadge } from '@/components/admin/verified-badge';
 
 interface Row {
   id: string;
-  name: string;
   slug: string;
+  headline: string | null;
   country: string | null;
-  websiteUrl: string | null;
   verified: boolean;
   createdAt: string;
-  owner: { id: string; email: string; name: string } | null;
-  _count: { requests: number };
+  user: { id: string; email: string; name: string; status: string; _count: { applications: number } };
+  skills: { skill: { id: string; slug: string; nameEn: string; nameAr: string } }[];
 }
 
 interface Page {
@@ -20,7 +19,7 @@ interface Page {
   nextCursor: string | null;
 }
 
-export default async function AdminCompaniesPage({
+export default async function AdminTrainersPage({
   searchParams,
 }: {
   searchParams: Promise<{ q?: string; verified?: string; cursor?: string }>;
@@ -35,13 +34,13 @@ export default async function AdminCompaniesPage({
   if (sp.cursor) qs.set('cursor', sp.cursor);
   qs.set('limit', '50');
 
-  const page = await authedFetch<Page>(`/admin/companies?${qs.toString()}`);
+  const page = await authedFetch<Page>(`/admin/trainers?${qs.toString()}`);
 
   return (
     <div className="space-y-6">
       <header>
-        <h1 className="text-3xl font-bold text-slate-900">{t('admin.companies.title')}</h1>
-        <p className="mt-1 text-sm text-slate-500">{t('admin.companies.subtitle')}</p>
+        <h1 className="text-3xl font-bold text-slate-900">{t('admin.trainers.title')}</h1>
+        <p className="mt-1 text-sm text-slate-500">{t('admin.trainers.subtitle')}</p>
       </header>
 
       <form
@@ -52,7 +51,7 @@ export default async function AdminCompaniesPage({
           name="q"
           type="search"
           defaultValue={sp.q ?? ''}
-          placeholder={t('admin.companies.searchPlaceholder')}
+          placeholder={t('admin.trainers.searchPlaceholder')}
           className="min-w-[220px] flex-1 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-200"
         />
         <select
@@ -75,28 +74,41 @@ export default async function AdminCompaniesPage({
       <ul className="grid gap-3 sm:grid-cols-2">
         {page.items.length === 0 ? (
           <li className="col-span-full rounded-2xl border border-dashed border-slate-200 bg-white/60 p-10 text-center text-sm text-slate-500">
-            {t('admin.companies.empty')}
+            {t('admin.trainers.empty')}
           </li>
         ) : (
-          page.items.map((c) => (
-            <li key={c.id}>
+          page.items.map((r) => (
+            <li key={r.id}>
               <Link
-                href={`/${locale}/admin/companies/${c.id}`}
+                href={`/${locale}/admin/trainers/${r.id}`}
                 className="group flex items-start justify-between gap-3 rounded-2xl border border-white/60 bg-white/70 p-4 shadow-sm backdrop-blur-md transition hover:-translate-y-0.5 hover:shadow-md"
               >
-                <div className="min-w-0">
-                  <div className="truncate text-base font-semibold text-slate-900">{c.name}</div>
+                <div className="min-w-0 flex-1">
+                  <div className="truncate text-base font-semibold text-slate-900">{r.user.name}</div>
                   <div className="mt-1 truncate text-xs text-slate-500">
-                    <span className="font-mono">{c.slug}</span>
-                    {c.country ? ` · ${c.country}` : ''}
+                    {r.headline ?? r.slug}
+                    {r.country ? ` · ${r.country}` : ''}
                   </div>
-                  <div className="mt-2 text-xs text-slate-500">
-                    {t('admin.companies.openRequests', { count: c._count.requests })}
-                    {c.owner ? ` · ${c.owner.name}` : ''}
-                  </div>
+                  {r.skills.length > 0 && (
+                    <div className="mt-2 flex flex-wrap gap-1">
+                      {r.skills.slice(0, 5).map((s) => (
+                        <span
+                          key={s.skill.id}
+                          className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-700"
+                        >
+                          {locale === 'ar' ? s.skill.nameAr : s.skill.nameEn}
+                        </span>
+                      ))}
+                      {r.skills.length > 5 && (
+                        <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-500">
+                          +{r.skills.length - 5}
+                        </span>
+                      )}
+                    </div>
+                  )}
                 </div>
                 <VerifiedBadge
-                  verified={c.verified}
+                  verified={r.verified}
                   labelVerified={t('admin.common.verified')}
                   labelUnverified={t('admin.common.unverified')}
                 />
@@ -109,7 +121,7 @@ export default async function AdminCompaniesPage({
       {page.nextCursor && (
         <div className="flex justify-end">
           <Link
-            href={{ pathname: `/${locale}/admin/companies`, query: { ...sp, cursor: page.nextCursor } }}
+            href={{ pathname: `/${locale}/admin/trainers`, query: { ...sp, cursor: page.nextCursor } }}
             className="rounded-lg border border-slate-200 bg-white/70 px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm hover:bg-white"
           >
             {t('admin.users.loadMore')}

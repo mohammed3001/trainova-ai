@@ -33,17 +33,40 @@ export class ChatService {
   ) {}
 
   async listConversations(userId: string): Promise<ConversationSummary[]> {
+    // Explicit nested `select` on `messages` so admin redaction metadata
+    // (`redactedById`, `redactReason`) is never surfaced to participants
+    // via the last-message preview. `redactedAt` stays — the client needs
+    // it to render "[redacted]" instead of the body.
     const conversations = await this.prisma.conversation.findMany({
       where: { participants: { some: { userId } } },
       orderBy: { updatedAt: 'desc' },
-      include: {
+      select: {
+        id: true,
+        requestId: true,
+        lockedAt: true,
+        createdAt: true,
+        updatedAt: true,
         participants: {
-          include: { user: { select: { id: true, name: true, role: true } } },
+          select: {
+            userId: true,
+            conversationId: true,
+            lastReadAt: true,
+            user: { select: { id: true, name: true, role: true } },
+          },
         },
         messages: {
           take: 1,
           orderBy: { createdAt: 'desc' },
-          include: { sender: { select: { id: true, name: true } } },
+          select: {
+            id: true,
+            conversationId: true,
+            senderId: true,
+            body: true,
+            type: true,
+            redactedAt: true,
+            createdAt: true,
+            sender: { select: { id: true, name: true } },
+          },
         },
       },
     });
@@ -156,11 +179,23 @@ export class ChatService {
       where: { conversationId_userId: { conversationId, userId } },
     });
     if (!part) throw new ForbiddenException('Not a participant');
+    // Explicit select: never leak admin redaction metadata (`redactedById`,
+    // `redactReason`) to participants. `redactedAt` is safe and tells the
+    // client to render "[redacted]" instead of the body.
     return this.prisma.message.findMany({
       where: { conversationId },
       orderBy: { createdAt: 'asc' },
       take: 200,
-      include: { sender: { select: { id: true, name: true, role: true } } },
+      select: {
+        id: true,
+        conversationId: true,
+        senderId: true,
+        body: true,
+        type: true,
+        redactedAt: true,
+        createdAt: true,
+        sender: { select: { id: true, name: true, role: true } },
+      },
     });
   }
 
@@ -172,9 +207,31 @@ export class ChatService {
     if (!participants.some((p) => p.userId === userId)) {
       throw new ForbiddenException('Not a participant');
     }
+    // Admin-locked conversations are frozen — participants may still read
+    // history but cannot add new messages. Keeping the ForbiddenException
+    // with a stable error code lets the chat UI render the lock notice.
+    const conv = await this.prisma.conversation.findUnique({
+      where: { id: input.conversationId },
+      select: { lockedAt: true },
+    });
+    if (conv?.lockedAt) {
+      throw new ForbiddenException('Conversation is locked');
+    }
     const message = await this.prisma.message.create({
       data: { conversationId: input.conversationId, senderId: userId, body: input.body },
-      include: { sender: { select: { id: true, name: true, role: true } } },
+      // Explicit select mirrors listMessages/listConversations — never leak
+      // admin redaction metadata (`redactedById`, `redactReason`) to
+      // participants, even as null placeholders.
+      select: {
+        id: true,
+        conversationId: true,
+        senderId: true,
+        body: true,
+        type: true,
+        redactedAt: true,
+        createdAt: true,
+        sender: { select: { id: true, name: true, role: true } },
+      },
     });
     await this.prisma.conversation.update({
       where: { id: input.conversationId },

@@ -1,19 +1,33 @@
 import type { JsonLdObject } from '@/lib/seo';
 
 /**
- * Escape characters that would let a payload break out of a `<script>` tag.
- * `JSON.stringify` does not escape `<`, `>`, `&`, U+2028, or U+2029, so a
- * user-supplied string containing e.g. `</script>` would otherwise close the
- * tag prematurely and enable arbitrary script injection. Values can reach
- * this component via trainer names, company descriptions, job titles, etc.
+ * Escape characters that would otherwise let attacker-controlled string fields
+ * (company names, trainer bios, request descriptions, …) break out of the
+ * inline `<script>` block and execute arbitrary markup. `JSON.stringify` does
+ * not escape `<`, `>`, or `&`, so a field containing `</script>` — or `<!--`,
+ * or `]]>` — would terminate the JSON-LD context in a browser's HTML parser.
+ *
+ * Escaping every `<`, `>`, and `&` to their `\uXXXX` form keeps the JSON valid
+ * (any JSON parser accepts `\u003c` in string literals) while making the
+ * payload inert inside an HTML script tag.
  */
-function escapeForScriptTag(value: unknown): string {
-  return JSON.stringify(value)
-    .replace(/</g, '\\u003c')
-    .replace(/>/g, '\\u003e')
-    .replace(/&/g, '\\u0026')
-    .replace(/\u2028/g, '\\u2028')
-    .replace(/\u2029/g, '\\u2029');
+function safeJsonForScript(value: unknown): string {
+  return JSON.stringify(value).replace(/[<>&\u2028\u2029]/g, (ch) => {
+    switch (ch) {
+      case '<':
+        return '\\u003c';
+      case '>':
+        return '\\u003e';
+      case '&':
+        return '\\u0026';
+      case '\u2028':
+        return '\\u2028';
+      case '\u2029':
+        return '\\u2029';
+      default:
+        return ch;
+    }
+  });
 }
 
 /**
@@ -31,7 +45,7 @@ export function JsonLd({ data }: { data: JsonLdObject | JsonLdObject[] }) {
           // because the same page always emits the same ordered set.
           key={idx}
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: escapeForScriptTag(item) }}
+          dangerouslySetInnerHTML={{ __html: safeJsonForScript(item) }}
         />
       ))}
     </>
