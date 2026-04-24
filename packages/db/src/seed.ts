@@ -59,9 +59,38 @@ async function main() {
       id: 'plan-company-pro',
       audience: 'COMPANY',
       tier: 'PRO',
-      priceMonthly: 99,
-      priceYearly: 990,
-      featuresJson: { requests: 'unlimited', matching: true, support: 'priority' },
+      priceMonthly: 9900,
+      priceYearly: 99000,
+      featuresJson: {
+        requests: 10,
+        matching: true,
+        aiAssistant: true,
+        commissionBps: 200,
+        support: 'priority',
+        featuredListings: 1,
+      },
+    },
+  });
+  await prisma.plan.upsert({
+    where: { id: 'plan-company-enterprise' },
+    update: {},
+    create: {
+      id: 'plan-company-enterprise',
+      audience: 'COMPANY',
+      tier: 'ENTERPRISE',
+      priceMonthly: 49900,
+      priceYearly: 499000,
+      featuresJson: {
+        requests: 'unlimited',
+        matching: true,
+        aiAssistant: true,
+        teamSeats: 10,
+        commissionBps: 100,
+        support: 'dedicated',
+        featuredListings: 'unlimited',
+        sso: true,
+        apiAccess: true,
+      },
     },
   });
   await prisma.plan.upsert({
@@ -73,7 +102,7 @@ async function main() {
       tier: 'BASIC',
       priceMonthly: 0,
       priceYearly: 0,
-      featuresJson: { visibility: 'standard' },
+      featuresJson: { visibility: 'standard', badge: null, workbench: false },
     },
   });
   await prisma.plan.upsert({
@@ -83,9 +112,33 @@ async function main() {
       id: 'plan-trainer-verified',
       audience: 'TRAINER',
       tier: 'VERIFIED_PRO',
-      priceMonthly: 19,
-      priceYearly: 190,
-      featuresJson: { visibility: 'boosted', badge: 'verified_pro' },
+      priceMonthly: 1900,
+      priceYearly: 19000,
+      featuresJson: {
+        visibility: 'boosted',
+        badge: 'verified_pro',
+        workbench: true,
+        applicationsPerMonth: 50,
+      },
+    },
+  });
+  await prisma.plan.upsert({
+    where: { id: 'plan-trainer-premium' },
+    update: {},
+    create: {
+      id: 'plan-trainer-premium',
+      audience: 'TRAINER',
+      tier: 'PREMIUM_VISIBILITY',
+      priceMonthly: 4900,
+      priceYearly: 49000,
+      featuresJson: {
+        visibility: 'featured',
+        badge: 'premium',
+        workbench: true,
+        applicationsPerMonth: 'unlimited',
+        homepageFeature: true,
+        priorityMatching: true,
+      },
     },
   });
   console.log('✔ Plans seeded');

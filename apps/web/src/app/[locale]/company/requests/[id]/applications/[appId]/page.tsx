@@ -107,6 +107,14 @@ export default async function ApplicationDetailPage({
               dataTestId="company-message-trainer"
             />
           ) : null}
+          {app.status === 'ACCEPTED' ? (
+            <Link
+              href={`/${locale}/company/contracts/new?applicationId=${encodeURIComponent(app.id)}`}
+              className="btn-primary"
+            >
+              {t('contracts.createCta')}
+            </Link>
+          ) : null}
         </div>
       </header>
 

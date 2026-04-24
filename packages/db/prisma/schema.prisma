@@ -54,6 +54,10 @@ model User {
   emailVerificationTokens EmailVerificationToken[]
   passwordResetTokens     PasswordResetToken[]
   modelCalls              ModelCall[]
+  stripeConnectAccount    StripeConnectAccount?
+  contractsAsTrainer      Contract[]                @relation("ContractTrainer")
+  payouts                 Payout[]
+  subscriptions           Subscription[]
 
   @@index([role, status])
 }
@@ -136,6 +140,7 @@ model Company {
   requests         JobRequest[]
   adCampaigns      AdCampaign[]
   modelConnections ModelConnection[]
+  contracts        Contract[]
 
   @@index([slug])
 }
@@ -440,6 +445,7 @@ model Application {
   attempts    TestAttempt[]
   attachments ApplicationAttachment[]
   modelCalls  ModelCall[]
+  contracts   Contract[]
 
   @@unique([requestId, trainerId])
   @@index([trainerId])
@@ -649,12 +655,196 @@ model Subscription {
   status               String    @default("ACTIVE")
   currentPeriodStart   DateTime?
   currentPeriodEnd     DateTime?
-  stripeSubscriptionId String?
+  stripeSubscriptionId String?   @unique
+  stripeCustomerId     String?
   cancelAtPeriodEnd    Boolean   @default(false)
   createdAt            DateTime  @default(now())
   updatedAt            DateTime  @updatedAt
 
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   @@index([userId])
+}
+
+// =========================
+// Payments & Contracts (T4.C)
+// =========================
+
+enum StripeConnectStatus {
+  NONE
+  PENDING
+  ACTIVE
+  RESTRICTED
+}
+
+/// Per-trainer Stripe Express Connect account used to receive payouts
+/// when milestones are released. Onboarding is initiated by the trainer
+/// via an Account Link; status is synced from the `account.updated`
+/// webhook (see `apps/api/src/payments/webhook.controller.ts`).
+model StripeConnectAccount {
+  id                String              @id @default(cuid())
+  userId            String              @unique
+  stripeAccountId   String              @unique
+  status            StripeConnectStatus @default(PENDING)
+  chargesEnabled    Boolean             @default(false)
+  payoutsEnabled    Boolean             @default(false)
+  detailsSubmitted  Boolean             @default(false)
+  country           String?
+  defaultCurrency   String?
+  lastSyncedAt      DateTime?
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+enum ContractStatus {
+  DRAFT
+  ACTIVE
+  COMPLETED
+  CANCELLED
+  DISPUTED
+}
+
+enum MilestoneStatus {
+  PENDING
+  FUNDED
+  RELEASED
+  REFUNDED
+  CANCELLED
+}
+
+enum PaymentIntentStatus {
+  REQUIRES_PAYMENT_METHOD
+  REQUIRES_CONFIRMATION
+  REQUIRES_ACTION
+  PROCESSING
+  REQUIRES_CAPTURE
+  SUCCEEDED
+  CANCELED
+  FAILED
+}
+
+enum PayoutStatus {
+  PENDING
+  IN_TRANSIT
+  PAID
+  FAILED
+  CANCELLED
+}
+
+/// A binding agreement between a company and trainer derived from an
+/// accepted application. Composed of one or more milestones that move
+/// money through escrow (PaymentIntent → held on platform → Transfer to
+/// Connect account on release).
+model Contract {
+  id                 String         @id @default(cuid())
+  applicationId      String
+  companyId          String
+  trainerId          String
+  title              String
+  description        String?
+  currency           String         @default("USD")
+  totalAmountCents   Int
+  platformFeeBps     Int            @default(1000) // 10% default commission
+  status             ContractStatus @default(DRAFT)
+  acceptedAt         DateTime?
+  completedAt        DateTime?
+  cancelledAt        DateTime?
+  createdAt          DateTime       @default(now())
+  updatedAt          DateTime       @updatedAt
+
+  application Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  company     Company     @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  trainer     User        @relation("ContractTrainer", fields: [trainerId], references: [id], onDelete: Cascade)
+  milestones  Milestone[]
+
+  @@index([companyId, status])
+  @@index([trainerId, status])
+  @@index([applicationId])
+}
+
+/// An individual payment milestone within a contract. State machine:
+/// PENDING → FUNDED (PaymentIntent succeeded, money held on platform)
+/// → RELEASED (Transfer to trainer Connect account + Payout queued)
+/// OR → REFUNDED (funds returned to company).
+model Milestone {
+  id             String          @id @default(cuid())
+  contractId     String
+  title          String
+  description    String?
+  amountCents    Int
+  order          Int             @default(0)
+  dueDate        DateTime?
+  status         MilestoneStatus @default(PENDING)
+  fundedAt       DateTime?
+  releasedAt     DateTime?
+  refundedAt     DateTime?
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+
+  contract       Contract        @relation(fields: [contractId], references: [id], onDelete: Cascade)
+  paymentIntents PaymentIntent[]
+  payouts        Payout[]
+
+  @@index([contractId, order])
+}
+
+/// Tracks a Stripe PaymentIntent used to fund a milestone. Mirrors
+/// Stripe state via webhooks; idempotent by `stripePaymentIntentId`.
+model PaymentIntent {
+  id                    String              @id @default(cuid())
+  milestoneId           String
+  stripePaymentIntentId String              @unique
+  clientSecret          String?
+  amountCents           Int
+  currency              String              @default("USD")
+  status                PaymentIntentStatus @default(REQUIRES_PAYMENT_METHOD)
+  receiptUrl            String?
+  failureMessage        String?
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  milestone Milestone @relation(fields: [milestoneId], references: [id], onDelete: Cascade)
+
+  @@index([milestoneId])
+}
+
+/// A transfer from the platform to a trainer's Connect account when a
+/// milestone is released. Mirrors Stripe Transfer state via webhooks.
+model Payout {
+  id                String       @id @default(cuid())
+  userId            String
+  milestoneId       String?
+  stripeTransferId  String?      @unique
+  stripePayoutId    String?      @unique
+  amountCents       Int
+  currency          String       @default("USD")
+  status            PayoutStatus @default(PENDING)
+  failureMessage    String?
+  arrivedAt         DateTime?
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  milestone Milestone? @relation(fields: [milestoneId], references: [id], onDelete: SetNull)
+
+  @@index([userId, createdAt])
+  @@index([milestoneId])
+}
+
+/// Idempotency store for incoming Stripe webhook events — every
+/// handled event id is recorded so replays become no-ops.
+model StripeWebhookEvent {
+  id              String   @id @default(cuid())
+  stripeEventId   String   @unique
+  type            String
+  processedAt     DateTime?
+  errorMessage    String?
+  payload         Json
+  createdAt       DateTime @default(now())
+
+  @@index([type, createdAt])
 }
 
 model AdCampaign {

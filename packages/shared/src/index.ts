@@ -4,3 +4,4 @@ export * from './schemas';
 export * from './uploads';
 export * from './models';
 export * from './workbench';
+export * from './payments';

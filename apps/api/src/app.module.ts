@@ -19,6 +19,7 @@ import { PublicModule } from './public/public.module';
 import { UploadsModule } from './uploads/uploads.module';
 import { ModelsModule } from './models/models.module';
 import { WorkbenchModule } from './workbench/workbench.module';
+import { PaymentsModule } from './payments/payments.module';
 import { HealthController } from './health.controller';
 
 @Module({
@@ -44,6 +45,7 @@ import { HealthController } from './health.controller';
     UploadsModule,
     ModelsModule,
     WorkbenchModule,
+    PaymentsModule,
   ],
   controllers: [HealthController],
   providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
