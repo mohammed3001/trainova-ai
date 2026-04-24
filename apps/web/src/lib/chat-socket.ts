@@ -46,7 +46,11 @@ async function fetchTicket(): Promise<string> {
 }
 
 export async function getChatSocket(): Promise<Socket> {
-  if (singleton?.connected) return singleton;
+  // Existence check (not `connected`) prevents creating duplicate sockets
+  // while the handshake is still in flight — especially under React 18
+  // Strict Mode which double-invokes effects. Callers already listen for
+  // the `connect` event to learn when the socket is usable.
+  if (singleton && !singleton.disconnected) return singleton;
   if (connectPromise) return connectPromise;
   connectPromise = (async () => {
     const token = await fetchTicket();

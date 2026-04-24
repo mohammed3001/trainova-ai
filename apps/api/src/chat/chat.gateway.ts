@@ -125,7 +125,12 @@ export class ChatGateway
     @MessageBody() body: { conversationId: string },
   ) {
     const { conversationId } = body ?? {};
-    if (!conversationId) return { ok: false };
+    // Require actual room membership before broadcasting — otherwise any
+    // authenticated socket could spoof offline-presence into arbitrary rooms
+    // it knows the id of.
+    if (!conversationId || !socket.rooms.has(`conv:${conversationId}`)) {
+      return { ok: false };
+    }
     await socket.leave(`conv:${conversationId}`);
     socket.to(`conv:${conversationId}`).emit('presence', {
       conversationId,
