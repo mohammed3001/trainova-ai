@@ -29,6 +29,46 @@
     "trainer": "Trainer",
     "admin": "Admin"
   },
+  "seo": {
+    "trainersList": {
+      "title": "AI Trainers & Experts — Verified on Your Model",
+      "description": "Browse the Trainova AI directory of fine-tuning, RLHF, prompt engineering, evaluation, safety and data-labeling specialists. Every verified trainer has been tested on a live company model."
+    },
+    "requestsList": {
+      "title": "Open AI Training Requests",
+      "description": "Live requests from global companies hiring AI trainers. Fine-tuning, prompt engineering, RLHF, evaluation, data labeling and more — apply directly on Trainova AI."
+    },
+    "skillsList": {
+      "title": "AI Skills Directory",
+      "description": "Explore every AI training specialty on Trainova AI — from LLM fine-tuning to safety alignment — with expert counts, trainers and live requests per skill."
+    },
+    "pricing": {
+      "title": "Pricing for Companies and Trainers",
+      "description": "Simple, transparent pricing for AI training teams. Free to start, Pro for growth, Enterprise for large model programs."
+    },
+    "about": {
+      "title": "About Trainova AI",
+      "description": "Trainova AI is the global marketplace, evaluation system and collaboration workspace for AI training talent — built for companies that need verified specialists on their actual models."
+    },
+    "trainer": {
+      "titleTemplate": "{name} — {headline}",
+      "descriptionTemplate": "{name} is an AI trainer on Trainova AI specialising in {skills}. {country}",
+      "countryAffix": "Based in {country}.",
+      "noCountry": "",
+      "defaultHeadline": "AI training specialist"
+    },
+    "company": {
+      "titleTemplate": "{name} — AI training projects",
+      "descriptionTemplate": "{name} is a verified company on Trainova AI, hiring AI trainers for model training, evaluation and data projects."
+    },
+    "request": {
+      "descriptionFallback": "Open AI training request on Trainova AI."
+    },
+    "skill": {
+      "titleTemplate": "{name} — AI Trainers, Experts and Open Requests",
+      "descriptionTemplate": "Find {name} specialists on Trainova AI. Browse verified trainers, review open requests and test candidates on your live model."
+    }
+  },
   "landing": {
     "heroTitle": "Hire, test and train the world's best AI specialists.",
     "heroBody": "Post a request, link your model or sandbox, and Trainova AI matches you with verified experts — screened on the exact problem you need solved.",

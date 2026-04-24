@@ -1,4 +1,23 @@
+import type { Metadata } from 'next';
+import { getTranslations } from 'next-intl/server';
 import { apiFetch } from '@/lib/api';
+import { buildMetadata } from '@/lib/seo';
+import type { Locale } from '@/i18n/config';
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: 'seo.pricing' });
+  return buildMetadata({
+    title: t('title'),
+    description: t('description'),
+    path: '/pricing',
+    locale: locale as Locale,
+  });
+}
 
 interface Plan {
   id: string;

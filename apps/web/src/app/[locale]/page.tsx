@@ -1,11 +1,29 @@
 import Link from 'next/link';
+import type { Metadata } from 'next';
 import { getTranslations, getLocale } from 'next-intl/server';
 import { apiFetch } from '@/lib/api';
+import { buildMetadata } from '@/lib/seo';
+import type { Locale } from '@/i18n/config';
 
 interface Stats {
   companies: number;
   trainers: number;
   openRequests: number;
+}
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  const t = await getTranslations({ locale });
+  return buildMetadata({
+    title: t('landing.heroTitle'),
+    description: t('landing.heroBody'),
+    path: '/',
+    locale: locale as Locale,
+  });
 }
 
 async function fetchStats(): Promise<Stats> {

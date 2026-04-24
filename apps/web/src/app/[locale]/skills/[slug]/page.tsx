@@ -1,7 +1,17 @@
 import Link from 'next/link';
-import { getLocale } from 'next-intl/server';
+import type { Metadata } from 'next';
+import { getLocale, getTranslations } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 import { apiFetch } from '@/lib/api';
+import { JsonLd } from '@/components/json-ld';
+import {
+  absoluteUrl,
+  breadcrumbLd,
+  buildMetadata,
+  collectionPageLd,
+  siteUrl,
+} from '@/lib/seo';
+import type { Locale } from '@/i18n/config';
 
 interface SkillDetail {
   id: string;
@@ -24,6 +34,32 @@ interface SkillDetail {
   }[];
 }
 
+async function fetchSkill(slug: string): Promise<SkillDetail | null> {
+  try {
+    return await apiFetch<SkillDetail>(`/skills/${slug}`);
+  } catch {
+    return null;
+  }
+}
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string; slug: string }>;
+}): Promise<Metadata> {
+  const { locale, slug } = await params;
+  const data = await fetchSkill(slug);
+  if (!data) return { robots: { index: false, follow: false } };
+  const t = await getTranslations({ locale, namespace: 'seo.skill' });
+  const name = locale === 'ar' ? data.nameAr : data.nameEn;
+  return buildMetadata({
+    title: t('titleTemplate', { name }),
+    description: t('descriptionTemplate', { name }),
+    path: `/skills/${data.slug}`,
+    locale: locale as Locale,
+  });
+}
+
 export default async function SkillDetailPage({
   params,
 }: {
@@ -31,19 +67,33 @@ export default async function SkillDetailPage({
 }) {
   const { slug } = await params;
   const locale = await getLocale();
-  let data: SkillDetail;
-  try {
-    data = await apiFetch<SkillDetail>(`/skills/${slug}`);
-  } catch {
-    notFound();
-  }
+  const data = await fetchSkill(slug);
+  if (!data) notFound();
   const name = locale === 'ar' ? data.nameAr : data.nameEn;
+
+  const pageUrl = absoluteUrl(`/skills/${data.slug}`, locale as Locale);
+  const skillsIndexUrl = absoluteUrl('/skills', locale as Locale);
+  const seoT = await getTranslations({ locale, namespace: 'seo' });
+  const commonT = await getTranslations({ locale, namespace: 'common' });
+  const ld = [
+    collectionPageLd({
+      name: seoT('skill.titleTemplate', { name }),
+      description: seoT('skill.descriptionTemplate', { name }),
+      url: pageUrl,
+    }),
+    breadcrumbLd([
+      { name: commonT('appName'), url: `${siteUrl()}/${locale}` },
+      { name: seoT('skillsList.title'), url: skillsIndexUrl },
+      { name, url: pageUrl },
+    ]),
+  ];
 
   return (
     <div className="space-y-8">
+      <JsonLd data={ld} />
       <header>
         <h1 className="text-3xl font-bold text-slate-900">{name}</h1>
-        <p className="text-slate-500">Discover trainers and open requests for {data.nameEn}.</p>
+        <p className="text-slate-500">{seoT('skill.descriptionTemplate', { name })}</p>
       </header>
 
       <section className="space-y-3">
