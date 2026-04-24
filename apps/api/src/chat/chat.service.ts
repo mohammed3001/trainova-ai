@@ -114,7 +114,19 @@ export class ChatService {
     }
     const message = await this.prisma.message.create({
       data: { conversationId: input.conversationId, senderId: userId, body: input.body },
-      include: { sender: { select: { id: true, name: true, role: true } } },
+      // Explicit select mirrors listMessages/listConversations — never leak
+      // admin redaction metadata (`redactedById`, `redactReason`) to
+      // participants, even as null placeholders.
+      select: {
+        id: true,
+        conversationId: true,
+        senderId: true,
+        body: true,
+        type: true,
+        redactedAt: true,
+        createdAt: true,
+        sender: { select: { id: true, name: true, role: true } },
+      },
     });
     await this.prisma.conversation.update({
       where: { id: input.conversationId },
