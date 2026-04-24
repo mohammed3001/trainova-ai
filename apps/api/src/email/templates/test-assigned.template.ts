@@ -22,11 +22,8 @@ export function renderTestAssigned(params: TestAssignedParams): RenderedEmail {
       '',
       `كلّفتك شركة ${companyName} بإكمال اختبار "${testTitle}".`,
       takeUrl,
-      '',
-      timeLimitMin ? `المدة الزمنية: ${timeLimitMin} دقيقة.` : '',
-    ]
-      .filter(Boolean)
-      .join('\n');
+      ...(timeLimitMin ? ['', `المدة الزمنية: ${timeLimitMin} دقيقة.`] : []),
+    ].join('\n');
     return { subject, html: renderLayout(locale, body), text };
   }
 
@@ -47,10 +44,7 @@ export function renderTestAssigned(params: TestAssignedParams): RenderedEmail {
     '',
     `${companyName} has assigned you the "${testTitle}" test.`,
     takeUrl,
-    '',
-    timeLimitMin ? `Time limit: ${timeLimitMin} minutes.` : '',
-  ]
-    .filter(Boolean)
-    .join('\n');
+    ...(timeLimitMin ? ['', `Time limit: ${timeLimitMin} minutes.`] : []),
+  ].join('\n');
   return { subject, html: renderLayout(locale, body), text };
 }

@@ -6,6 +6,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { Prisma } from '@trainova/db';
 import { PrismaService } from '../prisma/prisma.service';
 import { EmailService } from '../email/email.service';
 import {
@@ -222,25 +223,39 @@ export class TestsService {
       );
     }
 
-    // Idempotent: re-use an in-progress attempt rather than creating another
-    const existing = await this.prisma.testAttempt.findFirst({
+    // Idempotent: re-use an existing attempt for this (test, trainer, application)
+    // tuple. The @@unique index on TestAttempt(testId, trainerId, applicationId)
+    // guarantees that concurrent requests can't create duplicates — the race
+    // loser gets P2002 and we return the row the winner just created.
+    const existing = await this.prisma.testAttempt.findUnique({
       where: {
-        testId,
-        trainerId,
-        applicationId,
-        status: 'IN_PROGRESS',
+        testId_trainerId_applicationId: { testId, trainerId, applicationId },
       },
     });
     if (existing) return existing;
 
-    return this.prisma.testAttempt.create({
-      data: {
-        testId,
-        trainerId,
-        applicationId,
-        status: 'IN_PROGRESS',
-      },
-    });
+    try {
+      return await this.prisma.testAttempt.create({
+        data: {
+          testId,
+          trainerId,
+          applicationId,
+          status: 'IN_PROGRESS',
+        },
+      });
+    } catch (err) {
+      if (
+        err instanceof Prisma.PrismaClientKnownRequestError &&
+        err.code === 'P2002'
+      ) {
+        return this.prisma.testAttempt.findUniqueOrThrow({
+          where: {
+            testId_trainerId_applicationId: { testId, trainerId, applicationId },
+          },
+        });
+      }
+      throw err;
+    }
   }
 
   async submitAttempt(
