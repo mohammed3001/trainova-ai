@@ -253,7 +253,7 @@ export function jobPostingLd(args: {
       : { jobLocationType: 'TELECOMMUTE' }),
     ...(args.employmentType ? { employmentType: args.employmentType } : {}),
     ...(args.skills.length ? { skills: args.skills.join(', ') } : {}),
-    ...(args.salaryMin && args.salaryMax && args.currency
+    ...(args.salaryMin != null && args.salaryMax != null && args.currency
       ? {
           baseSalary: {
             '@type': 'MonetaryAmount',
