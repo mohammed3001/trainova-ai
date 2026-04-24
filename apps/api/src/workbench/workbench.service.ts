@@ -312,7 +312,13 @@ export class WorkbenchService {
     const out: Record<string, unknown> = {};
     for (const [k, v] of Object.entries(value as Record<string, unknown>)) {
       if (
-        /authorization|api[-_]?key|x-api-key|bearer|secret|token/i.test(k)
+        // Exact-match auth/credential keys only — broader substrings like
+        // `token` would wipe out legitimate usage metrics such as
+        // `maxTokens`, `prompt_tokens`, `completion_tokens`, etc., which
+        // we deliberately keep in the audit trail for billing / RLHF.
+        /^(authorization|api[-_]?key|x[-_]?api[-_]?key|bearer|secret|password|client[-_]?secret|session[-_]?token|access[-_]?token|refresh[-_]?token|aws[-_]?secret[-_]?access[-_]?key|aws[-_]?access[-_]?key[-_]?id)$/i.test(
+          k,
+        )
       ) {
         out[k] = '[redacted]';
       } else {

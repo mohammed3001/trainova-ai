@@ -25,7 +25,7 @@ export default async function NewRequestPage() {
 
   const [skills, me] = await Promise.all([
     apiFetch<Skill[]>('/skills').catch(() => []),
-    authedFetch<MyCompany | null>('/companies/mine').catch(() => null),
+    authedFetch<MyCompany | null>('/companies/me').catch(() => null),
   ]);
   const connections: PublicModelConnection[] = me
     ? await authedFetch<PublicModelConnection[]>(`/companies/${me.id}/models`).catch(
