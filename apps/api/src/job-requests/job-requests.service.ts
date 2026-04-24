@@ -1,4 +1,5 @@
 import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import { Prisma } from '@trainova/db';
 import { PrismaService } from '../prisma/prisma.service';
 import { randomSuffix, slugify } from '../common/slug.util';
 import type { CreateJobRequestInput } from '@trainova/shared';
@@ -93,6 +94,9 @@ export class JobRequestsService {
         confidentialityLevel: input.confidentialityLevel,
         status: 'OPEN',
         publishedAt: new Date(),
+        applicationSchema: input.applicationSchema
+          ? (input.applicationSchema as Prisma.InputJsonValue)
+          : Prisma.JsonNull,
         skills: skillRows.length ? { create: skillRows.map((s) => ({ skillId: s.id })) } : undefined,
       },
       include: { skills: { include: { skill: true } } },
@@ -128,6 +132,7 @@ export class JobRequestsService {
             },
           },
         },
+        request: { select: { applicationSchema: true } },
       },
     });
   }

@@ -3,9 +3,11 @@ import { redirect } from 'next/navigation';
 import { getLocale, getTranslations } from 'next-intl/server';
 import { getRole, getToken } from '@/lib/session';
 import { authedFetch } from '@/lib/authed-fetch';
+import { applicationFormSchema, type ApplicationForm } from '@trainova/shared';
 import { StatusBadge, StatusActions } from '../status-controls';
 import { AssignTestButton } from '../assign-test-button';
 import { AttemptsCard } from './attempts-card';
+import { AnswersCard } from './answers-card';
 
 interface Application {
   id: string;
@@ -13,6 +15,8 @@ interface Application {
   coverLetter: string | null;
   proposedRate: number | null;
   proposedTimelineDays: number | null;
+  answers: Record<string, unknown> | null;
+  request?: { applicationSchema?: unknown } | null;
   createdAt: string;
   trainer: {
     id: string;
@@ -96,6 +100,12 @@ export default async function ApplicationDetailPage({
           ) : null}
         </div>
       </header>
+
+      <AnswersCard
+        schemaJson={app.request?.applicationSchema ?? null}
+        answers={app.answers ?? {}}
+        locale={locale}
+      />
 
       <AttemptsCard applicationId={appId} requestId={id} locale={locale} />
 

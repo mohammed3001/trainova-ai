@@ -3,6 +3,11 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
+import {
+  APPLICATION_FORM_SCHEMA_VERSION,
+  type ApplicationForm,
+} from '@trainova/shared';
+import { FormBuilder } from './form-builder';
 
 interface Skill {
   slug: string;
@@ -16,6 +21,10 @@ export function NewRequestForm({ locale, skills }: { locale: string; skills: Ski
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selected, setSelected] = useState<string[]>([]);
+  const [applicationSchema, setApplicationSchema] = useState<ApplicationForm>({
+    version: APPLICATION_FORM_SCHEMA_VERSION,
+    fields: [],
+  });
 
   function toggleSkill(slug: string) {
     setSelected((prev) => (prev.includes(slug) ? prev.filter((s) => s !== slug) : [...prev, slug]));
@@ -26,6 +35,16 @@ export function NewRequestForm({ locale, skills }: { locale: string; skills: Ski
     setPending(true);
     setError(null);
     const fd = new FormData(e.currentTarget);
+
+    const invalidField = applicationSchema.fields.find(
+      (f) => f.labelEn.trim().length === 0 || f.labelAr.trim().length === 0,
+    );
+    if (invalidField) {
+      setPending(false);
+      setError(t('requests.formBuilder.errors.missingLabels'));
+      return;
+    }
+
     const payload = {
       title: String(fd.get('title') ?? ''),
       description: String(fd.get('description') ?? ''),
@@ -38,6 +57,7 @@ export function NewRequestForm({ locale, skills }: { locale: string; skills: Ski
       currency: 'USD',
       workType: String(fd.get('workType') ?? 'REMOTE'),
       skills: selected,
+      applicationSchema: applicationSchema.fields.length > 0 ? applicationSchema : null,
     };
     const res = await fetch('/api/proxy/job-requests', {
       method: 'POST',
@@ -98,6 +118,11 @@ export function NewRequestForm({ locale, skills }: { locale: string; skills: Ski
           })}
         </div>
       </div>
+
+      <div className="space-y-2 border-t border-slate-100 pt-3">
+        <FormBuilder value={applicationSchema} onChange={setApplicationSchema} />
+      </div>
+
       {error ? <div className="rounded-md bg-red-50 p-3 text-sm text-red-700">{error}</div> : null}
       <button type="submit" disabled={pending} className="btn-primary disabled:opacity-60">
         {pending ? t('common.loading') : t('common.submit')}

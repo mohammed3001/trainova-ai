@@ -103,6 +103,39 @@
     "proposedRate": "السعر المقترح (USD)",
     "proposedTimeline": "المدة المقترحة (أيام)",
     "applied": "تم إرسال التقديم",
+    "customFields": "أسئلة إضافية من الشركة",
+    "answerErrors": "رجاءً صحّح الحقول المظلّلة.",
+    "formBuilder": {
+      "title": "نموذج التقديم",
+      "description": "أضف أسئلة مخصّصة يلتزم بها المدرب عند التقديم. اختياري.",
+      "empty": "لا توجد أسئلة مخصّصة بعد. استخدم الأزرار أدناه لإضافة حقول.",
+      "remove": "حذف",
+      "dragHandle": "اسحب لإعادة الترتيب",
+      "labelEn": "التسمية (إنجليزي)",
+      "labelAr": "التسمية (عربي)",
+      "helpEn": "نص مساعد (إنجليزي)",
+      "helpAr": "نص مساعد (عربي)",
+      "required": "إلزامي",
+      "options": "الخيارات",
+      "optionValue": "القيمة",
+      "addOption": "إضافة خيار",
+      "removeOption": "حذف الخيار",
+      "kinds": {
+        "short_text": "نص قصير",
+        "long_text": "نص طويل",
+        "single_select": "اختيار فردي",
+        "multi_select": "اختيار متعدد",
+        "number": "رقم",
+        "date": "تاريخ",
+        "url": "رابط",
+        "email": "بريد إلكتروني",
+        "boolean": "نعم / لا"
+      },
+      "errors": {
+        "missingLabels": "كل حقل مخصّص يحتاج إلى تسمية بالعربية والإنجليزية.",
+        "missingOptions": "حقول الاختيار تحتاج إلى خيارين على الأقل."
+      }
+    },
     "fields": {
       "title": "العنوان",
       "description": "الوصف",
@@ -282,7 +315,11 @@
         "changedStatus": "غيّر الحالة من {from} إلى {to}",
         "unknownActor": "مستخدم غير معروف"
       },
-      "manageTests": "إدارة الاختبارات"
+      "manageTests": "إدارة الاختبارات",
+      "answers": {
+        "title": "إجابات التقديم",
+        "empty": "—"
+      }
     },
     "tests": {
       "title": "الاختبارات",
