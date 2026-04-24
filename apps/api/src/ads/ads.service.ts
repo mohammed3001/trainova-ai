@@ -334,23 +334,29 @@ export class AdsService {
     await this.prisma.$transaction(async (tx) => {
       const current = await tx.adTopup.findUnique({ where: { id: topupId } });
       if (!current || current.status === 'SUCCEEDED') return;
-      const campaign = await tx.adCampaign.findUnique({
-        where: { id: current.campaignId },
-        select: { status: true },
-      });
       await tx.adTopup.update({
         where: { id: topupId },
         data: { status: 'SUCCEEDED' },
       });
       // Re-activate campaigns that were auto-paused for running out of
       // runway. APPROVED / DRAFT / PENDING_REVIEW / REJECTED / ENDED are
-      // left alone on purpose.
-      const shouldReactivate = campaign?.status === 'PAUSED';
+      // left alone on purpose. Admin- or owner-initiated pauses also stay
+      // paused — only `pausedReason='BUDGET_EXHAUSTED'` is safe to auto-
+      // reverse, because that's the reason we ourselves flipped it in
+      // `recordImpression`. A top-up must never resume a campaign that an
+      // admin paused for a policy violation.
+      const campaign = await tx.adCampaign.findUnique({
+        where: { id: current.campaignId },
+        select: { status: true, pausedReason: true },
+      });
+      const shouldReactivate =
+        campaign?.status === 'PAUSED' &&
+        campaign.pausedReason === 'BUDGET_EXHAUSTED';
       await tx.adCampaign.update({
         where: { id: current.campaignId },
         data: {
           budgetCents: { increment: amountCents },
-          status: shouldReactivate ? 'ACTIVE' : undefined,
+          ...(shouldReactivate ? { status: 'ACTIVE' as const, pausedReason: null } : {}),
         },
       });
     });
@@ -446,7 +452,12 @@ export class AdsService {
     }
     const updated = await this.prisma.adCampaign.update({
       where: { id: campaignId },
-      data: { status: 'PAUSED' },
+      data: {
+        status: 'PAUSED',
+        // Record *why* we paused so a later top-up does not accidentally
+        // reactivate a campaign that was paused for policy reasons.
+        pausedReason: isAdmin ? 'ADMIN' : 'OWNER',
+      },
       include: campaignInclude(),
     });
     return toOwnerCampaign(updated);
@@ -472,7 +483,7 @@ export class AdsService {
     }
     const updated = await this.prisma.adCampaign.update({
       where: { id: campaignId },
-      data: { status: 'ACTIVE' },
+      data: { status: 'ACTIVE', pausedReason: null },
       include: campaignInclude(),
     });
     return toOwnerCampaign(updated);
@@ -568,10 +579,12 @@ export class AdsService {
     const spentMicro = creative.campaign.spentMicroCents;
     if (spentMicro + chargeMicro > budgetMicro) {
       // Auto-pause so the server stops serving a campaign that can't
-      // pay for its own impressions.
+      // pay for its own impressions. Tag the pause so that a subsequent
+      // top-up (see `creditBudget`) is allowed to auto-resume — admin /
+      // owner manual pauses are tagged differently and stay paused.
       await this.prisma.adCampaign.update({
         where: { id: creative.campaignId },
-        data: { status: 'PAUSED' },
+        data: { status: 'PAUSED', pausedReason: 'BUDGET_EXHAUSTED' },
       });
       return { ok: true, skipped: 'budget' };
     }

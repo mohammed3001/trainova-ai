@@ -891,6 +891,16 @@ enum AdTopupStatus {
   REFUNDED
 }
 
+// Why a campaign entered the PAUSED state. Used by creditBudget() to decide
+// whether a successful top-up should auto-resume the campaign: only the
+// BUDGET_EXHAUSTED auto-pause is safe to reverse, manual admin/owner pauses
+// must stay paused until explicitly resumed.
+enum AdPauseReason {
+  BUDGET_EXHAUSTED
+  ADMIN
+  OWNER
+}
+
 model AdCampaign {
   id                 String           @id @default(cuid())
   ownerId            String
@@ -913,6 +923,7 @@ model AdCampaign {
   spentCents         Int              @default(0)
   spentMicroCents    BigInt           @default(0)
   status             AdCampaignStatus @default(DRAFT)
+  pausedReason       AdPauseReason?
   rejectionReason    String?
   reviewedById       String?
   reviewedAt         DateTime?
