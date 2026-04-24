@@ -905,7 +905,13 @@ model AdCampaign {
   // Running totals — kept on the row so serve() can enforce budget cheaply
   // (no aggregate query per request).
   budgetCents        Int              @default(0)
+  // Spent-to-date in whole cents (display-facing, floor of the microcent
+  // accumulator) and in microcents (1/1000 of a cent) for lossless sub-cent
+  // CPM accrual. CPM charges are fractional per impression, so the sub-cent
+  // accumulator prevents Math.floor(cpmCents/1000) from zeroing out for every
+  // rate below $10 / 1000 (e.g. cpmCents=500 → 500 microcents/impression).
   spentCents         Int              @default(0)
+  spentMicroCents    BigInt           @default(0)
   status             AdCampaignStatus @default(DRAFT)
   rejectionReason    String?
   reviewedById       String?

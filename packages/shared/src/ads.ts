@@ -43,7 +43,13 @@ export type AdTopupStatus = (typeof AD_TOPUP_STATUSES)[number];
 // `/trainers/foo`).
 const urlOrPath = z.string().refine(
   (v) => {
-    if (v.startsWith('/')) return v.length > 1 && v.length <= 1024;
+    if (v.startsWith('/')) {
+      // Reject protocol-relative URLs (//evil.com) which browsers resolve as
+      // `https://evil.com` on 302 redirects. Also reject backslash-variants
+      // that some browsers tolerate (/\evil.com).
+      if (v.startsWith('//') || v.startsWith('/\\')) return false;
+      return v.length > 1 && v.length <= 1024;
+    }
     try {
       const u = new URL(v);
       return u.protocol === 'https:' && v.length <= 1024;

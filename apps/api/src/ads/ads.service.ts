@@ -560,10 +560,12 @@ export class AdsService {
     if (creative.campaign.status !== 'ACTIVE') {
       return { ok: true, skipped: 'status' };
     }
-    const chargedCents = computeImpressionCharge(creative.campaign.pricingModel, {
+    const chargeMicro = computeImpressionChargeMicro(creative.campaign.pricingModel, {
       cpm: creative.campaign.cpmCents,
     });
-    if (creative.campaign.spentCents + chargedCents > creative.campaign.budgetCents) {
+    const budgetMicro = BigInt(creative.campaign.budgetCents) * 1000n;
+    const spentMicro = creative.campaign.spentMicroCents;
+    if (spentMicro + chargeMicro > budgetMicro) {
       // Auto-pause so the server stops serving a campaign that can't
       // pay for its own impressions.
       await this.prisma.adCampaign.update({
@@ -595,18 +597,24 @@ export class AdsService {
           country: session.country ?? null,
           sessionHash: session.sessionHash ?? null,
           userId: session.userId ?? null,
-          chargedCents,
+          // Displayed whole-cent charge; sub-cent accrual lives on the
+          // campaign row (spentMicroCents).
+          chargedCents: Number(chargeMicro / 1000n),
         },
       });
       await tx.adCreative.update({
         where: { id: creative.id },
         data: { impressionCount: { increment: 1 } },
       });
-      if (chargedCents > 0) {
-        await tx.adCampaign.update({
-          where: { id: creative.campaignId },
-          data: { spentCents: { increment: chargedCents } },
-        });
+      if (chargeMicro > 0n) {
+        // Atomic: increment the microcent accumulator and derive the
+        // whole-cent display value from the post-increment value.
+        await tx.$executeRaw`
+          UPDATE "AdCampaign"
+          SET "spentMicroCents" = "spentMicroCents" + ${chargeMicro}::BIGINT,
+              "spentCents" = FLOOR(("spentMicroCents" + ${chargeMicro}::BIGINT) / 1000)::INT
+          WHERE id = ${creative.campaignId}
+        `;
       }
     });
     return { ok: true };
@@ -627,16 +635,17 @@ export class AdsService {
     });
     if (!creative) throw new NotFoundException('Creative not found');
     if (!creative.isActive) throw new NotFoundException('Creative not found');
-    const chargedCents = computeClickCharge(creative.campaign.pricingModel, {
+    const chargeMicro = computeClickChargeMicro(creative.campaign.pricingModel, {
       cpc: creative.campaign.cpcCents,
     });
+    const budgetMicro = BigInt(creative.campaign.budgetCents) * 1000n;
+    const spentMicro = creative.campaign.spentMicroCents;
     // A click is allowed even if the campaign paused *right before* the
     // click — the user already saw the ad. But we don't over-charge.
-    const willCharge =
-      creative.campaign.status === 'ACTIVE' &&
-      creative.campaign.spentCents + chargedCents <= creative.campaign.budgetCents
-        ? chargedCents
-        : 0;
+    const willChargeMicro =
+      creative.campaign.status === 'ACTIVE' && spentMicro + chargeMicro <= budgetMicro
+        ? chargeMicro
+        : 0n;
     await this.prisma.$transaction(async (tx) => {
       await tx.adClick.create({
         data: {
@@ -649,18 +658,20 @@ export class AdsService {
           country: session.country ?? null,
           sessionHash: session.sessionHash ?? null,
           userId: session.userId ?? null,
-          chargedCents: willCharge,
+          chargedCents: Number(willChargeMicro / 1000n),
         },
       });
       await tx.adCreative.update({
         where: { id: creative.id },
         data: { clickCount: { increment: 1 } },
       });
-      if (willCharge > 0) {
-        await tx.adCampaign.update({
-          where: { id: creative.campaignId },
-          data: { spentCents: { increment: willCharge } },
-        });
+      if (willChargeMicro > 0n) {
+        await tx.$executeRaw`
+          UPDATE "AdCampaign"
+          SET "spentMicroCents" = "spentMicroCents" + ${willChargeMicro}::BIGINT,
+              "spentCents" = FLOOR(("spentMicroCents" + ${willChargeMicro}::BIGINT) / 1000)::INT
+          WHERE id = ${creative.campaignId}
+        `;
       }
     });
     return { ctaUrl: creative.ctaUrl };
@@ -860,24 +871,26 @@ function toPublicCreative(row: {
   };
 }
 
-function computeImpressionCharge(
+function computeImpressionChargeMicro(
   pricingModel: string,
   prices: { cpm: number | null },
-): number {
+): bigint {
   if (pricingModel === 'CPM' && prices.cpm) {
-    // CPM = cost per 1000 impressions; charge integer cents per single
-    // impression (floor avoids undercharging from rounding).
-    return Math.floor(prices.cpm / 1000);
+    // cpmCents is cost in cents per 1000 impressions. Per-impression cost
+    // expressed in microcents (1/1000 of a cent) therefore equals cpmCents
+    // numerically — no rounding loss even for sub-cent rates like $0.50 CPM
+    // (cpmCents=50 → 50 microcents per impression).
+    return BigInt(prices.cpm);
   }
-  return 0;
+  return 0n;
 }
 
-function computeClickCharge(
+function computeClickChargeMicro(
   pricingModel: string,
   prices: { cpc: number | null },
-): number {
-  if (pricingModel === 'CPC' && prices.cpc) return prices.cpc;
-  return 0;
+): bigint {
+  if (pricingModel === 'CPC' && prices.cpc) return BigInt(prices.cpc) * 1000n;
+  return 0n;
 }
 
 /**
