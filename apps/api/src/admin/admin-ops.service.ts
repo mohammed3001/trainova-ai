@@ -102,25 +102,30 @@ export class AdminOpsService {
     status: JobRequestStatus,
     reason?: string,
   ) {
-    const current = await this.prisma.jobRequest.findUnique({
-      where: { id },
-      select: { id: true, status: true, publishedAt: true, closedAt: true },
-    });
-    if (!current) throw new NotFoundException('Request not found');
-    // Keep the no-op response shape identical to the mutated path so callers
-    // (especially the admin UI's optimistic updates) don't have to branch on
-    // "was it actually changed".
-    if (current.status === status) {
-      return {
-        id: current.id,
-        status: current.status,
-        publishedAt: current.publishedAt,
-        closedAt: current.closedAt,
-      };
-    }
-
     return this.prisma.$transaction(async (tx) => {
-      const patch: Prisma.JobRequestUpdateInput = { status };
+      // Read inside the transaction so two admins mutating the same request
+      // concurrently can't both see a stale `status`/`publishedAt` — under
+      // READ COMMITTED the second transaction either sees the first's commit
+      // or is serialised behind it, and the `updateMany` atomic claim below
+      // enforces the transition invariant on top of that.
+      const current = await tx.jobRequest.findUnique({
+        where: { id },
+        select: { id: true, status: true, publishedAt: true, closedAt: true },
+      });
+      if (!current) throw new NotFoundException('Request not found');
+      // Keep the no-op response shape identical to the mutated path so callers
+      // (especially the admin UI's optimistic updates) don't have to branch on
+      // "was it actually changed".
+      if (current.status === status) {
+        return {
+          id: current.id,
+          status: current.status,
+          publishedAt: current.publishedAt,
+          closedAt: current.closedAt,
+        };
+      }
+
+      const patch: Prisma.JobRequestUpdateManyMutationInput = { status };
       // Stamp `publishedAt` the first time a request becomes OPEN, regardless
       // of the source state. An admin may push IN_REVIEW → OPEN or reopen a
       // CLOSED request that was never published in the first place; in both
@@ -133,9 +138,18 @@ export class AdminOpsService {
         // doesn't show a stale "Closed: <date>" next to an OPEN badge.
         patch.closedAt = null;
       }
-      const updated = await tx.jobRequest.update({
-        where: { id },
+      // Atomic claim: the where-clause pins the source status so a concurrent
+      // update that already transitioned the row produces `count: 0` and we
+      // refuse to overwrite + mis-log it.
+      const claim = await tx.jobRequest.updateMany({
+        where: { id, status: current.status },
         data: patch,
+      });
+      if (claim.count === 0) {
+        throw new BadRequestException('Request status changed concurrently — refresh and retry');
+      }
+      const updated = await tx.jobRequest.findUniqueOrThrow({
+        where: { id },
         select: { id: true, status: true, publishedAt: true, closedAt: true },
       });
       await tx.auditLog.create({
