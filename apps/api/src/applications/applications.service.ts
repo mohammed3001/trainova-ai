@@ -18,6 +18,7 @@ import {
   type ApplyToRequestInput,
 } from '@trainova/shared';
 import type { ApplicationStatus, Prisma } from '@trainova/db';
+import { escapeHtml } from '../email/templates/layout';
 
 interface StatusUpdateContext {
   ip?: string | null;
@@ -227,10 +228,22 @@ export class ApplicationsService {
     };
     const t = typeMap[status];
     if (!t) return;
+    // The company-owner-controlled `requestTitle` appears in both the JSON
+    // in-app notification (safe — rendered as text by the client) and the
+    // email HTML body (unsafe — must be escaped to prevent a malicious
+    // company from injecting markup or phishing buttons into the trainer's
+    // inbox). Build two parallel title maps so JSON stays readable while
+    // the email body uses the escaped form.
+    const safeTitle = escapeHtml(requestTitle);
     const titles = {
       'application.shortlisted': `Shortlisted for "${requestTitle}"`,
       'application.accepted': `You were accepted for "${requestTitle}"`,
       'application.rejected': `Application not selected: "${requestTitle}"`,
+    } as const;
+    const htmlTitles = {
+      'application.shortlisted': `Shortlisted for &quot;${safeTitle}&quot;`,
+      'application.accepted': `You were accepted for &quot;${safeTitle}&quot;`,
+      'application.rejected': `Application not selected: &quot;${safeTitle}&quot;`,
     } as const;
     await this.notifications.emit({
       userId: trainerUserId,
@@ -244,7 +257,7 @@ export class ApplicationsService {
         t === 'application.accepted' || t === 'application.rejected'
           ? {
               subject: titles[t],
-              html: `<p>${titles[t]}.</p><p>Open the request on Trainova AI to see details.</p>`,
+              html: `<p>${htmlTitles[t]}.</p><p>Open the request on Trainova AI to see details.</p>`,
             }
           : null,
     });
