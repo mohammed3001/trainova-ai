@@ -253,7 +253,9 @@ export function jobPostingLd(args: {
       : { jobLocationType: 'TELECOMMUTE' }),
     ...(args.employmentType ? { employmentType: args.employmentType } : {}),
     ...(args.skills.length ? { skills: args.skills.join(', ') } : {}),
-    ...(args.salaryMin && args.salaryMax && args.currency
+    // `!= null` so a valid `salaryMin === 0` (e.g. "budget from $0") still
+    // emits the baseSalary block. Truthiness would drop it silently.
+    ...(args.salaryMin != null && args.salaryMax != null && args.currency
       ? {
           baseSalary: {
             '@type': 'MonetaryAmount',
