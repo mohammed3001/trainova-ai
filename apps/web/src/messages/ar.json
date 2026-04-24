@@ -1751,5 +1751,52 @@
       "ADMIN": "مشرف",
       "SUPER_ADMIN": "مشرف"
     }
+  },
+  "matching": {
+    "trainer": {
+      "title": "ترشيحات مناسبة لك",
+      "subtitle": "طلبات مفتوحة مرتبة وفق مهاراتك ولغاتك ونطاق سعرك وسجل أدائك. الأقوى تطابقاً يظهر أولاً.",
+      "empty": "لا توجد حالياً طلبات مفتوحة تطابق ملفك. أضف مزيداً من المهارات أو وسع لغات العمل لرؤية نتائج أكثر.",
+      "viewCta": "عرض الطلب والتقديم",
+      "dashboardHeading": "أفضل المطابقات لك",
+      "seeAll": "عرض كل الترشيحات"
+    },
+    "company": {
+      "title": "مدربون مقترحون",
+      "subtitle": "أفضل المدربين لطلب «{title}» بناءً على المهارات المشتركة واللغات وملاءمة السعر ودلائل الثقة والسجل داخل المنصة.",
+      "empty": "لا يوجد مدربون مطابقون حتى الآن. جرب توسيع المهارات المطلوبة أو اللغات.",
+      "backToApplications": "العودة إلى التقديمات",
+      "openCta": "عرض الملف"
+    },
+    "admin": {
+      "title": "المدربون المطابقون",
+      "subtitle": "{title} — {company}",
+      "backToRequest": "العودة إلى الطلب",
+      "empty": "لا يوجد مدربون مطابقون مع هذا الفلتر.",
+      "filterMinScore": "الحد الأدنى للنقاط",
+      "filterLimit": "العدد",
+      "applyFilter": "تطبيق",
+      "statTotal": "عدد المطابقات",
+      "statAvgScore": "متوسط النقاط",
+      "statVerified": "موثقون / حققوا الشروط"
+    },
+    "breakdown": {
+      "skills": "المهارات",
+      "languages": "اللغات",
+      "rate": "ملاءمة السعر",
+      "trust": "الثقة",
+      "history": "السجل",
+      "skillsRequiredOk": "المهارات الإلزامية متوفرة",
+      "skillsRequiredMissing": "تنقص بعض المهارات الإلزامية",
+      "skillsSummary": "{matched} متطابقة · {missing} ناقصة",
+      "languagesSummary": "{count} لغات متطابقة",
+      "portfolioSummary": "{count} أعمال في الحافظة",
+      "historySummary": "قُبِل {accepted} من {total} تقديم"
+    },
+    "workType": {
+      "remote": "عن بُعد",
+      "onsite": "في الموقع",
+      "hybrid": "هجين"
+    }
   }
 }

@@ -1751,5 +1751,52 @@
       "ADMIN": "Admin",
       "SUPER_ADMIN": "Admin"
     }
+  },
+  "matching": {
+    "trainer": {
+      "title": "Recommended for you",
+      "subtitle": "Open job requests scored against your skills, languages, rate range, and history. We surface the strongest fits first.",
+      "empty": "No open requests match your profile yet. Add more skills or expand your languages to see more results.",
+      "viewCta": "View and apply",
+      "dashboardHeading": "Top matches for you",
+      "seeAll": "See all matches"
+    },
+    "company": {
+      "title": "Suggested trainers",
+      "subtitle": "Top trainer matches for {title} based on shared skills, languages, rate fit, trust signals, and platform history.",
+      "empty": "No trainers match this request yet. Try broadening the required skills or languages.",
+      "backToApplications": "Back to applications",
+      "openCta": "View profile"
+    },
+    "admin": {
+      "title": "Trainer matches",
+      "subtitle": "{title} — {company}",
+      "backToRequest": "Back to request",
+      "empty": "No trainers match this request with the current filter.",
+      "filterMinScore": "Min score",
+      "filterLimit": "Limit",
+      "applyFilter": "Apply",
+      "statTotal": "Matches shown",
+      "statAvgScore": "Average score",
+      "statVerified": "Verified / required-OK"
+    },
+    "breakdown": {
+      "skills": "Skills",
+      "languages": "Languages",
+      "rate": "Rate fit",
+      "trust": "Trust",
+      "history": "History",
+      "skillsRequiredOk": "Required skills matched",
+      "skillsRequiredMissing": "Some required skills are missing",
+      "skillsSummary": "{matched} matched · {missing} missing",
+      "languagesSummary": "{count} matching languages",
+      "portfolioSummary": "{count} portfolio items",
+      "historySummary": "{accepted} accepted of {total} applications"
+    },
+    "workType": {
+      "remote": "Remote",
+      "onsite": "On-site",
+      "hybrid": "Hybrid"
+    }
   }
 }

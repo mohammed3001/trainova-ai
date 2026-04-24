@@ -46,13 +46,22 @@ export default async function ApplicationsPage({
     <div className="space-y-6">
       <div className="flex items-center justify-between gap-3">
         <h1 className="text-3xl font-bold text-slate-900">{t('company.applications.title')}</h1>
-        <Link
-          href={`/${locale}/company/requests/${id}/tests`}
-          className="rounded-md border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50"
-          data-testid="manage-tests-link"
-        >
-          {t('company.applications.manageTests')}
-        </Link>
+        <div className="flex items-center gap-2">
+          <Link
+            href={`/${locale}/company/requests/${id}/suggested`}
+            className="rounded-md border border-brand-200 bg-brand-50 px-3 py-1.5 text-xs font-medium text-brand-700 hover:bg-brand-100"
+            data-testid="suggested-trainers-link"
+          >
+            {t('matching.company.title')}
+          </Link>
+          <Link
+            href={`/${locale}/company/requests/${id}/tests`}
+            className="rounded-md border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50"
+            data-testid="manage-tests-link"
+          >
+            {t('company.applications.manageTests')}
+          </Link>
+        </div>
       </div>
       {apps.length === 0 ? (
         <div className="card text-sm text-slate-500">{t('company.applications.empty')}</div>

@@ -1,0 +1,475 @@
+import { Injectable } from '@nestjs/common';
+import {
+  MATCHING_WEIGHTS,
+  type JobMatch,
+  type MatchingScoreBreakdown,
+  type TrainerMatch,
+} from '@trainova/shared';
+import { PrismaService } from '../prisma/prisma.service';
+
+interface TrainerView {
+  userId: string;
+  name: string;
+  email: string;
+  avatarUrl: string | null;
+  profile: {
+    slug: string;
+    headline: string | null;
+    country: string | null;
+    languages: string[];
+    hourlyRateMin: number | null;
+    hourlyRateMax: number | null;
+    verified: boolean;
+    skills: { skillId: string; yearsExperience: number | null }[];
+    portfolioCount: number;
+  };
+  history: { total: number; accepted: number };
+}
+
+interface JobView {
+  id: string;
+  slug: string;
+  title: string;
+  industry: string | null;
+  workType: string;
+  budgetMin: number | null;
+  budgetMax: number | null;
+  currency: string;
+  publishedAt: Date | null;
+  languages: string[];
+  companyName: string;
+  skills: { skillId: string; required: boolean; minYears: number | null }[];
+}
+
+@Injectable()
+export class MatchingService {
+  constructor(private readonly prisma: PrismaService) {}
+
+  // =====================================================================
+  // Public entrypoints
+  // =====================================================================
+
+  /**
+   * Top trainers for a given OPEN job request, scored by skill / language /
+   * rate / trust / history. Sorted desc by score, ties broken by verified,
+   * then by hourlyRateMin asc (cheaper wins ties).
+   */
+  async recommendTrainersForJob(
+    jobRequestId: string,
+    opts: { limit: number; minScore?: number },
+  ): Promise<TrainerMatch[]> {
+    const job = await this.loadJobView(jobRequestId);
+    if (!job) return [];
+
+    // Pull a candidate pool: trainers whose profile shares at least one skill
+    // with the request OR who match a request language. We then re-score the
+    // pool in-process. We cap the pool to keep cold-path latency bounded.
+    const trainers = await this.candidateTrainersForJob(job, 200);
+
+    const scored: TrainerMatch[] = trainers
+      .map((t) => {
+        const breakdown = this.scoreTrainerAgainstJob(t, job);
+        const score = this.combine(breakdown);
+        return {
+          trainerId: t.userId,
+          trainerName: t.name,
+          trainerEmail: t.email,
+          slug: t.profile.slug,
+          headline: t.profile.headline,
+          country: t.profile.country,
+          avatarUrl: t.avatarUrl,
+          hourlyRateMin: t.profile.hourlyRateMin,
+          hourlyRateMax: t.profile.hourlyRateMax,
+          currency: job.currency,
+          score,
+          breakdown,
+        } satisfies TrainerMatch;
+      })
+      .filter((m) => (opts.minScore ? m.score >= opts.minScore : true))
+      .sort((a, b) => {
+        if (b.score !== a.score) return b.score - a.score;
+        if (a.breakdown.trust.verified !== b.breakdown.trust.verified) {
+          return a.breakdown.trust.verified ? -1 : 1;
+        }
+        const ar = a.hourlyRateMin ?? Number.POSITIVE_INFINITY;
+        const br = b.hourlyRateMin ?? Number.POSITIVE_INFINITY;
+        return ar - br;
+      });
+
+    return scored.slice(0, opts.limit);
+  }
+
+  /**
+   * Top OPEN job requests for a given trainer.
+   */
+  async recommendJobsForTrainer(
+    userId: string,
+    opts: { limit: number; minScore?: number },
+  ): Promise<JobMatch[]> {
+    const trainer = await this.loadTrainerView(userId);
+    if (!trainer) return [];
+
+    const jobs = await this.candidateJobsForTrainer(trainer, 200);
+
+    const scored: JobMatch[] = jobs
+      .map((j) => {
+        const breakdown = this.scoreTrainerAgainstJob(trainer, j);
+        const score = this.combine(breakdown);
+        return {
+          jobRequestId: j.id,
+          slug: j.slug,
+          title: j.title,
+          companyName: j.companyName,
+          industry: j.industry,
+          workType: j.workType,
+          budgetMin: j.budgetMin,
+          budgetMax: j.budgetMax,
+          currency: j.currency,
+          publishedAt: j.publishedAt?.toISOString() ?? null,
+          score,
+          breakdown,
+        } satisfies JobMatch;
+      })
+      .filter((m) => (opts.minScore ? m.score >= opts.minScore : true))
+      .sort((a, b) => b.score - a.score);
+
+    return scored.slice(0, opts.limit);
+  }
+
+  // =====================================================================
+  // Scoring
+  // =====================================================================
+
+  private scoreTrainerAgainstJob(
+    trainer: TrainerView,
+    job: JobView,
+  ): MatchingScoreBreakdown {
+    // ---- Skills (50%) ------------------------------------------------------
+    const trainerSkillIds = new Map(
+      trainer.profile.skills.map((s) => [s.skillId, s.yearsExperience ?? 0]),
+    );
+    const jobSkillIds = job.skills.map((s) => s.skillId);
+    const requiredSkills = job.skills.filter((s) => s.required);
+    const matchedSkillIds: string[] = [];
+    const missingSkillIds: string[] = [];
+
+    let weightedHit = 0;
+    let weightedTotal = 0;
+    for (const js of job.skills) {
+      const weight = js.required ? 2 : 1;
+      weightedTotal += weight;
+      const trainerYears = trainerSkillIds.get(js.skillId);
+      if (trainerYears === undefined) {
+        missingSkillIds.push(js.skillId);
+        continue;
+      }
+      // Skill is present; partial credit if minYears not satisfied
+      if (js.minYears && trainerYears < js.minYears) {
+        const ratio = trainerYears / js.minYears;
+        weightedHit += weight * Math.max(0.4, ratio);
+      } else {
+        weightedHit += weight;
+      }
+      matchedSkillIds.push(js.skillId);
+    }
+
+    const skillsScore = jobSkillIds.length === 0 ? 60 : Math.round((weightedHit / weightedTotal) * 100);
+    const requiredSatisfied =
+      requiredSkills.length === 0 ||
+      requiredSkills.every((rs) => trainerSkillIds.has(rs.skillId));
+
+    // ---- Languages (15%) ---------------------------------------------------
+    const jobLangs = new Set(job.languages.map((l) => l.toLowerCase()));
+    const matchedLangs = trainer.profile.languages.filter((l) =>
+      jobLangs.has(l.toLowerCase()),
+    );
+    const langsScore =
+      jobLangs.size === 0 ? 50 : Math.round((matchedLangs.length / jobLangs.size) * 100);
+
+    // ---- Rate fit (15%) ----------------------------------------------------
+    const rateScore = this.scoreRateFit(trainer, job);
+    const rateFits = rateScore >= 70;
+
+    // ---- Trust (10%) -------------------------------------------------------
+    let trustScore = 40;
+    if (trainer.profile.verified) trustScore += 40;
+    trustScore += Math.min(20, trainer.profile.portfolioCount * 5);
+    if (trustScore > 100) trustScore = 100;
+
+    // ---- History (10%) -----------------------------------------------------
+    const historyScore = this.scoreHistory(trainer);
+
+    return {
+      skills: { score: skillsScore, matchedSkillIds, missingSkillIds, requiredSatisfied },
+      languages: { score: langsScore, matched: matchedLangs },
+      rate: { score: rateScore, fits: rateFits },
+      trust: {
+        score: trustScore,
+        verified: trainer.profile.verified,
+        portfolioCount: trainer.profile.portfolioCount,
+      },
+      history: {
+        score: historyScore,
+        pastApplications: trainer.history.total,
+        acceptedApplications: trainer.history.accepted,
+      },
+    };
+  }
+
+  private scoreRateFit(trainer: TrainerView, job: JobView): number {
+    const tMin = trainer.profile.hourlyRateMin;
+    const tMax = trainer.profile.hourlyRateMax;
+    const bMin = job.budgetMin;
+    const bMax = job.budgetMax;
+    if (tMin === null && tMax === null) return 60;
+    if (bMin === null && bMax === null) return 70;
+
+    const trainerLo = tMin ?? tMax ?? 0;
+    const trainerHi = tMax ?? tMin ?? trainerLo;
+    const budgetLo = bMin ?? bMax ?? 0;
+    const budgetHi = bMax ?? bMin ?? budgetLo;
+
+    // Full overlap → 100, partial → linear, no overlap → distance penalty.
+    if (trainerHi <= budgetHi && trainerLo >= budgetLo) return 100;
+    if (trainerLo > budgetHi) {
+      const gap = trainerLo - budgetHi;
+      const denom = budgetHi || 1;
+      return Math.max(0, Math.round(100 - (gap / denom) * 100));
+    }
+    if (trainerHi < budgetLo) {
+      // Trainer cheaper than min budget → still positive but capped (company may be over-budgeting)
+      return 70;
+    }
+    // Partial overlap: measure how much of trainer's range intersects budget
+    const overlapLo = Math.max(trainerLo, budgetLo);
+    const overlapHi = Math.min(trainerHi, budgetHi);
+    const overlap = Math.max(0, overlapHi - overlapLo);
+    const trainerSpan = Math.max(1, trainerHi - trainerLo);
+    return Math.min(95, Math.round(40 + (overlap / trainerSpan) * 60));
+  }
+
+  private scoreHistory(trainer: TrainerView): number {
+    if (trainer.history.total === 0) return 50;
+    const acceptanceRate = trainer.history.accepted / trainer.history.total;
+    const volumeBonus = Math.min(30, trainer.history.total * 3);
+    return Math.min(100, Math.round(40 + acceptanceRate * 30 + volumeBonus));
+  }
+
+  private combine(b: MatchingScoreBreakdown): number {
+    const w = MATCHING_WEIGHTS;
+    const total =
+      (b.skills.score * w.skills +
+        b.languages.score * w.languages +
+        b.rate.score * w.rate +
+        b.trust.score * w.trust +
+        b.history.score * w.history) /
+      100;
+    return Math.round(Math.max(0, Math.min(100, total)));
+  }
+
+  // =====================================================================
+  // Loaders
+  // =====================================================================
+
+  private async loadTrainerView(userId: string): Promise<TrainerView | null> {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        avatarUrl: true,
+        trainerProfile: {
+          select: {
+            slug: true,
+            headline: true,
+            country: true,
+            languages: true,
+            hourlyRateMin: true,
+            hourlyRateMax: true,
+            verified: true,
+            skills: { select: { skillId: true, yearsExperience: true } },
+            assets: {
+              where: { kind: 'portfolio', deletedAt: null },
+              select: { id: true },
+            },
+          },
+        },
+      },
+    });
+    if (!user || !user.trainerProfile) return null;
+
+    const [total, accepted] = await Promise.all([
+      this.prisma.application.count({ where: { trainerId: userId } }),
+      this.prisma.application.count({
+        where: { trainerId: userId, status: 'ACCEPTED' },
+      }),
+    ]);
+
+    return {
+      userId: user.id,
+      name: user.name,
+      email: user.email,
+      avatarUrl: user.avatarUrl,
+      profile: {
+        slug: user.trainerProfile.slug,
+        headline: user.trainerProfile.headline,
+        country: user.trainerProfile.country,
+        languages: user.trainerProfile.languages,
+        hourlyRateMin: user.trainerProfile.hourlyRateMin,
+        hourlyRateMax: user.trainerProfile.hourlyRateMax,
+        verified: user.trainerProfile.verified,
+        skills: user.trainerProfile.skills,
+        portfolioCount: user.trainerProfile.assets.length,
+      },
+      history: { total, accepted },
+    };
+  }
+
+  private async loadJobView(id: string): Promise<JobView | null> {
+    const job = await this.prisma.jobRequest.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        slug: true,
+        title: true,
+        industry: true,
+        workType: true,
+        budgetMin: true,
+        budgetMax: true,
+        currency: true,
+        publishedAt: true,
+        languages: true,
+        company: { select: { name: true } },
+        skills: { select: { skillId: true, required: true, minYears: true } },
+      },
+    });
+    if (!job) return null;
+    return {
+      id: job.id,
+      slug: job.slug,
+      title: job.title,
+      industry: job.industry,
+      workType: job.workType,
+      budgetMin: job.budgetMin,
+      budgetMax: job.budgetMax,
+      currency: job.currency,
+      publishedAt: job.publishedAt,
+      languages: job.languages,
+      companyName: job.company.name,
+      skills: job.skills,
+    };
+  }
+
+  private async candidateTrainersForJob(job: JobView, cap: number): Promise<TrainerView[]> {
+    const skillIds = job.skills.map((s) => s.skillId);
+    const profiles = await this.prisma.trainerProfile.findMany({
+      where: {
+        user: { status: 'ACTIVE' },
+        OR: [
+          skillIds.length ? { skills: { some: { skillId: { in: skillIds } } } } : { id: { equals: '' } },
+          job.languages.length ? { languages: { hasSome: job.languages } } : { id: { equals: '' } },
+        ],
+      },
+      take: cap,
+      orderBy: [{ verified: 'desc' }, { updatedAt: 'desc' }],
+      select: {
+        slug: true,
+        headline: true,
+        country: true,
+        languages: true,
+        hourlyRateMin: true,
+        hourlyRateMax: true,
+        verified: true,
+        skills: { select: { skillId: true, yearsExperience: true } },
+        assets: {
+          where: { kind: 'portfolio', deletedAt: null },
+          select: { id: true },
+        },
+        user: {
+          select: { id: true, name: true, email: true, avatarUrl: true, status: true },
+        },
+      },
+    });
+    if (profiles.length === 0) return [];
+
+    const userIds = profiles.map((p) => p.user.id);
+    const historyRows = await this.prisma.application.groupBy({
+      by: ['trainerId', 'status'],
+      where: { trainerId: { in: userIds } },
+      _count: { _all: true },
+    });
+    const historyByUser = new Map<string, { total: number; accepted: number }>();
+    for (const id of userIds) historyByUser.set(id, { total: 0, accepted: 0 });
+    for (const row of historyRows) {
+      const h = historyByUser.get(row.trainerId);
+      if (!h) continue;
+      h.total += row._count._all;
+      if (row.status === 'ACCEPTED') h.accepted += row._count._all;
+    }
+
+    return profiles.map((p) => ({
+      userId: p.user.id,
+      name: p.user.name,
+      email: p.user.email,
+      avatarUrl: p.user.avatarUrl,
+      profile: {
+        slug: p.slug,
+        headline: p.headline,
+        country: p.country,
+        languages: p.languages,
+        hourlyRateMin: p.hourlyRateMin,
+        hourlyRateMax: p.hourlyRateMax,
+        verified: p.verified,
+        skills: p.skills,
+        portfolioCount: p.assets.length,
+      },
+      history: historyByUser.get(p.user.id) ?? { total: 0, accepted: 0 },
+    }));
+  }
+
+  private async candidateJobsForTrainer(trainer: TrainerView, cap: number): Promise<JobView[]> {
+    const skillIds = trainer.profile.skills.map((s) => s.skillId);
+    const orConditions: import('@trainova/db').Prisma.JobRequestWhereInput[] = [];
+    if (skillIds.length) orConditions.push({ skills: { some: { skillId: { in: skillIds } } } });
+    if (trainer.profile.languages.length)
+      orConditions.push({ languages: { hasSome: trainer.profile.languages } });
+
+    const rows = await this.prisma.jobRequest.findMany({
+      where: {
+        status: 'OPEN',
+        ...(orConditions.length ? { OR: orConditions } : {}),
+      },
+      take: cap,
+      orderBy: [{ featured: 'desc' }, { publishedAt: 'desc' }],
+      select: {
+        id: true,
+        slug: true,
+        title: true,
+        industry: true,
+        workType: true,
+        budgetMin: true,
+        budgetMax: true,
+        currency: true,
+        publishedAt: true,
+        languages: true,
+        company: { select: { name: true } },
+        skills: { select: { skillId: true, required: true, minYears: true } },
+      },
+    });
+    return rows.map((r) => ({
+      id: r.id,
+      slug: r.slug,
+      title: r.title,
+      industry: r.industry,
+      workType: r.workType,
+      budgetMin: r.budgetMin,
+      budgetMax: r.budgetMax,
+      currency: r.currency,
+      publishedAt: r.publishedAt,
+      languages: r.languages,
+      companyName: r.company.name,
+      skills: r.skills,
+    }));
+  }
+}

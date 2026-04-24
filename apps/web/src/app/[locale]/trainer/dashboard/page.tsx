@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { getLocale, getTranslations } from 'next-intl/server';
+import type { JobMatch } from '@trainova/shared';
 import { getRole, getToken } from '@/lib/session';
 import { authedFetch } from '@/lib/authed-fetch';
 import { StartChatButton } from '@/components/chat/start-chat-button';
@@ -39,9 +40,12 @@ export default async function TrainerDashboard() {
   if (!token) redirect(`/${locale}/login`);
   if (role !== 'TRAINER') redirect(`/${locale}`);
 
-  const [me, apps] = await Promise.all([
+  const [me, apps, matches] = await Promise.all([
     authedFetch<MeUser>('/auth/me'),
     authedFetch<ApplicationRow[]>('/applications/mine').catch(() => []),
+    authedFetch<JobMatch[]>('/matching/me/recommended-jobs?limit=3').catch(
+      () => [] as JobMatch[],
+    ),
   ]);
 
   return (
@@ -59,6 +63,48 @@ export default async function TrainerDashboard() {
           {t('profile.trainer.title')}
         </Link>
       </div>
+
+      {matches.length > 0 ? (
+        <section>
+          <div className="mb-3 flex items-center justify-between">
+            <h2 className="text-lg font-semibold text-slate-900">
+              {t('matching.trainer.dashboardHeading')}
+            </h2>
+            <Link
+              href={`/${locale}/trainer/recommended`}
+              className="text-sm font-medium text-brand-700 hover:text-brand-800"
+              data-testid="trainer-matches-see-all"
+            >
+              {t('matching.trainer.seeAll')}
+            </Link>
+          </div>
+          <ul className="grid gap-3 md:grid-cols-3">
+            {matches.map((m) => (
+              <li
+                key={m.jobRequestId}
+                className="card space-y-2"
+                data-testid={`trainer-dashboard-match-${m.jobRequestId}`}
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <Link
+                    href={`/${locale}/requests/${m.slug}`}
+                    className="text-sm font-semibold text-slate-900 hover:text-brand-700"
+                  >
+                    {m.title}
+                  </Link>
+                  <span
+                    className="inline-flex items-center rounded-full bg-brand-50 px-2 py-0.5 text-xs font-bold text-brand-700 ring-1 ring-inset ring-brand-100"
+                    aria-label={`match score ${m.score}`}
+                  >
+                    {m.score}
+                  </span>
+                </div>
+                <div className="text-xs text-slate-500">{m.companyName}</div>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
 
       <section>
         <h2 className="mb-3 text-lg font-semibold text-slate-900">{t('dashboard.myApplications')}</h2>
