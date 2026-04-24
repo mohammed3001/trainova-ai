@@ -129,8 +129,10 @@ async function probeHuggingFace(input: ProbeInput): Promise<ProbeResult> {
       headers: { Accept: 'application/json', ...authHeader(input) },
     });
     // HF endpoints often return 405 for GET on POST-only routes — treat
-    // anything < 500 as "endpoint reachable, auth understood".
-    if (res.status < 500) {
+    // 2xx + 404 + 405 as "endpoint reachable, auth understood". 401 / 403
+    // mean the credential was rejected; surface that as a real failure so
+    // the connection doesn't auto-promote DRAFT → ACTIVE on a bad key.
+    if (isReachableNonAuthFailure(res.status)) {
       return {
         ok: true,
         status: res.status,
@@ -157,10 +159,17 @@ async function probeRawHttps(input: ProbeInput): Promise<ProbeResult> {
       method: 'GET',
       headers: { Accept: 'application/json', ...authHeader(input) },
     });
+    // Same auth-vs-reachability split as HuggingFace — 401/403 must not
+    // be treated as healthy or the row would silently promote to ACTIVE
+    // with a rejected credential.
+    const ok = isReachableNonAuthFailure(res.status);
     return {
-      ok: res.status < 500,
+      ok,
       status: res.status,
-      detail: `GET endpoint ${res.status}`,
+      detail: ok ? `GET endpoint ${res.status}` : undefined,
+      error: ok
+        ? undefined
+        : `GET endpoint ${res.status} (auth or upstream failure)`,
     };
   } catch (e) {
     return { ok: false, status: null, error: errorMessage(e) };
@@ -205,6 +214,18 @@ export async function probeModelConnection(
 
 function endsWithSlash(url: string): string {
   return url.endsWith('/') ? url : `${url}/`;
+}
+
+/**
+ * "Reachable but not an auth failure." 2xx is success, 404/405 indicate the
+ * endpoint exists but the verb/path is wrong (HF inference deployments
+ * commonly return 405 for GET) — both prove the credential was accepted at
+ * the network edge. 401/403 explicitly mean the credential was rejected
+ * and must not promote a connection to ACTIVE.
+ */
+function isReachableNonAuthFailure(status: number): boolean {
+  if (status >= 200 && status < 300) return true;
+  return status === 404 || status === 405;
 }
 
 function truncate(s: string, max: number): string {

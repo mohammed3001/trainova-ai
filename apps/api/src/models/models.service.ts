@@ -105,6 +105,38 @@ export class ModelsService {
     } else if (typeof patch.credentials === 'string' && patch.credentials.length > 0) {
       data.encryptedCredentials = encryptSecret(patch.credentials);
     }
+
+    // Provider invariants must be enforced against the **merged** state, not
+    // the patch in isolation. Zod's superRefine on the update schema only
+    // sees the patch (and `.partial()` already strips `null`), so a request
+    // that switches an ANTHROPIC connection to OPENAI_COMPATIBLE without
+    // also providing endpointUrl would slip through and leave the row in
+    // a permanently-failing state.
+    const merged = {
+      provider: (data.provider as string | undefined) ?? existing.provider,
+      endpointUrl:
+        data.endpointUrl !== undefined
+          ? (data.endpointUrl as string | null)
+          : existing.endpointUrl,
+      region:
+        data.region !== undefined
+          ? (data.region as string | null)
+          : existing.region,
+      authKind: (data.authKind as string | undefined) ?? existing.authKind,
+    };
+    if (
+      ['OPENAI_COMPATIBLE', 'RAW_HTTPS', 'HUGGINGFACE'].includes(merged.provider) &&
+      !merged.endpointUrl
+    ) {
+      throw new BadRequestException('endpointUrl is required for this provider');
+    }
+    if (merged.provider === 'BEDROCK' && !merged.region) {
+      throw new BadRequestException('region is required for Bedrock');
+    }
+    if (merged.authKind === 'aws_sigv4' && merged.provider !== 'BEDROCK') {
+      throw new BadRequestException('aws_sigv4 is only valid for Bedrock');
+    }
+
     const row = await this.prisma.modelConnection.update({ where: { id }, data });
     return this.toPublic(row);
   }
