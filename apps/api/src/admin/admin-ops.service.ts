@@ -104,10 +104,20 @@ export class AdminOpsService {
   ) {
     const current = await this.prisma.jobRequest.findUnique({
       where: { id },
-      select: { id: true, status: true },
+      select: { id: true, status: true, publishedAt: true, closedAt: true },
     });
     if (!current) throw new NotFoundException('Request not found');
-    if (current.status === status) return { id, status };
+    // Keep the no-op response shape identical to the mutated path so callers
+    // (especially the admin UI's optimistic updates) don't have to branch on
+    // "was it actually changed".
+    if (current.status === status) {
+      return {
+        id: current.id,
+        status: current.status,
+        publishedAt: current.publishedAt,
+        closedAt: current.closedAt,
+      };
+    }
 
     return this.prisma.$transaction(async (tx) => {
       const patch: Prisma.JobRequestUpdateInput = { status };
