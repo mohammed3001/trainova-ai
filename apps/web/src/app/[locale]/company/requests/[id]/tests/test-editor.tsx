@@ -155,7 +155,8 @@ export function TestEditor({
       if (task.type === 'MCQ') {
         const opts = task.options.map((o) => o.trim()).filter((o) => o.length > 0);
         if (opts.length < 2) return t('company.tests.errors.mcqNeedsOptions', { n: i + 1 });
-        if (!task.answerKey || !opts.includes(task.answerKey)) {
+        const answer = task.answerKey?.trim() ?? '';
+        if (!answer || !opts.includes(answer)) {
           return t('company.tests.errors.mcqNeedsAnswer', { n: i + 1 });
         }
       }
@@ -188,7 +189,7 @@ export function TestEditor({
             task.type === 'MCQ'
               ? task.options.map((o) => o.trim()).filter((o) => o.length > 0)
               : [],
-          answerKey: task.type === 'MCQ' ? task.answerKey : null,
+          answerKey: task.type === 'MCQ' ? (task.answerKey?.trim() ?? null) : null,
           rubric: task.rubricHint.trim() ? { hint: task.rubricHint.trim() } : undefined,
           maxScore: task.maxScore,
           order: i,
