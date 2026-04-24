@@ -134,6 +134,7 @@ model Company {
   members    CompanyMember[]
   requests   JobRequest[]
   adCampaigns AdCampaign[]
+  modelConnections ModelConnection[]
 
   @@index([slug])
 }
@@ -156,6 +157,51 @@ model CompanyMember {
   user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([companyId, userId])
+}
+
+// =========================
+// Model Registry (T4.A)
+// =========================
+
+enum ModelProvider {
+  OPENAI_COMPATIBLE
+  ANTHROPIC
+  BEDROCK
+  HUGGINGFACE
+  RAW_HTTPS
+}
+
+enum ModelConnectionStatus {
+  DRAFT
+  ACTIVE
+  DISABLED
+}
+
+/// A company-owned connection to a live model or evaluation endpoint.
+/// Credentials are encrypted at rest with the platform key (see
+/// `common/crypto.util.ts`) — the raw value never leaves the server.
+model ModelConnection {
+  id                   String                @id @default(cuid())
+  companyId            String
+  name                 String
+  provider             ModelProvider
+  endpointUrl          String?
+  modelId              String?
+  region               String?
+  authKind             String                @default("api_key")
+  encryptedCredentials Bytes?
+  metadata             Json                  @default("{}")
+  status               ModelConnectionStatus @default(DRAFT)
+  lastCheckedAt        DateTime?
+  lastCheckOk          Boolean?
+  lastCheckError       String?
+  createdAt            DateTime              @default(now())
+  updatedAt            DateTime              @updatedAt
+  deletedAt            DateTime?
+
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@index([companyId, deletedAt])
 }
 
 // =========================

@@ -43,9 +43,14 @@ export default async function CompanyDashboard() {
           {t('dashboard.createRequest')}
         </Link>
         {role === 'COMPANY_OWNER' ? (
-          <Link href={`/${locale}/company/profile`} className="btn-secondary">
-            {t('profile.company.editCta')}
-          </Link>
+          <>
+            <Link href={`/${locale}/company/models`} className="btn-secondary">
+              {t('company.models.title')}
+            </Link>
+            <Link href={`/${locale}/company/profile`} className="btn-secondary">
+              {t('profile.company.editCta')}
+            </Link>
+          </>
         ) : null}
       </div>
 

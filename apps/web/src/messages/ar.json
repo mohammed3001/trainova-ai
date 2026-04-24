@@ -274,6 +274,71 @@
     }
   },
   "company": {
+    "models": {
+      "badge": "سجل النماذج",
+      "title": "النماذج المرتبطة",
+      "subtitle": "اربط نماذج الذكاء الاصطناعي الحيّة الخاصة بك — متوافقة مع OpenAI أو Anthropic أو Bedrock أو HuggingFace أو أي نقطة HTTPS — ليتمكن المدربون من تقييمها داخل Trainova دون مشاهدة مفاتيحك. تُحفظ المفاتيح مشفّرة وتُمرَّر عبر بروكسي المنصة.",
+      "add": "إضافة اتصال",
+      "edit": "تعديل",
+      "delete": "حذف",
+      "test": "اختبار الاتصال",
+      "testing": "جارٍ الاختبار…",
+      "testingLive": "نتواصل مع المزوّد — قد يستغرق ذلك حتى ٨ ثوانٍ.",
+      "helper": "تبدأ الاتصالات كمسوّدة وتُرقّى تلقائياً إلى نشطة عند أول اختبار ناجح.",
+      "confirmDelete": "هل تريد حذف هذا الاتصال (حذف منطقي)؟ سيفقد المدربون الوصول فوراً.",
+      "empty": {
+        "title": "لا توجد نماذج مرتبطة بعد",
+        "body": "أضف اتصالك الأول لتفعيل التقييم داخل المنصة. لا نخزّن المفاتيح بصيغة نصّية أبداً."
+      },
+      "status": {
+        "DRAFT": "مسوّدة",
+        "ACTIVE": "نشط",
+        "DISABLED": "متوقّف"
+      },
+      "providers": {
+        "OPENAI_COMPATIBLE": "متوافق مع OpenAI",
+        "ANTHROPIC": "Anthropic",
+        "BEDROCK": "AWS Bedrock",
+        "HUGGINGFACE": "HuggingFace Inference",
+        "RAW_HTTPS": "HTTPS مخصّص"
+      },
+      "auth": {
+        "api_key": "مفتاح API (Bearer)",
+        "bearer": "رمز Bearer",
+        "aws_sigv4": "AWS SigV4",
+        "none": "بدون / عام"
+      },
+      "fields": {
+        "name": "الاسم الظاهر",
+        "provider": "المزوّد",
+        "endpointUrl": "رابط النقطة (Endpoint)",
+        "modelId": "معرّف النموذج",
+        "modelIdPlaceholder": "مثال: gpt-4o-mini أو claude-3-5-sonnet أو anthropic.claude-3-haiku-20240307",
+        "region": "المنطقة",
+        "authKind": "نوع المصادقة",
+        "credentials": "بيانات الاعتماد",
+        "credentialsHint": "تُلصق مرة واحدة وتُشفَّر فور الحفظ. لا نعرض لاحقاً سوى أول وآخر ٤ أحرف.",
+        "credentialsUpdate": "استبدال بيانات الاعتماد",
+        "credentialsUpdateHint": "اتركه فارغاً للإبقاء على المفتاح الحالي (المعاينة: {preview}).",
+        "lastChecked": "آخر اختبار",
+        "ok": "ناجح",
+        "failed": "فاشل",
+        "none": "—"
+      },
+      "result": {
+        "ok": "الاتصال يعمل بشكل سليم",
+        "fail": "فشل الاتصال"
+      },
+      "editor": {
+        "newTitle": "ربط نموذج",
+        "editTitle": "تعديل الاتصال",
+        "subtitle": "نختبر النقطة الحيّة بعد الحفظ ولا نعتبرها نشطة إلا عند استجابة المزوّد.",
+        "create": "ربط",
+        "save": "حفظ التغييرات",
+        "cancel": "إلغاء",
+        "dismiss": "إغلاق المحرّر"
+      }
+    },
     "applications": {
       "title": "الطلبات المقدَّمة",
       "empty": "لا توجد طلبات بعد.",
