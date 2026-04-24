@@ -64,6 +64,7 @@ model User {
   verificationRequestsReviewed  VerificationRequest[]     @relation("VerificationReviewer")
   reportsFiled                  Report[]                  @relation("ReportReporter")
   reportsResolved               Report[]                  @relation("ReportResolver")
+  emailTemplatesUpdated         EmailTemplate[]           @relation("EmailTemplateUpdatedBy")
 
   @@index([role, status])
 }
@@ -1244,4 +1245,33 @@ model Report {
   @@index([status, createdAt])
   @@index([targetType, targetId])
   @@index([reporterId])
+}
+
+/// Admin-editable email templates. The in-code templates in
+/// `apps/api/src/email/templates/*` remain as fallback so the app always
+/// has content even before the DB is seeded. On every email send, the
+/// service looks up `(key, locale)` here first; if found and enabled, the
+/// DB row wins and `{{variables}}` are interpolated against the call-site
+/// params. Otherwise we fall back to the built-in template.
+///
+/// `key` matches the enum in @trainova/shared (VERIFY_EMAIL, RESET_PASSWORD,
+/// WELCOME, TEST_ASSIGNED, …) and `locale` is 'en' or 'ar'. Composite unique
+/// on (key, locale) enforces exactly one row per translation.
+model EmailTemplate {
+  id          String   @id @default(cuid())
+  key         String
+  locale      String
+  subject     String
+  bodyHtml    String   @db.Text
+  bodyText    String   @db.Text
+  variables   Json     @default("[]")
+  enabled     Boolean  @default(true)
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  updatedById String?
+  updatedBy   User?    @relation("EmailTemplateUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
+
+  @@unique([key, locale])
+  @@index([key])
 }
