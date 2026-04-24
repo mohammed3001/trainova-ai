@@ -2,7 +2,6 @@ import {
   Body,
   Controller,
   Get,
-  Header,
   Param,
   Patch,
   Query,
@@ -64,10 +63,12 @@ export class TrainersController {
   }
 
   @Get(':slug/cv.pdf')
-  @Header('Content-Type', 'application/pdf')
   async cv(@Param('slug') slug: string, @Res() res: Response) {
+    // @Res() (no passthrough) puts this handler in library-specific mode,
+    // which disables @Header() — set every header imperatively instead.
     const profile = await this.trainers.findBySlug(slug);
     const fileName = `${slug}.pdf`;
+    res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', `inline; filename="${fileName}"`);
     res.setHeader('Cache-Control', 'public, max-age=300');
     const stream = renderTrainerCvPdf(profile);
