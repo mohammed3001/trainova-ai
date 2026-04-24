@@ -864,7 +864,12 @@
       "companies": "الشركات",
       "trainers": "المدربون",
       "verification": "التوثيق",
-      "requests": "الطلبات"
+      "requests": "الطلبات",
+      "tests": "الاختبارات",
+      "attempts": "المحاولات",
+      "conversations": "الإشراف على الدردشة",
+      "reports": "البلاغات",
+      "analytics": "التحليلات"
     },
     "userRole": {
       "SUPER_ADMIN": "أدمن أعلى",
@@ -944,6 +949,260 @@
         "approve": "قبول طلب التوثيق؟ سيُعتبر الملف المستهدف موثّقًا.",
         "reject": "رفض طلب التوثيق؟ سيظهر السبب لمقدّم الطلب."
       }
+    },
+    "requests": {
+      "title": "الطلبات",
+      "subtitle": "جميع طلبات الشركات — تمييز، إغلاق، أرشفة.",
+      "searchPlaceholder": "ابحث في العنوان أو الـ slug أو الوصف…",
+      "filter": {
+        "allStatuses": "كل الحالات",
+        "allFeatured": "الكل",
+        "featuredYes": "المميّزة فقط",
+        "featuredNo": "غير المميّزة",
+        "apply": "تطبيق"
+      },
+      "col": {
+        "title": "العنوان",
+        "company": "الشركة",
+        "status": "الحالة",
+        "featured": "مميّز",
+        "applications": "التقديمات",
+        "tests": "الاختبارات",
+        "createdAt": "تاريخ الإنشاء",
+        "actions": "إجراءات"
+      },
+      "status": {
+        "DRAFT": "مسودة",
+        "OPEN": "مفتوح",
+        "PAUSED": "متوقف",
+        "CLOSED": "مغلق",
+        "ARCHIVED": "مؤرشف"
+      },
+      "empty": "لا توجد طلبات مطابقة للفلاتر الحالية.",
+      "section": {
+        "meta": "بيانات وصفية",
+        "skills": "المهارات",
+        "counts": "العدّادات",
+        "actions": "الإجراءات"
+      },
+      "action": {
+        "setStatus": "تعيين الحالة",
+        "changeStatus": "تغيير الحالة",
+        "feature": "تمييز",
+        "unfeature": "إلغاء التمييز",
+        "reasonLabel": "سبب (اختياري)",
+        "reasonPlaceholder": "ملاحظة داخلية — تُحفظ في سجل التدقيق"
+      },
+      "confirm": {
+        "status": "تغيير حالة الطلب؟",
+        "featured": "تبديل علامة التمييز؟"
+      },
+      "loadMore": "تحميل المزيد"
+    },
+    "tests": {
+      "title": "الاختبارات",
+      "subtitle": "عرض إداري لكل اختبارات المنصة.",
+      "searchPlaceholder": "ابحث في العنوان أو الوصف…",
+      "filter": {
+        "allScoringModes": "كل أنماط التقييم",
+        "apply": "تطبيق"
+      },
+      "scoringMode": {
+        "AUTO": "تلقائي",
+        "MANUAL": "يدوي",
+        "HYBRID": "هجين"
+      },
+      "col": {
+        "title": "العنوان",
+        "request": "الطلب",
+        "company": "الشركة",
+        "scoringMode": "التقييم",
+        "passingScore": "درجة النجاح",
+        "tasks": "المهام",
+        "attempts": "المحاولات",
+        "createdAt": "تاريخ الإنشاء"
+      },
+      "empty": "لا توجد اختبارات مطابقة للفلاتر.",
+      "section": {
+        "meta": "بيانات وصفية",
+        "tasks": "المهام",
+        "attempts": "المحاولات",
+        "breakdown": "توزيع الحالات"
+      },
+      "task": {
+        "header": "#{order} · {type}",
+        "weight": "الوزن: {weight}"
+      },
+      "loadMore": "تحميل المزيد"
+    },
+    "attempts": {
+      "title": "المحاولة",
+      "subtitle": "تفاصيل كاملة للمحاولة عبر الاختبار والمدرب والإجابات.",
+      "status": {
+        "IN_PROGRESS": "جارية",
+        "SUBMITTED": "مُرسلة",
+        "GRADED": "تم التقييم",
+        "EXPIRED": "منتهية"
+      },
+      "col": {
+        "test": "الاختبار",
+        "trainer": "المدرب",
+        "status": "الحالة",
+        "score": "النتيجة",
+        "submittedAt": "وقت الإرسال",
+        "duration": "المدة"
+      },
+      "section": {
+        "meta": "بيانات وصفية",
+        "responses": "الإجابات",
+        "application": "التقديم"
+      },
+      "noResponses": "لا توجد إجابات مسجّلة بعد.",
+      "durationSec": "{sec} ث",
+      "empty": "لا توجد محاولات مطابقة للفلاتر.",
+      "scoreOf": "{score}/{max}"
+    },
+    "conversations": {
+      "title": "الإشراف على الدردشة",
+      "subtitle": "فحص المحادثات وقفلها وإخفاء الرسائل المسيئة.",
+      "searchPlaceholder": "ابحث باسم أو بريد مشارك…",
+      "filter": {
+        "lockedAll": "كل المحادثات",
+        "lockedOnly": "المقفلة فقط",
+        "apply": "تطبيق"
+      },
+      "col": {
+        "participants": "المشاركون",
+        "request": "الطلب",
+        "messages": "الرسائل",
+        "locked": "القفل",
+        "updatedAt": "آخر تحديث"
+      },
+      "empty": "لا توجد محادثات مطابقة للفلاتر.",
+      "section": {
+        "meta": "بيانات وصفية",
+        "participants": "المشاركون",
+        "messages": "الرسائل",
+        "actions": "إجراءات الإشراف"
+      },
+      "action": {
+        "lock": "قفل المحادثة",
+        "unlock": "إلغاء القفل",
+        "redact": "إخفاء",
+        "reasonLabel": "السبب",
+        "reasonPlaceholder": "سبب يُحفظ في سجل التدقيق (إلزامي للإخفاء)",
+        "lockReasonPlaceholder": "سبب اختياري للقفل"
+      },
+      "confirm": {
+        "lock": "هل تريد قفل هذه المحادثة؟ سيرى المشاركون إشعاراً.",
+        "unlock": "هل تريد إلغاء قفل هذه المحادثة؟",
+        "redact": "إخفاء هذه الرسالة؟ سيُستبدل النص بعبارة [مخفى بواسطة المشرف]."
+      },
+      "lockedBadge": "مقفلة",
+      "redactedBadge": "مخفيّة",
+      "redactedBody": "[مخفى بواسطة المشرف]",
+      "noMessages": "لا توجد رسائل في هذه المحادثة بعد.",
+      "loadMore": "تحميل المزيد"
+    },
+    "reports": {
+      "title": "البلاغات",
+      "subtitle": "بلاغات الإشراف المُرسَلة من المستخدمين.",
+      "col": {
+        "target": "الهدف",
+        "category": "الفئة",
+        "reporter": "المُبلّغ",
+        "status": "الحالة",
+        "resolution": "القرار",
+        "createdAt": "الإنشاء"
+      },
+      "filter": {
+        "allStatuses": "كل الحالات",
+        "allTargets": "كل الأهداف",
+        "allCategories": "كل الفئات",
+        "apply": "تطبيق"
+      },
+      "status": {
+        "OPEN": "مفتوح",
+        "INVESTIGATING": "قيد الفحص",
+        "RESOLVED": "محلول",
+        "DISMISSED": "مرفوض"
+      },
+      "category": {
+        "SPAM": "سبام",
+        "HARASSMENT": "تحرّش",
+        "INAPPROPRIATE": "محتوى غير لائق",
+        "FRAUD": "احتيال",
+        "IMPERSONATION": "انتحال",
+        "COPYRIGHT": "حقوق نشر",
+        "SAFETY": "أمان",
+        "OTHER": "أخرى"
+      },
+      "targetType": {
+        "USER": "مستخدم",
+        "COMPANY": "شركة",
+        "TRAINER": "مدرب",
+        "REQUEST": "طلب",
+        "APPLICATION": "تقديم",
+        "MESSAGE": "رسالة",
+        "CONVERSATION": "محادثة",
+        "REVIEW": "تقييم",
+        "TEST": "اختبار",
+        "OTHER": "أخرى"
+      },
+      "resolution": {
+        "NO_ACTION": "لا إجراء",
+        "WARNING_ISSUED": "تحذير",
+        "CONTENT_REMOVED": "إزالة المحتوى",
+        "USER_SUSPENDED": "تعليق الحساب",
+        "USER_BANNED": "حظر الحساب",
+        "ESCALATED": "تصعيد"
+      },
+      "empty": "لا توجد بلاغات مطابقة للفلاتر.",
+      "section": {
+        "meta": "بيانات وصفية",
+        "target": "الهدف",
+        "reporter": "المُبلّغ",
+        "evidence": "أدلة",
+        "reason": "السبب",
+        "review": "المراجعة",
+        "details": "البلاغ",
+        "closed": "تم إغلاق هذا البلاغ ({status})."
+      },
+      "noEvidence": "لا توجد أدلة.",
+      "action": {
+        "review": "إرسال المراجعة",
+        "statusLabel": "الحالة الجديدة",
+        "resolutionLabel": "القرار (مطلوب عند الإغلاق)",
+        "notesLabel": "ملاحظات داخلية (اختياري)",
+        "notesPlaceholder": "تظهر للمشرفين فقط — تُحفظ في سجل التدقيق",
+        "submit": "تسجيل القرار",
+        "noResolution": "اختر القرار"
+      },
+      "confirm": {
+        "review": "تأكيد قرار المراجعة؟",
+        "submit": "هل تريد تسجيل هذا القرار؟"
+      },
+      "loadMore": "تحميل المزيد"
+    },
+    "analytics": {
+      "title": "التحليلات",
+      "subtitle": "نشاط المنصة كسلاسل زمنية خلال النافذة المختارة.",
+      "window": "آخر {days} يوماً",
+      "series": {
+        "signups": "التسجيلات",
+        "requests": "الطلبات",
+        "applications": "التقديمات",
+        "attempts": "محاولات الاختبارات",
+        "messages": "الرسائل",
+        "reports": "البلاغات"
+      },
+      "breakdown": {
+        "signupsByRole": "التسجيلات حسب الدور",
+        "requestsByStatus": "الطلبات حسب الحالة",
+        "reportsByStatus": "البلاغات حسب الحالة",
+        "total": "الإجمالي: {n}"
+      },
+      "empty": "لا يوجد نشاط في النافذة المحددة."
     }
   },
   "ads": {

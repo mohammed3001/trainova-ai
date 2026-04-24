@@ -13,23 +13,45 @@ import {
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import type { Request } from 'express';
 import {
+  adminAnalyticsRangeSchema,
+  adminListAttemptsQuerySchema,
   adminListCompaniesQuerySchema,
+  adminListConversationsQuerySchema,
+  adminListReportsQuerySchema,
+  adminListRequestsQuerySchema,
+  adminListTestsQuerySchema,
   adminListTrainersQuerySchema,
   adminListUsersQuerySchema,
   adminListVerificationQuerySchema,
+  adminLockConversationSchema,
+  adminRedactMessageSchema,
+  adminSetRequestFeaturedSchema,
+  adminSetRequestStatusSchema,
   adminSetUserRoleSchema,
   adminSetUserStatusSchema,
   adminSetVerifiedSchema,
+  reviewReportSchema,
   reviewVerificationSchema,
 } from '@trainova/shared';
 import type {
+  AdminAnalyticsRange,
+  AdminListAttemptsQuery,
   AdminListCompaniesQuery,
+  AdminListConversationsQuery,
+  AdminListReportsQuery,
+  AdminListRequestsQuery,
+  AdminListTestsQuery,
   AdminListTrainersQuery,
   AdminListUsersQuery,
   AdminListVerificationQuery,
+  AdminLockConversationInput,
+  AdminRedactMessageInput,
+  AdminSetRequestFeaturedInput,
+  AdminSetRequestStatusInput,
   AdminSetUserRoleInput,
   AdminSetUserStatusInput,
   AdminSetVerifiedInput,
+  ReviewReportInput,
   ReviewVerificationInput,
   UserRole,
 } from '@trainova/shared';
@@ -39,6 +61,8 @@ import { Roles } from '../auth/roles.decorator';
 import { CurrentUser, AuthUser } from '../auth/current-user.decorator';
 import { ZodValidationPipe } from '../common/zod-validation.pipe';
 import { AdminService, AdminContext } from './admin.service';
+import { AdminOpsService } from './admin-ops.service';
+import { AdminReportsService } from './admin-reports.service';
 import { VerificationService } from '../verification/verification.service';
 
 function clientIp(req: Request): string | null {
@@ -58,6 +82,8 @@ function ctx(user: AuthUser, req: Request): AdminContext {
 export class AdminController {
   constructor(
     private readonly admin: AdminService,
+    private readonly ops: AdminOpsService,
+    private readonly reports: AdminReportsService,
     private readonly verification: VerificationService,
   ) {}
 
@@ -201,12 +227,143 @@ export class AdminController {
     );
   }
 
-  // Legacy
+  // ---------------------------------------------------------------------------
+  // T5.B — job requests (admin view across all companies)
+  // ---------------------------------------------------------------------------
+
   @Get('requests')
-  requests() {
-    return this.admin.listRequests();
+  @UsePipes(new ZodValidationPipe(adminListRequestsQuerySchema))
+  listRequests(@Query() q: AdminListRequestsQuery) {
+    return this.ops.listRequests(q);
   }
 
+  @Get('requests/:id')
+  getRequest(@Param('id') id: string) {
+    return this.ops.getRequest(id);
+  }
+
+  @Patch('requests/:id/status')
+  @UsePipes(new ZodValidationPipe(adminSetRequestStatusSchema))
+  setRequestStatus(
+    @CurrentUser() user: AuthUser,
+    @Req() req: Request,
+    @Param('id') id: string,
+    @Body() body: AdminSetRequestStatusInput,
+  ) {
+    return this.ops.setRequestStatus(ctx(user, req), id, body.status, body.reason);
+  }
+
+  @Patch('requests/:id/featured')
+  @UsePipes(new ZodValidationPipe(adminSetRequestFeaturedSchema))
+  setRequestFeatured(
+    @CurrentUser() user: AuthUser,
+    @Req() req: Request,
+    @Param('id') id: string,
+    @Body() body: AdminSetRequestFeaturedInput,
+  ) {
+    return this.ops.setRequestFeatured(ctx(user, req), id, body.featured);
+  }
+
+  // ---------------------------------------------------------------------------
+  // T5.B — tests (admin view across all companies) + attempts
+  // ---------------------------------------------------------------------------
+
+  @Get('tests')
+  @UsePipes(new ZodValidationPipe(adminListTestsQuerySchema))
+  listTests(@Query() q: AdminListTestsQuery) {
+    return this.ops.listTests(q);
+  }
+
+  @Get('tests/:id')
+  getTest(@Param('id') id: string) {
+    return this.ops.getTest(id);
+  }
+
+  @Get('attempts')
+  @UsePipes(new ZodValidationPipe(adminListAttemptsQuerySchema))
+  listAttempts(@Query() q: AdminListAttemptsQuery) {
+    return this.ops.listAttempts(q);
+  }
+
+  @Get('attempts/:id')
+  getAttempt(@Param('id') id: string) {
+    return this.ops.getAttempt(id);
+  }
+
+  // ---------------------------------------------------------------------------
+  // T5.B — chat moderation (conversations + messages)
+  // ---------------------------------------------------------------------------
+
+  @Get('conversations')
+  @UsePipes(new ZodValidationPipe(adminListConversationsQuerySchema))
+  listConversations(@Query() q: AdminListConversationsQuery) {
+    return this.ops.listConversations(q);
+  }
+
+  @Get('conversations/:id')
+  getConversation(@Param('id') id: string) {
+    return this.ops.getConversation(id);
+  }
+
+  @Post('conversations/:id/lock')
+  @UsePipes(new ZodValidationPipe(adminLockConversationSchema))
+  lockConversation(
+    @CurrentUser() user: AuthUser,
+    @Req() req: Request,
+    @Param('id') id: string,
+    @Body() body: AdminLockConversationInput,
+  ) {
+    return this.ops.setConversationLocked(ctx(user, req), id, body.locked, body.reason);
+  }
+
+  @Post('messages/:id/redact')
+  @UsePipes(new ZodValidationPipe(adminRedactMessageSchema))
+  redactMessage(
+    @CurrentUser() user: AuthUser,
+    @Req() req: Request,
+    @Param('id') id: string,
+    @Body() body: AdminRedactMessageInput,
+  ) {
+    return this.ops.redactMessage(ctx(user, req), id, body.reason);
+  }
+
+  // ---------------------------------------------------------------------------
+  // T5.B — moderation reports queue
+  // ---------------------------------------------------------------------------
+
+  @Get('reports')
+  @UsePipes(new ZodValidationPipe(adminListReportsQuerySchema))
+  listReports(@Query() q: AdminListReportsQuery) {
+    return this.reports.listForAdmin(q);
+  }
+
+  @Get('reports/:id')
+  getReport(@Param('id') id: string) {
+    return this.reports.getForAdmin(id);
+  }
+
+  @Post('reports/:id/review')
+  @UsePipes(new ZodValidationPipe(reviewReportSchema))
+  reviewReport(
+    @CurrentUser() user: AuthUser,
+    @Req() req: Request,
+    @Param('id') id: string,
+    @Body() body: ReviewReportInput,
+  ) {
+    return this.reports.review(ctx(user, req), id, body);
+  }
+
+  // ---------------------------------------------------------------------------
+  // T5.B — analytics time-series
+  // ---------------------------------------------------------------------------
+
+  @Get('analytics')
+  @UsePipes(new ZodValidationPipe(adminAnalyticsRangeSchema))
+  analytics(@Query() q: AdminAnalyticsRange) {
+    return this.ops.analytics(q.days);
+  }
+
+  // Legacy helper kept for skill lookup widgets.
   @Get('skills')
   skills() {
     return this.admin.listSkills();

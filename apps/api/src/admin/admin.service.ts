@@ -527,19 +527,8 @@ export class AdminService {
   }
 
   // ---------------------------------------------------------------------------
-  // Legacy list helpers (pre-T5.A). Kept for callers in overview UI.
+  // Skill lookup (used by admin UI widgets).
   // ---------------------------------------------------------------------------
-
-  listRequests() {
-    return this.prisma.jobRequest.findMany({
-      orderBy: { createdAt: 'desc' },
-      take: 100,
-      include: {
-        company: { select: { name: true, slug: true } },
-        _count: { select: { applications: true } },
-      },
-    });
-  }
 
   listSkills() {
     return this.prisma.skill.findMany({ orderBy: { nameEn: 'asc' } });
