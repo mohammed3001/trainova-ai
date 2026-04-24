@@ -40,30 +40,30 @@ model User {
   createdAt       DateTime   @default(now())
   updatedAt       DateTime   @updatedAt
 
-  company                 Company?                  @relation("CompanyOwner")
-  companyMembers          CompanyMember[]
-  trainerProfile          TrainerProfile?
-  sessions                RefreshToken[]
-  applications            Application[]
-  sentMessages            Message[]                 @relation("MessageSender")
-  conversationsIn         ConversationParticipant[]
-  authoredReviews         Review[]                  @relation("ReviewAuthor")
-  targetReviews           Review[]                  @relation("ReviewTarget")
-  notifications           Notification[]
-  auditLogs               AuditLog[]
-  emailVerificationTokens EmailVerificationToken[]
-  passwordResetTokens     PasswordResetToken[]
-  modelCalls              ModelCall[]
-  stripeConnectAccount    StripeConnectAccount?
-  contractsAsTrainer      Contract[]                @relation("ContractTrainer")
-  payouts                 Payout[]
-  subscriptions           Subscription[]
-  adCampaignsOwned        AdCampaign[]              @relation("AdCampaignOwner")
-  adCampaignsReviewed     AdCampaign[]              @relation("AdCampaignReviewer")
-  verificationRequestsSubmitted VerificationRequest[] @relation("VerificationSubmitter")
-  verificationRequestsReviewed  VerificationRequest[] @relation("VerificationReviewer")
-  reportsFiled            Report[]                  @relation("ReportReporter")
-  reportsResolved         Report[]                  @relation("ReportResolver")
+  company                       Company?                  @relation("CompanyOwner")
+  companyMembers                CompanyMember[]
+  trainerProfile                TrainerProfile?
+  sessions                      RefreshToken[]
+  applications                  Application[]
+  sentMessages                  Message[]                 @relation("MessageSender")
+  conversationsIn               ConversationParticipant[]
+  authoredReviews               Review[]                  @relation("ReviewAuthor")
+  targetReviews                 Review[]                  @relation("ReviewTarget")
+  notifications                 Notification[]
+  auditLogs                     AuditLog[]
+  emailVerificationTokens       EmailVerificationToken[]
+  passwordResetTokens           PasswordResetToken[]
+  modelCalls                    ModelCall[]
+  stripeConnectAccount          StripeConnectAccount?
+  contractsAsTrainer            Contract[]                @relation("ContractTrainer")
+  payouts                       Payout[]
+  subscriptions                 Subscription[]
+  adCampaignsOwned              AdCampaign[]              @relation("AdCampaignOwner")
+  adCampaignsReviewed           AdCampaign[]              @relation("AdCampaignReviewer")
+  verificationRequestsSubmitted VerificationRequest[]     @relation("VerificationSubmitter")
+  verificationRequestsReviewed  VerificationRequest[]     @relation("VerificationReviewer")
+  reportsFiled                  Report[]                  @relation("ReportReporter")
+  reportsResolved               Report[]                  @relation("ReportResolver")
 
   @@index([role, status])
 }
@@ -564,13 +564,13 @@ model TestTaskResponse {
 // =========================
 
 model Conversation {
-  id          String    @id @default(cuid())
-  requestId   String?
-  lockedAt    DateTime?
-  lockedById  String?
-  lockReason  String?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  id         String    @id @default(cuid())
+  requestId  String?
+  lockedAt   DateTime?
+  lockedById String?
+  lockReason String?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
 
   request      JobRequest?               @relation(fields: [requestId], references: [id], onDelete: SetNull)
   participants ConversationParticipant[]
@@ -1054,10 +1054,13 @@ model Page {
   metaTitle       String?
   metaDescription String?
   status          String   @default("PUBLISHED")
+  /// Optional tag — e.g. "LEGAL" for /terms, /privacy (hidden from marketing nav).
+  kind            String   @default("PAGE")
   updatedAt       DateTime @updatedAt
   createdAt       DateTime @default(now())
 
   @@unique([slug, locale])
+  @@index([kind, status])
 }
 
 model Setting {
@@ -1065,6 +1068,77 @@ model Setting {
   value     Json
   group     String   @default("general")
   updatedAt DateTime @updatedAt
+}
+
+// =========================
+// CMS — blog + FAQ + feature flags
+// =========================
+
+enum ArticleStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+model Category {
+  id            String    @id @default(cuid())
+  slug          String    @unique
+  nameEn        String
+  nameAr        String
+  descriptionEn String?
+  descriptionAr String?
+  order         Int       @default(0)
+  articles      Article[]
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model Article {
+  id              String        @id @default(cuid())
+  slug            String
+  locale          String
+  title           String
+  excerpt         String?
+  content         String
+  coverUrl        String?
+  metaTitle       String?
+  metaDescription String?
+  status          ArticleStatus @default(DRAFT)
+  publishedAt     DateTime?
+  categoryId      String?
+  category        Category?     @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  authorId        String?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@unique([slug, locale])
+  @@index([status, publishedAt])
+  @@index([categoryId])
+}
+
+model FaqEntry {
+  id        String   @id @default(cuid())
+  locale    String
+  section   String   @default("GENERAL")
+  question  String
+  answer    String
+  order     Int      @default(0)
+  published Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([locale, section, order])
+  @@index([published])
+}
+
+model FeatureFlag {
+  key         String   @id
+  description String?
+  enabled     Boolean  @default(false)
+  /// JSON payload with optional variants / rollout percentage / audiences.
+  payload     Json?
+  updatedAt   DateTime @updatedAt
+  updatedBy   String?
 }
 
 // =========================
@@ -1149,20 +1223,20 @@ enum ReportResolution {
 }
 
 model Report {
-  id            String             @id @default(cuid())
+  id            String            @id @default(cuid())
   reporterId    String
   targetType    ReportTargetType
   targetId      String
   category      ReportCategory
   reason        String
-  evidenceUrls  String[]           @default([])
-  status        ReportStatus       @default(OPEN)
+  evidenceUrls  String[]          @default([])
+  status        ReportStatus      @default(OPEN)
   resolution    ReportResolution?
   resolverId    String?
   resolvedAt    DateTime?
   resolverNotes String?
-  createdAt     DateTime           @default(now())
-  updatedAt     DateTime           @updatedAt
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
 
   reporter User  @relation("ReportReporter", fields: [reporterId], references: [id], onDelete: Cascade)
   resolver User? @relation("ReportResolver", fields: [resolverId], references: [id], onDelete: SetNull)

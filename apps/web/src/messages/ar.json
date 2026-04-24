@@ -869,7 +869,12 @@
       "attempts": "المحاولات",
       "conversations": "الإشراف على الدردشة",
       "reports": "البلاغات",
-      "analytics": "التحليلات"
+      "analytics": "التحليلات",
+      "cmsPages": "الصفحات",
+      "cmsArticles": "المقالات",
+      "cmsCategories": "الأقسام",
+      "cmsFaqs": "الأسئلة الشائعة",
+      "featureFlags": "رايات الميزات"
     },
     "userRole": {
       "SUPER_ADMIN": "أدمن أعلى",
@@ -1203,6 +1208,170 @@
         "total": "الإجمالي: {n}"
       },
       "empty": "لا يوجد نشاط في النافذة المحددة."
+    },
+    "jsonAccordion": "بيانات JSON الخام",
+    "cms": {
+      "save": "حفظ",
+      "edit": "تعديل",
+      "delete": "حذف",
+      "empty": "لا يوجد شيء بعد. أضف أول عنصر للبدء.",
+      "loadMore": "تحميل المزيد",
+      "filter": {
+        "searchPlaceholder": "بحث…",
+        "allLocales": "كل اللغات",
+        "allStatuses": "كل الحالات",
+        "allKinds": "كل الأنواع",
+        "apply": "تطبيق"
+      },
+      "pageStatus": {
+        "DRAFT": "مسودة",
+        "PUBLISHED": "منشور"
+      },
+      "pageKind": {
+        "PAGE": "صفحة",
+        "LEGAL": "قانوني"
+      },
+      "articleStatus": {
+        "DRAFT": "مسودة",
+        "PUBLISHED": "منشور",
+        "ARCHIVED": "مؤرشف"
+      },
+      "pages": {
+        "title": "الصفحات",
+        "subtitle": "الصفحات العامة والإشعارات القانونية والمحتوى الثابت.",
+        "new": "صفحة جديدة",
+        "edit": "تعديل الصفحة",
+        "col": {
+          "title": "العنوان",
+          "slug": "الرابط",
+          "locale": "اللغة",
+          "kind": "النوع",
+          "status": "الحالة",
+          "updated": "آخر تحديث",
+          "actions": "إجراءات"
+        },
+        "field": {
+          "title": "العنوان",
+          "slug": "الرابط",
+          "locale": "اللغة",
+          "kind": "النوع",
+          "status": "الحالة",
+          "metaTitle": "عنوان SEO",
+          "metaDescription": "وصف SEO",
+          "content": "المحتوى (markdown / HTML)",
+          "contentHint": "يدعم markdown وHTML."
+        }
+      },
+      "articles": {
+        "title": "المدونة والمقالات",
+        "subtitle": "المحتوى التحريري المعروض في المدونة العامة وخريطة SEO.",
+        "new": "مقال جديد",
+        "edit": "تعديل المقال",
+        "noCategory": "— بدون قسم —",
+        "filter": {
+          "allCategories": "كل الأقسام"
+        },
+        "col": {
+          "title": "العنوان",
+          "slug": "الرابط",
+          "locale": "اللغة",
+          "status": "الحالة",
+          "category": "القسم",
+          "published": "النشر",
+          "actions": "إجراءات"
+        },
+        "field": {
+          "title": "العنوان",
+          "slug": "الرابط",
+          "locale": "اللغة",
+          "status": "الحالة",
+          "category": "القسم",
+          "coverUrl": "رابط صورة الغلاف",
+          "excerpt": "المقتطف",
+          "metaTitle": "عنوان SEO",
+          "metaDescription": "وصف SEO",
+          "content": "المحتوى (markdown / HTML)",
+          "contentHint": "المحتوى الطويل. يدعم markdown وHTML."
+        }
+      },
+      "categories": {
+        "title": "الأقسام",
+        "subtitle": "التصنيف المستخدم في المقالات والقوائم العامة.",
+        "new": "قسم جديد",
+        "edit": "تعديل القسم",
+        "col": {
+          "nameEn": "الاسم (EN)",
+          "nameAr": "الاسم (AR)",
+          "slug": "الرابط",
+          "order": "الترتيب",
+          "articles": "المقالات"
+        },
+        "field": {
+          "slug": "الرابط",
+          "order": "الترتيب",
+          "nameEn": "الاسم (EN)",
+          "nameAr": "الاسم (AR)",
+          "descriptionEn": "الوصف (EN)",
+          "descriptionAr": "الوصف (AR)"
+        }
+      },
+      "faqs": {
+        "title": "الأسئلة الشائعة",
+        "subtitle": "الأسئلة المتكررة مُجمَّعة حسب القسم واللغة.",
+        "new": "سؤال جديد",
+        "edit": "تعديل السؤال",
+        "col": {
+          "question": "السؤال",
+          "section": "القسم",
+          "locale": "اللغة",
+          "order": "الترتيب",
+          "published": "الحالة"
+        },
+        "field": {
+          "locale": "اللغة",
+          "section": "القسم",
+          "order": "الترتيب",
+          "question": "السؤال",
+          "answer": "الإجابة",
+          "published": "منشور"
+        },
+        "filter": {
+          "allSections": "كل الأقسام",
+          "anyPublished": "أي حالة",
+          "published": "منشور",
+          "unpublished": "مخفي"
+        },
+        "section": {
+          "GENERAL": "عام",
+          "COMPANIES": "الشركات",
+          "TRAINERS": "المدربون",
+          "PAYMENTS": "المدفوعات",
+          "TESTS": "الاختبارات",
+          "MODELS": "النماذج",
+          "ACCOUNT": "الحساب"
+        }
+      },
+      "featureFlags": {
+        "title": "رايات الميزات",
+        "subtitle": "تفعيل ميزات المنصة وإطلاق التجارب.",
+        "new": "راية جديدة",
+        "edit": "تعديل الراية",
+        "on": "مُفعَّل",
+        "off": "معطَّل",
+        "col": {
+          "key": "المفتاح",
+          "enabled": "الحالة",
+          "description": "الوصف",
+          "updated": "آخر تحديث"
+        },
+        "field": {
+          "key": "المفتاح",
+          "description": "الوصف",
+          "enabled": "مُفعَّل",
+          "payload": "Payload (JSON)",
+          "payloadHint": "كائن JSON اختياري يُمرَّر للعميل (مثلاً نسبة الإطلاق أو المتغيّر)."
+        }
+      }
     }
   },
   "ads": {

@@ -21,6 +21,11 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     { href: `/${locale}/admin/conversations`, label: t('admin.nav.conversations') },
     { href: `/${locale}/admin/reports`, label: t('admin.nav.reports') },
     { href: `/${locale}/admin/analytics`, label: t('admin.nav.analytics') },
+    { href: `/${locale}/admin/cms/pages`, label: t('admin.nav.cmsPages') },
+    { href: `/${locale}/admin/cms/articles`, label: t('admin.nav.cmsArticles') },
+    { href: `/${locale}/admin/cms/categories`, label: t('admin.nav.cmsCategories') },
+    { href: `/${locale}/admin/cms/faqs`, label: t('admin.nav.cmsFaqs') },
+    { href: `/${locale}/admin/cms/feature-flags`, label: t('admin.nav.featureFlags') },
   ];
 
   return (

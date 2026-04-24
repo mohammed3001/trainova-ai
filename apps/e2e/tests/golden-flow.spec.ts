@@ -300,10 +300,12 @@ test.describe('Golden E2E flow — 11 steps', () => {
     const tagNames = [...operationTags].sort();
     const expected = [
       'admin',
+      'admin-cms',
       'ads',
       'applications',
       'auth',
       'chat',
+      'cms',
       'companies',
       'health',
       'job-requests',
