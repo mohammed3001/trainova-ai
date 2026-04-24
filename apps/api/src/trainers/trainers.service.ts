@@ -34,8 +34,22 @@ export class TrainersService {
     const profile = await this.prisma.trainerProfile.findUnique({
       where: { slug },
       include: {
-        user: { select: { id: true, name: true, createdAt: true } },
-        skills: { include: { skill: true } },
+        user: { select: { id: true, name: true, avatarUrl: true, createdAt: true } },
+        skills: { include: { skill: true }, orderBy: { id: 'asc' } },
+        assets: {
+          where: { deletedAt: null },
+          orderBy: [{ order: 'asc' }, { createdAt: 'asc' }],
+          select: {
+            id: true,
+            kind: true,
+            url: true,
+            title: true,
+            mimeType: true,
+            byteLength: true,
+            order: true,
+            createdAt: true,
+          },
+        },
       },
     });
     if (!profile) throw new NotFoundException('Trainer not found');

@@ -197,6 +197,22 @@
     "rate": "Hourly rate",
     "noResults": "No trainers match your filters."
   },
+  "trainerProfile": {
+    "verified": "Verified",
+    "downloadCv": "Download CV (PDF)",
+    "website": "Website",
+    "about": "About",
+    "skills": "Skills",
+    "portfolio": "Portfolio",
+    "certifications": "Certifications",
+    "rate": "Hourly rate",
+    "hour": "hr",
+    "availability": "Availability",
+    "skillsCount": "Skills",
+    "memberSince": "Member since",
+    "responseWithin": "Responds within {hours}h",
+    "untitled": "Untitled"
+  },
   "profile": {
     "trainer": {
       "title": "My profile",
