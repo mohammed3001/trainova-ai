@@ -313,6 +313,7 @@ test.describe('Golden E2E flow — 11 steps', () => {
       'trainers',
       'uploads',
       'users',
+      'workbench',
     ];
     expect(tagNames).toEqual(expected);
 
