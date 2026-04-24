@@ -530,17 +530,188 @@
   },
   "admin": {
     "overview": "Overview",
-    "users": "Users",
-    "companies": "Companies",
-    "requests": "Requests",
-    "skills": "Skills",
-    "settings": "Settings",
+    "generatedAt": "Generated at",
+    "common": {
+      "verified": "Verified",
+      "unverified": "Unverified"
+    },
+    "nav": {
+      "title": "Admin panel",
+      "overview": "Overview",
+      "users": "Users",
+      "companies": "Companies",
+      "trainers": "Trainers",
+      "verification": "Verification",
+      "requests": "Requests"
+    },
     "kpi": {
       "users": "Total users",
+      "usersSub": "{active} active · {suspended} suspended",
       "companies": "Companies",
       "trainers": "Trainers",
       "requestsOpen": "Open requests",
-      "applications": "Applications"
+      "applications": "Applications",
+      "pendingVerifications": "Pending verifications",
+      "verifiedOf": "{verified} verified"
+    },
+    "userRole": {
+      "SUPER_ADMIN": "Super admin",
+      "ADMIN": "Admin",
+      "COMPANY_OWNER": "Company owner",
+      "COMPANY_MEMBER": "Company member",
+      "TRAINER": "Trainer"
+    },
+    "userStatus": {
+      "ACTIVE": "Active",
+      "SUSPENDED": "Suspended",
+      "PENDING": "Pending"
+    },
+    "users": {
+      "title": "Users",
+      "subtitle": "Manage every user account on the platform.",
+      "searchPlaceholder": "Search by name or email…",
+      "empty": "No users match the current filters.",
+      "open": "Open",
+      "loadMore": "Load more",
+      "emailVerified": "Email verified",
+      "emailUnverified": "Email unverified",
+      "lastLogin": "Last login",
+      "applications": "Applications",
+      "linkedCompany": "Linked company",
+      "linkedTrainer": "Linked trainer profile",
+      "noRelations": "No linked company or trainer profile.",
+      "suspensionHint": "Suspending a user revokes all active sessions.",
+      "filter": {
+        "apply": "Apply",
+        "allRoles": "All roles",
+        "allStatuses": "All statuses"
+      },
+      "col": {
+        "name": "Name",
+        "email": "Email",
+        "role": "Role",
+        "status": "Status",
+        "verified": "Email",
+        "created": "Created",
+        "actions": "Actions"
+      },
+      "section": {
+        "role": "Role",
+        "status": "Account status",
+        "email": "Email & password",
+        "relations": "Linked profiles"
+      },
+      "action": {
+        "saveRole": "Save role",
+        "saveStatus": "Save status",
+        "markVerified": "Mark email verified",
+        "resendVerify": "Resend verification email",
+        "resetPassword": "Send password reset"
+      },
+      "confirm": {
+        "role": "Change this user's role?",
+        "status": "Change this user's status? Suspending will sign them out everywhere.",
+        "markVerified": "Mark this user's email as verified?",
+        "resetPassword": "Send a password reset email to this user?"
+      }
+    },
+    "companies": {
+      "title": "Companies",
+      "subtitle": "Verify legitimate employers and manage their accounts.",
+      "searchPlaceholder": "Search by name, slug, or country…",
+      "empty": "No companies match the current filters.",
+      "openRequests": "{count, plural, =0 {No open requests} one {# open request} other {# open requests}}",
+      "ownerMissing": "No owner on record.",
+      "filter": {
+        "all": "All",
+        "verified": "Verified only",
+        "unverified": "Unverified only"
+      },
+      "action": {
+        "verify": "Verify company",
+        "unverify": "Remove verification"
+      },
+      "confirm": {
+        "verify": "Mark this company as verified?",
+        "unverify": "Remove verification from this company?"
+      },
+      "section": {
+        "details": "Details",
+        "owner": "Owner"
+      },
+      "field": {
+        "website": "Website",
+        "size": "Size",
+        "industry": "Industry",
+        "requests": "Requests"
+      }
+    },
+    "trainers": {
+      "title": "Trainers",
+      "subtitle": "Verify skills and manage trainer profiles.",
+      "searchPlaceholder": "Search by name, slug, or headline…",
+      "empty": "No trainers match the current filters.",
+      "noSkills": "No skills listed yet.",
+      "action": {
+        "verify": "Verify trainer",
+        "unverify": "Remove verification",
+        "viewPublic": "View public profile"
+      },
+      "confirm": {
+        "verify": "Mark this trainer as verified?",
+        "unverify": "Remove verification from this trainer?"
+      },
+      "section": {
+        "profile": "Profile",
+        "user": "User account",
+        "skills": "Skills",
+        "portfolio": "Portfolio"
+      },
+      "field": {
+        "rate": "Hourly rate",
+        "availability": "Availability",
+        "languages": "Languages"
+      }
+    },
+    "verification": {
+      "title": "Verification queue",
+      "subtitle": "Review identity and legitimacy submissions from companies and trainers.",
+      "empty": "Nothing to review right now.",
+      "noDocuments": "No documents were attached to this request.",
+      "approveHint": "Approving marks the target profile as verified.",
+      "rejectionReasonLabel": "Reason shown to the submitter",
+      "viewTarget": "Open target profile",
+      "targetDeleted": "Target profile no longer exists",
+      "status": {
+        "PENDING": "Pending",
+        "APPROVED": "Approved",
+        "REJECTED": "Rejected"
+      },
+      "targetType": {
+        "ALL": "All target types",
+        "COMPANY": "Company",
+        "TRAINER": "Trainer"
+      },
+      "col": {
+        "documents": "Documents",
+        "reviewer": "Reviewer",
+        "reviewedAt": "Reviewed"
+      },
+      "section": {
+        "submitter": "Submitter",
+        "documents": "Supporting documents",
+        "notes": "Submitter notes",
+        "rejectionReason": "Rejection reason",
+        "review": "Review"
+      },
+      "action": {
+        "approve": "Approve",
+        "reject": "Reject"
+      },
+      "confirm": {
+        "approve": "Approve this verification request? The target profile will be marked as verified.",
+        "reject": "Reject this verification request? The submitter will see the reason."
+      }
     }
   }
 }

@@ -15,6 +15,7 @@ import { ApplicationsModule } from './applications/applications.module';
 import { TestsModule } from './tests/tests.module';
 import { ChatModule } from './chat/chat.module';
 import { AdminModule } from './admin/admin.module';
+import { VerificationModule } from './verification/verification.module';
 import { PublicModule } from './public/public.module';
 import { UploadsModule } from './uploads/uploads.module';
 import { HealthController } from './health.controller';
@@ -37,6 +38,7 @@ import { HealthController } from './health.controller';
     ApplicationsModule,
     TestsModule,
     ChatModule,
+    VerificationModule,
     AdminModule,
     PublicModule,
     UploadsModule,

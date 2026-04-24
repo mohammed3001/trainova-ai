@@ -159,7 +159,7 @@ export class AuthService {
     return { verified: true };
   }
 
-  private async issueVerificationEmail(
+  async issueVerificationEmail(
     userId: string,
     email: string,
     name: string,

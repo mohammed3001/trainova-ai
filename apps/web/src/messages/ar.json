@@ -530,17 +530,188 @@
   },
   "admin": {
     "overview": "نظرة عامة",
-    "users": "المستخدمون",
-    "companies": "الشركات",
-    "requests": "الطلبات",
-    "skills": "المهارات",
-    "settings": "الإعدادات",
+    "generatedAt": "تم التوليد في",
+    "common": {
+      "verified": "موثّق",
+      "unverified": "غير موثّق"
+    },
+    "nav": {
+      "title": "لوحة الأدمن",
+      "overview": "نظرة عامة",
+      "users": "المستخدمون",
+      "companies": "الشركات",
+      "trainers": "المدربون",
+      "verification": "التوثيق",
+      "requests": "الطلبات"
+    },
     "kpi": {
       "users": "إجمالي المستخدمين",
+      "usersSub": "{active} نشط · {suspended} موقوف",
       "companies": "الشركات",
       "trainers": "المدربون",
       "requestsOpen": "الطلبات المفتوحة",
-      "applications": "التقديمات"
+      "applications": "التقديمات",
+      "pendingVerifications": "طلبات توثيق معلّقة",
+      "verifiedOf": "{verified} موثّق"
+    },
+    "userRole": {
+      "SUPER_ADMIN": "أدمن أعلى",
+      "ADMIN": "أدمن",
+      "COMPANY_OWNER": "مالك شركة",
+      "COMPANY_MEMBER": "عضو شركة",
+      "TRAINER": "مدرب"
+    },
+    "userStatus": {
+      "ACTIVE": "نشط",
+      "SUSPENDED": "موقوف",
+      "PENDING": "قيد الانتظار"
+    },
+    "users": {
+      "title": "المستخدمون",
+      "subtitle": "إدارة جميع حسابات المستخدمين على المنصة.",
+      "searchPlaceholder": "ابحث بالاسم أو البريد…",
+      "empty": "لا يوجد مستخدمون مطابقون للفلاتر الحالية.",
+      "open": "فتح",
+      "loadMore": "عرض المزيد",
+      "emailVerified": "بريد موثّق",
+      "emailUnverified": "بريد غير موثّق",
+      "lastLogin": "آخر دخول",
+      "applications": "التقديمات",
+      "linkedCompany": "الشركة المرتبطة",
+      "linkedTrainer": "ملف المدرب المرتبط",
+      "noRelations": "لا توجد شركة أو ملف مدرب مرتبط.",
+      "suspensionHint": "إيقاف المستخدم يلغي جميع الجلسات النشطة.",
+      "filter": {
+        "apply": "تطبيق",
+        "allRoles": "كل الأدوار",
+        "allStatuses": "كل الحالات"
+      },
+      "col": {
+        "name": "الاسم",
+        "email": "البريد",
+        "role": "الدور",
+        "status": "الحالة",
+        "verified": "البريد",
+        "created": "الإنشاء",
+        "actions": "إجراءات"
+      },
+      "section": {
+        "role": "الدور",
+        "status": "حالة الحساب",
+        "email": "البريد وكلمة المرور",
+        "relations": "الملفات المرتبطة"
+      },
+      "action": {
+        "saveRole": "حفظ الدور",
+        "saveStatus": "حفظ الحالة",
+        "markVerified": "اعتبار البريد موثّقًا",
+        "resendVerify": "إعادة إرسال بريد التوثيق",
+        "resetPassword": "إرسال إعادة تعيين كلمة المرور"
+      },
+      "confirm": {
+        "role": "هل تريد تغيير دور هذا المستخدم؟",
+        "status": "تغيير حالة هذا المستخدم؟ الإيقاف يسجّل خروجه من كل الأماكن.",
+        "markVerified": "اعتبار بريد هذا المستخدم موثّقًا؟",
+        "resetPassword": "إرسال بريد إعادة تعيين كلمة المرور لهذا المستخدم؟"
+      }
+    },
+    "companies": {
+      "title": "الشركات",
+      "subtitle": "توثيق الشركات وإدارة حساباتها.",
+      "searchPlaceholder": "ابحث بالاسم أو المعرّف أو الدولة…",
+      "empty": "لا توجد شركات مطابقة للفلاتر الحالية.",
+      "openRequests": "{count, plural, =0 {لا طلبات مفتوحة} one {# طلب مفتوح} two {طلبان مفتوحان} few {# طلبات مفتوحة} many {# طلبًا مفتوحًا} other {# طلب مفتوح}}",
+      "ownerMissing": "لا يوجد مالك مسجّل.",
+      "filter": {
+        "all": "الكل",
+        "verified": "الموثّقة فقط",
+        "unverified": "غير الموثّقة فقط"
+      },
+      "action": {
+        "verify": "توثيق الشركة",
+        "unverify": "إلغاء التوثيق"
+      },
+      "confirm": {
+        "verify": "اعتبار هذه الشركة موثّقة؟",
+        "unverify": "إلغاء توثيق هذه الشركة؟"
+      },
+      "section": {
+        "details": "التفاصيل",
+        "owner": "المالك"
+      },
+      "field": {
+        "website": "الموقع",
+        "size": "الحجم",
+        "industry": "القطاع",
+        "requests": "الطلبات"
+      }
+    },
+    "trainers": {
+      "title": "المدربون",
+      "subtitle": "توثيق المهارات وإدارة ملفات المدربين.",
+      "searchPlaceholder": "ابحث بالاسم أو المعرّف أو العنوان…",
+      "empty": "لا يوجد مدربون مطابقون للفلاتر الحالية.",
+      "noSkills": "لا توجد مهارات مسجّلة بعد.",
+      "action": {
+        "verify": "توثيق المدرب",
+        "unverify": "إلغاء التوثيق",
+        "viewPublic": "عرض الملف العام"
+      },
+      "confirm": {
+        "verify": "اعتبار هذا المدرب موثّقًا؟",
+        "unverify": "إلغاء توثيق هذا المدرب؟"
+      },
+      "section": {
+        "profile": "الملف",
+        "user": "حساب المستخدم",
+        "skills": "المهارات",
+        "portfolio": "نماذج الأعمال"
+      },
+      "field": {
+        "rate": "السعر بالساعة",
+        "availability": "التوافر",
+        "languages": "اللغات"
+      }
+    },
+    "verification": {
+      "title": "قائمة التوثيق",
+      "subtitle": "راجع طلبات توثيق الهوية والأهلية من الشركات والمدربين.",
+      "empty": "لا يوجد شيء للمراجعة الآن.",
+      "noDocuments": "لم تُرفق مستندات مع هذا الطلب.",
+      "approveHint": "الموافقة تعلّم الملف المستهدف كموثّق.",
+      "rejectionReasonLabel": "السبب الذي سيظهر لمقدّم الطلب",
+      "viewTarget": "فتح الملف المستهدف",
+      "targetDeleted": "الملف المستهدف لم يعد موجودًا",
+      "status": {
+        "PENDING": "قيد الانتظار",
+        "APPROVED": "مقبول",
+        "REJECTED": "مرفوض"
+      },
+      "targetType": {
+        "ALL": "كل الأنواع",
+        "COMPANY": "شركة",
+        "TRAINER": "مدرب"
+      },
+      "col": {
+        "documents": "المستندات",
+        "reviewer": "المراجع",
+        "reviewedAt": "تاريخ المراجعة"
+      },
+      "section": {
+        "submitter": "مقدّم الطلب",
+        "documents": "المستندات الداعمة",
+        "notes": "ملاحظات مقدّم الطلب",
+        "rejectionReason": "سبب الرفض",
+        "review": "المراجعة"
+      },
+      "action": {
+        "approve": "قبول",
+        "reject": "رفض"
+      },
+      "confirm": {
+        "approve": "قبول طلب التوثيق؟ سيُعتبر الملف المستهدف موثّقًا.",
+        "reject": "رفض طلب التوثيق؟ سيظهر السبب لمقدّم الطلب."
+      }
     }
   }
 }
