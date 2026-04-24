@@ -236,7 +236,6 @@ export class AdminReportsService {
   }
 
   async review(ctx: AdminContext, id: string, body: ReviewReportInput) {
-    // Atomic claim: only a PENDING/OPEN/INVESTIGATING report may transition.
     const current = await this.prisma.report.findUnique({
       where: { id },
       select: { id: true, status: true, resolution: true },
@@ -251,8 +250,13 @@ export class AdminReportsService {
     }
 
     return this.prisma.$transaction(async (tx) => {
-      const updated = await tx.report.update({
-        where: { id },
+      // Atomic claim: only a not-yet-closed report may transition. Collapsing
+      // the status check and the update into a single `updateMany` ensures
+      // two admins reviewing the same report concurrently can't both succeed
+      // under PostgreSQL READ COMMITTED — the loser gets `count: 0` and the
+      // next statement throws. Mirrors the pattern in VerificationService.review.
+      const claim = await tx.report.updateMany({
+        where: { id, status: { notIn: ['RESOLVED', 'DISMISSED'] } },
         data: {
           status: body.status,
           resolution: body.resolution ?? null,
@@ -260,6 +264,12 @@ export class AdminReportsService {
           resolverId: terminal ? ctx.actorId : null,
           resolvedAt: terminal ? new Date() : null,
         },
+      });
+      if (claim.count === 0) {
+        throw new BadRequestException('Report already closed');
+      }
+      const updated = await tx.report.findUniqueOrThrow({
+        where: { id },
         select: {
           id: true,
           status: true,
