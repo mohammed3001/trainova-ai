@@ -109,16 +109,20 @@ export class ApplicationsService {
       select: { name: true },
     });
     if (withCompany?.company.ownerId) {
-      await this.notifications.emit({
-        userId: withCompany.company.ownerId,
-        type: 'application.received',
-        payload: {
-          title: `New application on "${withCompany.title}"`,
-          body: `${trainerUser?.name ?? 'A trainer'} applied to your request.`,
-          href: `/company/requests/${withCompany.slug}/applications/${created.id}`,
-          meta: { applicationId: created.id, requestSlug: withCompany.slug },
-        },
-      });
+      try {
+        await this.notifications.emit({
+          userId: withCompany.company.ownerId,
+          type: 'application.received',
+          payload: {
+            title: `New application on "${withCompany.title}"`,
+            body: `${trainerUser?.name ?? 'A trainer'} applied to your request.`,
+            href: `/company/requests/${withCompany.slug}/applications/${created.id}`,
+            meta: { applicationId: created.id, requestSlug: withCompany.slug },
+          },
+        });
+      } catch {
+        /* swallow — application already persisted, notification is best-effort */
+      }
     }
     return created;
   }
@@ -194,7 +198,17 @@ export class ApplicationsService {
 
       return tx.application.findUniqueOrThrow({ where: { id: applicationId } });
     }).then(async (updated) => {
-      await this.notifyTrainerOfStatus(app.trainerId, updated.id, toStatus, app.request.title, app.request.slug);
+      try {
+        await this.notifyTrainerOfStatus(
+          app.trainerId,
+          updated.id,
+          toStatus,
+          app.request.title,
+          app.request.slug,
+        );
+      } catch {
+        /* swallow — status change is authoritative */
+      }
       return updated;
     });
   }
@@ -310,16 +324,20 @@ export class ApplicationsService {
       /* swallow — status change is authoritative */
     }
 
-    await this.notifications.emit({
-      userId: app.trainerId,
-      type: 'test.assigned',
-      payload: {
-        title: `Test assigned for "${app.request.title}"`,
-        body: 'Open your application to start the evaluation.',
-        href: `/trainer/applications/${applicationId}/test`,
-        meta: { applicationId, testId, requestSlug: app.request.slug },
-      },
-    });
+    try {
+      await this.notifications.emit({
+        userId: app.trainerId,
+        type: 'test.assigned',
+        payload: {
+          title: `Test assigned for "${app.request.title}"`,
+          body: 'Open your application to start the evaluation.',
+          href: `/trainer/applications/${applicationId}/test`,
+          meta: { applicationId, testId, requestSlug: app.request.slug },
+        },
+      });
+    } catch {
+      /* swallow — status change is authoritative */
+    }
 
     return this.prisma.application.findUniqueOrThrow({ where: { id: applicationId } });
   }

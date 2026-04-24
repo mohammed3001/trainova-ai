@@ -260,20 +260,27 @@ export class ChatService {
     const preview = message.body.slice(0, 140);
     for (const p of participants) {
       if (p.userId === userId) continue;
-      await this.notifications.emit({
-        userId: p.userId,
-        type: 'chat.message',
-        payload: {
-          title: `New message from ${senderName}`,
-          body: preview,
-          href: `/chat/${input.conversationId}`,
-          meta: {
-            conversationId: input.conversationId,
-            messageId: message.id,
-            senderId: userId,
+      // Best-effort per recipient: the message is already persisted and
+      // broadcast via WebSocket. A Prisma failure on one notification row
+      // must not surface a 500 or skip remaining recipients.
+      try {
+        await this.notifications.emit({
+          userId: p.userId,
+          type: 'chat.message',
+          payload: {
+            title: `New message from ${senderName}`,
+            body: preview,
+            href: `/chat/${input.conversationId}`,
+            meta: {
+              conversationId: input.conversationId,
+              messageId: message.id,
+              senderId: userId,
+            },
           },
-        },
-      });
+        });
+      } catch {
+        /* non-fatal — message already persisted + broadcast */
+      }
     }
 
     return message;
