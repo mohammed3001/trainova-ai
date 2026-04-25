@@ -16,6 +16,13 @@ import {
   getNotificationsSocket,
   type NotificationNewEvent,
 } from '@/lib/notifications-socket';
+import {
+  disablePush,
+  enablePush,
+  fetchPushBootstrap,
+  isPushSupported,
+  isSubscribed,
+} from '@/lib/push-client';
 
 type TypeLabels = Record<NotificationType, string>;
 
@@ -69,6 +76,11 @@ export function NotificationsBell({ locale: localeProp, initialUnread = 0 }: Pro
   const [items, setItems] = useState<NotificationItem[]>([]);
   const [unread, setUnread] = useState<number>(initialUnread);
   const [loaded, setLoaded] = useState(false);
+  const [pushSupported, setPushSupported] = useState(false);
+  const [pushAvailable, setPushAvailable] = useState(false);
+  const [pushPubKey, setPushPubKey] = useState<string | null>(null);
+  const [pushOn, setPushOn] = useState(false);
+  const [pushBusy, setPushBusy] = useState(false);
   const wrapRef = useRef<HTMLDivElement | null>(null);
   const socketRef = useRef<Socket | null>(null);
 
@@ -140,6 +152,42 @@ export function NotificationsBell({ locale: localeProp, initialUnread = 0 }: Pro
   useEffect(() => {
     if (open && !loaded && !loading) void fetchData();
   }, [open, loaded, loading, fetchData]);
+
+  // Push capability probe — runs once on mount. Server says whether
+  // VAPID is configured (`enabled`); browser tells us whether the user
+  // already subscribed in a previous session.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const supported = isPushSupported();
+      if (!supported) return;
+      const boot = await fetchPushBootstrap();
+      if (cancelled) return;
+      setPushSupported(true);
+      setPushAvailable(!!boot.enabled && !!boot.publicKey);
+      setPushPubKey(boot.publicKey);
+      setPushOn(await isSubscribed());
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const handleTogglePush = useCallback(async () => {
+    if (pushBusy) return;
+    setPushBusy(true);
+    try {
+      if (pushOn) {
+        await disablePush();
+        setPushOn(false);
+      } else if (pushPubKey) {
+        const r = await enablePush(pushPubKey);
+        setPushOn(r.ok);
+      }
+    } finally {
+      setPushBusy(false);
+    }
+  }, [pushBusy, pushOn, pushPubKey]);
 
   const handleMarkAll = useCallback(async () => {
     try {
@@ -231,6 +279,43 @@ export function NotificationsBell({ locale: localeProp, initialUnread = 0 }: Pro
               {t('markAllRead')}
             </button>
           </div>
+
+          {pushSupported && pushAvailable ? (
+            <div
+              className="flex items-center justify-between gap-2 border-b border-slate-100 bg-white/70 px-4 py-2"
+              data-testid="notifications-push-row"
+            >
+              <div className="min-w-0">
+                <p className="text-[11px] font-medium text-slate-700">
+                  {t('push.title')}
+                </p>
+                <p className="truncate text-[10px] text-slate-500">
+                  {pushOn ? t('push.on') : t('push.off')}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => void handleTogglePush()}
+                disabled={pushBusy}
+                aria-pressed={pushOn}
+                className={`relative inline-flex h-5 w-9 shrink-0 items-center rounded-full transition ${
+                  pushOn
+                    ? 'bg-gradient-to-r from-indigo-500 to-fuchsia-500'
+                    : 'bg-slate-300'
+                } disabled:opacity-50`}
+                data-testid="notifications-push-toggle"
+              >
+                <span
+                  className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition ${
+                    pushOn ? 'translate-x-4 rtl:-translate-x-4' : 'translate-x-1 rtl:-translate-x-1'
+                  }`}
+                />
+                <span className="sr-only">
+                  {pushOn ? t('push.disable') : t('push.enable')}
+                </span>
+              </button>
+            </div>
+          ) : null}
 
           <div className="max-h-[26rem] overflow-y-auto" data-testid="notifications-list">
             {loading && !loaded ? (

@@ -34,7 +34,7 @@ export interface NotificationList {
 // they must route through the Next.js proxy route handler (which forwards
 // the auth cookie server-side) rather than `authedFetch`, which reads
 // `cookies()` from `next/headers` and would throw in the browser.
-async function proxyJson<T>(path: string, init?: RequestInit): Promise<T> {
+export async function proxyJson<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(`/api/proxy${path}`, {
     ...init,
     credentials: 'same-origin',

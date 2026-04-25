@@ -3,6 +3,7 @@ import { Prisma } from '@trainova/db';
 import { PrismaService } from '../prisma/prisma.service';
 import { NotificationsGateway } from './notifications.gateway';
 import { EmailService } from '../email/email.service';
+import { PushService } from './push.service';
 
 export type NotificationType =
   // Applications
@@ -45,6 +46,7 @@ export class NotificationsService {
     @Inject(forwardRef(() => NotificationsGateway))
     private readonly gateway: NotificationsGateway,
     private readonly email: EmailService,
+    private readonly push: PushService,
   ) {}
 
   async emit(args: EmitArgs) {
@@ -62,6 +64,14 @@ export class NotificationsService {
       readAt: row.readAt ? row.readAt.toISOString() : null,
       createdAt: row.createdAt.toISOString(),
     });
+
+    // Fan-out to browser Web Push subscriptions. Best-effort: the
+    // Notification row + WebSocket push are already authoritative, so a
+    // failure on a single endpoint (or VAPID being unconfigured) must
+    // not surface to the caller.
+    this.push
+      .sendToUser(args.userId, args.type, args.payload)
+      .catch(() => undefined);
 
     if (args.email) {
       const user = await this.prisma.user.findUnique({

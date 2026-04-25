@@ -55,6 +55,7 @@ model User {
   authoredReviews               Review[]                  @relation("ReviewAuthor")
   targetReviews                 Review[]                  @relation("ReviewTarget")
   notifications                 Notification[]
+  pushSubscriptions             PushSubscription[]
   auditLogs                     AuditLog[]
   emailVerificationTokens       EmailVerificationToken[]
   passwordResetTokens           PasswordResetToken[]
@@ -662,6 +663,26 @@ model Notification {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, readAt])
+}
+
+/// Browser Web Push subscription. One row per (user, endpoint) pair —
+/// a single user can have multiple devices/browsers each with their own
+/// endpoint. Stored encrypted-at-rest by Postgres; the keys are required
+/// by the web-push protocol (RFC 8291) to encrypt the payload before it
+/// reaches the user agent.
+model PushSubscription {
+  id        String   @id @default(cuid())
+  userId    String
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+  userAgent String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }
 
 // =========================

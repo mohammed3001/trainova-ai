@@ -17,7 +17,6 @@ import { ChatModule } from './chat/chat.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { AdminModule } from './admin/admin.module';
 import { CmsModule } from './cms/cms.module';
-import { VerificationModule } from './verification/verification.module';
 import { PublicModule } from './public/public.module';
 import { UploadsModule } from './uploads/uploads.module';
 import { ModelsModule } from './models/models.module';
