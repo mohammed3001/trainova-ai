@@ -101,7 +101,10 @@ export class TeamService {
     // through a previous accept) — the company would end up with two slots
     // for the same human and surprising role-resolution behavior.
     const existingMember = await this.prisma.companyMember.findFirst({
-      where: { companyId: company.id, user: { email: body.email } },
+      where: {
+        companyId: company.id,
+        user: { email: { equals: body.email, mode: 'insensitive' } },
+      },
       select: { id: true },
     });
     if (existingMember || company.owner.email.toLowerCase() === body.email) {
@@ -341,26 +344,52 @@ export class TeamService {
   /**
    * Resolve the caller's effective role on a company. Owners are mapped
    * to a synthetic `OWNER` row even though they don't have a
-   * `CompanyMember` record. If `companyId` is omitted we look up the
-   * caller's own (owned) company, which is the entry point for the
-   * settings UI.
+   * `CompanyMember` record. If `companyId` is omitted we resolve the
+   * caller's company by first checking ownership, then falling back to
+   * any `CompanyMember` row for the caller — so non-owner members
+   * (ADMIN/RECRUITER/VIEWER) can hit the team settings UI without
+   * needing to know their company id.
    */
   private async requireMembership(
     callerId: string,
     allowed: CompanyMemberRole[],
     companyId?: string,
   ): Promise<{ company: { id: string; name: string; ownerId: string; owner: { email: string } }; callerRole: CompanyMemberRole }> {
-    const company = companyId
-      ? await this.prisma.company.findUnique({
-          where: { id: companyId },
-          select: { id: true, name: true, ownerId: true, owner: { select: { email: true } } },
-        })
-      : await this.prisma.company.findUnique({
-          where: { ownerId: callerId },
-          select: { id: true, name: true, ownerId: true, owner: { select: { email: true } } },
+    const companySelect = {
+      id: true,
+      name: true,
+      ownerId: true,
+      owner: { select: { email: true } },
+    } satisfies Prisma.CompanySelect;
+
+    let company: Prisma.CompanyGetPayload<{ select: typeof companySelect }> | null;
+    if (companyId) {
+      company = await this.prisma.company.findUnique({
+        where: { id: companyId },
+        select: companySelect,
+      });
+    } else {
+      company = await this.prisma.company.findUnique({
+        where: { ownerId: callerId },
+        select: companySelect,
+      });
+      if (!company) {
+        const membership = await this.prisma.companyMember.findFirst({
+          where: { userId: callerId },
+          select: { companyId: true },
         });
+        if (membership) {
+          company = await this.prisma.company.findUnique({
+            where: { id: membership.companyId },
+            select: companySelect,
+          });
+        }
+      }
+    }
     if (!company) {
-      throw new NotFoundException(companyId ? 'Company not found' : 'You do not own a company');
+      throw new NotFoundException(
+        companyId ? 'Company not found' : 'You are not a member of any company',
+      );
     }
 
     let role: CompanyMemberRole;
