@@ -142,7 +142,30 @@ export class PaymentsService {
         companyOwner.taxProfile.taxIdVerified
       ),
     });
-    const contractSplit = computeTaxInclusive(total, resolvedTax.rateBps);
+    // Compute each milestone's inclusive split first, then derive the
+    // contract aggregates as the sum of those splits. Computing the
+    // contract split independently from `total` causes integer-rounding
+    // drift (e.g. two 333¢ milestones at 15% VAT round to 290/43 each
+    // → 580/86, but the contract total 666 rounds to 578/88). Summing
+    // the parts keeps the contract-level DTO fields and the milestone
+    // list internally consistent.
+    const milestoneData = input.milestones.map((m, idx) => {
+      const msSplit = computeTaxInclusive(m.amountCents, resolvedTax.rateBps);
+      return {
+        title: m.title,
+        description: m.description ?? null,
+        amountCents: m.amountCents,
+        subtotalCents: msSplit.subtotalCents,
+        taxAmountCents: msSplit.taxAmountCents,
+        order: idx,
+        dueDate: m.dueDate ? new Date(m.dueDate) : null,
+      };
+    });
+    const contractSubtotal = milestoneData.reduce(
+      (sum, m) => sum + m.subtotalCents,
+      0,
+    );
+    const contractTax = total - contractSubtotal;
 
     const contract = await this.prisma.contract.create({
       data: {
@@ -153,29 +176,16 @@ export class PaymentsService {
         description: input.description ?? null,
         currency: input.currency,
         totalAmountCents: total,
-        subtotalAmountCents: contractSplit.subtotalCents,
+        subtotalAmountCents: contractSubtotal,
         taxRateBps: resolvedTax.rateBps,
-        taxAmountCents: contractSplit.taxAmountCents,
+        taxAmountCents: contractTax,
         taxLabel: resolvedTax.label || null,
         taxNote: resolvedTax.note,
         reverseCharge: resolvedTax.reverseCharge,
         platformFeeBps: input.platformFeeBps ?? 1000,
         status: 'ACTIVE',
         acceptedAt: new Date(),
-        milestones: {
-          create: input.milestones.map((m, idx) => {
-            const msSplit = computeTaxInclusive(m.amountCents, resolvedTax.rateBps);
-            return {
-              title: m.title,
-              description: m.description ?? null,
-              amountCents: m.amountCents,
-              subtotalCents: msSplit.subtotalCents,
-              taxAmountCents: msSplit.taxAmountCents,
-              order: idx,
-              dueDate: m.dueDate ? new Date(m.dueDate) : null,
-            };
-          }),
-        },
+        milestones: { create: milestoneData },
       },
       include: this.contractInclude,
     });
