@@ -778,6 +778,12 @@
       "fundFailed": "تعذّر تمويل هذه المرحلة.",
       "releaseFailed": "تعذّر الإفراج عن هذه المرحلة.",
       "refundFailed": "تعذّر استرداد هذه المرحلة."
+    },
+    "actions": {
+      "label": "إجراءات العقد",
+      "leaveReview": "اترك تقييماً",
+      "raiseDispute": "رفع نزاع",
+      "viewDisputes": "نزاعاتي"
     }
   },
   "payments": {
@@ -1833,5 +1839,119 @@
     "saved": "تم حفظ التفضيلات.",
     "errorGeneric": "تعذّر حفظ التفضيلات. أعد المحاولة.",
     "fxStaleWarning": "أسعار التحويل غير متاحة مؤقتاً؛ تُعرض المبالغ بعملتها الأصلية."
+  },
+  "reviews": {
+    "profile": {
+      "title": "تقييمات موثَّقة من عقود",
+      "subtitle": "آراء العملاء بعد إكمال العقود.",
+      "empty": "لا توجد تقييمات بعد — كن أول من يتعاقد ويقيّم هذا المدرب.",
+      "average": "{rating} / 5",
+      "count": "{count, plural, =0 {لا تقييمات} =1 {تقييم واحد} =2 {تقييمان} few {# تقييمات} many {# تقييماً} other {# تقييم}}",
+      "verifiedBadge": "تقييم موثَّق من عقد",
+      "byOnContract": "بقلم {author} · العقد: {contract}",
+      "by": "بقلم {author}",
+      "starsAria": "{rating} من 5 نجوم"
+    },
+    "submit": {
+      "title": "اكتب تقييماً",
+      "intro": "شارك تجربتك مع {counterparty} في عقد \"{contract}\".",
+      "ratingLabel": "التقييم العام",
+      "commentLabel": "تعليق (اختياري)",
+      "commentPlaceholder": "ما الذي تميَّز؟ وما الذي يمكن تحسينه؟",
+      "submit": "إرسال التقييم",
+      "cancel": "إلغاء",
+      "submittedAt": "أُرسل في {at}",
+      "alreadySubmitted": "لقد قمت بتقييم هذا العقد بالفعل.",
+      "errorGeneric": "تعذّر إرسال التقييم. حاول مجدداً."
+    },
+    "eligible": {
+      "heading": "تقييمات بانتظار كتابتها",
+      "empty": "لا توجد عقود مكتملة بانتظار تقييمك.",
+      "completedAt": "اكتمل في {at}",
+      "openForm": "اكتب تقييماً",
+      "alreadyDone": "تم إرسال التقييم"
+    }
+  },
+  "disputes": {
+    "raise": {
+      "title": "افتح نزاعاً",
+      "intro": "صف المشكلة بوضوح. سيقوم أحد المسؤولين بالمراجعة واتخاذ القرار.",
+      "reasonLabel": "السبب",
+      "reasons": {
+        "PAYMENT_NOT_RELEASED": "الدفعة لم تُفرَج",
+        "WORK_NOT_DELIVERED": "العمل لم يُسلَّم",
+        "QUALITY_ISSUE": "مشكلة جودة",
+        "COMMUNICATION_BREAKDOWN": "انقطاع التواصل",
+        "SCOPE_DISAGREEMENT": "خلاف على نطاق العمل",
+        "OTHER": "غير ذلك"
+      },
+      "descriptionLabel": "ماذا حدث؟",
+      "descriptionPlaceholder": "أدرج التواريخ والمبالغ وأي سياق ذي صلة (10 أحرف على الأقل).",
+      "evidenceLabel": "روابط أدلة (اختياري)",
+      "evidencePlaceholder": "https://… رابط واحد في كل سطر",
+      "submit": "افتح النزاع",
+      "cancel": "إلغاء",
+      "errorGeneric": "تعذّر فتح النزاع. حاول مجدداً.",
+      "errorActiveExists": "يوجد نزاع نشط بالفعل لهذا العقد."
+    },
+    "list": {
+      "title": "النزاعات",
+      "subtitle": "النزاعات النشطة والمحلولة التي أنت طرف فيها.",
+      "empty": "لا توجد نزاعات.",
+      "raisedAt": "فُتح في {at}",
+      "resolvedAt": "حُلّ في {at}",
+      "view": "عرض",
+      "filterStatus": "تصفية حسب الحالة",
+      "all": "الكل"
+    },
+    "detail": {
+      "title": "نزاع على {contract}",
+      "raisedBy": "فتحه {name} ({role})",
+      "reason": "السبب",
+      "description": "الوصف",
+      "evidence": "الأدلة",
+      "noEvidence": "لا توجد أدلة مرفقة.",
+      "resolution": "القرار",
+      "noResolution": "بانتظار قرار المسؤول.",
+      "withdraw": "سحب النزاع",
+      "withdrawConfirm": "هل تريد سحب هذا النزاع؟ يمكنك فتح نزاع جديد لاحقاً.",
+      "withdrawn": "تم سحب النزاع."
+    },
+    "status": {
+      "OPEN": "مفتوح",
+      "UNDER_REVIEW": "قيد المراجعة",
+      "RESOLVED_FOR_TRAINER": "حُسم لصالح المدرب",
+      "RESOLVED_FOR_COMPANY": "حُسم لصالح الشركة",
+      "REJECTED": "مرفوض",
+      "WITHDRAWN": "مسحوب"
+    },
+    "role": {
+      "COMPANY": "شركة",
+      "TRAINER": "مدرب"
+    },
+    "admin": {
+      "title": "طابور النزاعات",
+      "subtitle": "حسم النزاعات المفتوحة والنشطة عبر المنصة.",
+      "empty": "لا توجد نزاعات تطابق التصفية الحالية.",
+      "openCount": "{count} مفتوح",
+      "underReviewCount": "{count} قيد المراجعة",
+      "resolvedCount": "{count} محسوم",
+      "queueLink": "النزاعات المفتوحة",
+      "review": "مراجعة",
+      "resolve": {
+        "title": "حسم النزاع",
+        "statusLabel": "النتيجة",
+        "statusOptions": {
+          "UNDER_REVIEW": "وضع تحت المراجعة",
+          "RESOLVED_FOR_TRAINER": "حسم لصالح المدرب",
+          "RESOLVED_FOR_COMPANY": "حسم لصالح الشركة",
+          "REJECTED": "رفض (بلا أساس)"
+        },
+        "resolutionLabel": "مذكرة القرار",
+        "resolutionPlaceholder": "وضّح المبررات (10 أحرف على الأقل لأي قرار نهائي).",
+        "submit": "تطبيق القرار",
+        "errorGeneric": "تعذّر تطبيق القرار. حاول مجدداً."
+      }
+    }
   }
 }

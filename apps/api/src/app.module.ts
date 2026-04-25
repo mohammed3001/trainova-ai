@@ -27,6 +27,8 @@ import { SettingsModule } from './settings/settings.module';
 import { FeatureFlagsModule } from './feature-flags/feature-flags.module';
 import { MatchingModule } from './matching/matching.module';
 import { CurrencyModule } from './currency/currency.module';
+import { ReviewsModule } from './reviews/reviews.module';
+import { DisputesModule } from './disputes/disputes.module';
 import { HealthController } from './health.controller';
 
 @Module({
@@ -60,6 +62,8 @@ import { HealthController } from './health.controller';
     FeatureFlagsModule,
     MatchingModule,
     CurrencyModule,
+    ReviewsModule,
+    DisputesModule,
   ],
   controllers: [HealthController],
   providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],

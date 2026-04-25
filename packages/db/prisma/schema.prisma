@@ -70,6 +70,8 @@ model User {
   reportsFiled                  Report[]                  @relation("ReportReporter")
   reportsResolved               Report[]                  @relation("ReportResolver")
   emailTemplatesUpdated         EmailTemplate[]           @relation("EmailTemplateUpdatedBy")
+  disputesRaised                Dispute[]                 @relation("DisputeRaiser")
+  disputesResolved              Dispute[]                 @relation("DisputeResolver")
 
   @@index([role, status])
 }
@@ -621,19 +623,26 @@ model Message {
 // Reviews & Notifications
 // =========================
 
+/// A review left by one party of a contract about the other. We persist
+/// `contractId` so we can show provenance ("Verified contract review") and
+/// enforce one review per author per contract via the unique constraint.
 model Review {
   id         String   @id @default(cuid())
   authorId   String
   targetId   String
+  contractId String?
   projectRef String?
   rating     Int
   comment    String?
   createdAt  DateTime @default(now())
 
-  author User @relation("ReviewAuthor", fields: [authorId], references: [id], onDelete: Cascade)
-  target User @relation("ReviewTarget", fields: [targetId], references: [id], onDelete: Cascade)
+  author   User      @relation("ReviewAuthor", fields: [authorId], references: [id], onDelete: Cascade)
+  target   User      @relation("ReviewTarget", fields: [targetId], references: [id], onDelete: Cascade)
+  contract Contract? @relation(fields: [contractId], references: [id], onDelete: SetNull)
 
+  @@unique([authorId, contractId])
   @@index([targetId])
+  @@index([contractId])
 }
 
 model Notification {
@@ -779,10 +788,60 @@ model Contract {
   company     Company     @relation(fields: [companyId], references: [id], onDelete: Cascade)
   trainer     User        @relation("ContractTrainer", fields: [trainerId], references: [id], onDelete: Cascade)
   milestones  Milestone[]
+  reviews     Review[]
+  disputes    Dispute[]
 
   @@index([companyId, status])
   @@index([trainerId, status])
   @@index([applicationId])
+}
+
+/// Lifecycle of a dispute raised on a contract.
+/// OPEN: just raised, awaiting admin triage.
+/// UNDER_REVIEW: admin is actively investigating.
+/// RESOLVED_FOR_TRAINER / RESOLVED_FOR_COMPANY: admin sided with one party.
+/// REJECTED: dispute determined to be without merit.
+/// WITHDRAWN: raiser cancelled before admin acted.
+enum DisputeStatus {
+  OPEN
+  UNDER_REVIEW
+  RESOLVED_FOR_TRAINER
+  RESOLVED_FOR_COMPANY
+  REJECTED
+  WITHDRAWN
+}
+
+enum DisputePartyRole {
+  COMPANY
+  TRAINER
+}
+
+/// A formal dispute on a contract. Either party can raise one; admin
+/// resolves it. We keep a single OPEN/UNDER_REVIEW row per contract via
+/// a partial unique index in code (enforced at the service layer; SQL
+/// supports it but Prisma does not surface partial-unique syntax).
+model Dispute {
+  id           String           @id @default(cuid())
+  contractId   String
+  raisedById   String
+  raisedByRole DisputePartyRole
+  reason       String
+  description  String?
+  evidence     Json?
+  status       DisputeStatus    @default(OPEN)
+  resolverId   String?
+  resolution   String?
+  resolvedAt   DateTime?
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+
+  contract Contract @relation(fields: [contractId], references: [id], onDelete: Cascade)
+  raisedBy User     @relation("DisputeRaiser", fields: [raisedById], references: [id], onDelete: Cascade)
+  resolver User?    @relation("DisputeResolver", fields: [resolverId], references: [id], onDelete: SetNull)
+
+  @@index([contractId, status])
+  @@index([status, createdAt])
+  @@index([raisedById])
 }
 
 /// An individual payment milestone within a contract. State machine:

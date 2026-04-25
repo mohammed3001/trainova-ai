@@ -778,6 +778,12 @@
       "fundFailed": "We couldn't fund this milestone.",
       "releaseFailed": "We couldn't release this milestone.",
       "refundFailed": "We couldn't refund this milestone."
+    },
+    "actions": {
+      "label": "Contract actions",
+      "leaveReview": "Leave a review",
+      "raiseDispute": "Raise a dispute",
+      "viewDisputes": "View my disputes"
     }
   },
   "payments": {
@@ -1833,5 +1839,119 @@
     "saved": "Preferences saved.",
     "errorGeneric": "Could not save preferences. Try again.",
     "fxStaleWarning": "Conversion rates are temporarily unavailable; amounts are shown in their original currency."
+  },
+  "reviews": {
+    "profile": {
+      "title": "Verified contract reviews",
+      "subtitle": "Feedback from clients on completed contracts.",
+      "empty": "No reviews yet — be the first to hire and rate this trainer.",
+      "average": "{rating} / 5",
+      "count": "{count, plural, =0 {no reviews} =1 {1 review} other {# reviews}}",
+      "verifiedBadge": "Verified contract review",
+      "byOnContract": "by {author} · contract: {contract}",
+      "by": "by {author}",
+      "starsAria": "{rating} out of 5 stars"
+    },
+    "submit": {
+      "title": "Leave a review",
+      "intro": "Share your experience working with {counterparty} on \"{contract}\".",
+      "ratingLabel": "Overall rating",
+      "commentLabel": "Comment (optional)",
+      "commentPlaceholder": "What stood out? What could improve?",
+      "submit": "Submit review",
+      "cancel": "Cancel",
+      "submittedAt": "Submitted {at}",
+      "alreadySubmitted": "You have already reviewed this contract.",
+      "errorGeneric": "Could not submit review. Please try again."
+    },
+    "eligible": {
+      "heading": "Reviews you can leave",
+      "empty": "No completed contracts awaiting your review.",
+      "completedAt": "Completed {at}",
+      "openForm": "Write review",
+      "alreadyDone": "Review submitted"
+    }
+  },
+  "disputes": {
+    "raise": {
+      "title": "Open a dispute",
+      "intro": "Describe the issue clearly. An admin will review and decide.",
+      "reasonLabel": "Reason",
+      "reasons": {
+        "PAYMENT_NOT_RELEASED": "Payment not released",
+        "WORK_NOT_DELIVERED": "Work not delivered",
+        "QUALITY_ISSUE": "Quality issue",
+        "COMMUNICATION_BREAKDOWN": "Communication breakdown",
+        "SCOPE_DISAGREEMENT": "Scope disagreement",
+        "OTHER": "Other"
+      },
+      "descriptionLabel": "What happened?",
+      "descriptionPlaceholder": "Please include dates, amounts, and any relevant context (min 10 characters).",
+      "evidenceLabel": "Evidence links (optional)",
+      "evidencePlaceholder": "https://… one link per line",
+      "submit": "Open dispute",
+      "cancel": "Cancel",
+      "errorGeneric": "Could not open dispute. Please try again.",
+      "errorActiveExists": "An active dispute already exists for this contract."
+    },
+    "list": {
+      "title": "Disputes",
+      "subtitle": "Active and resolved disputes you are a party to.",
+      "empty": "You have no disputes.",
+      "raisedAt": "Raised {at}",
+      "resolvedAt": "Resolved {at}",
+      "view": "View",
+      "filterStatus": "Filter by status",
+      "all": "All"
+    },
+    "detail": {
+      "title": "Dispute on {contract}",
+      "raisedBy": "Raised by {name} ({role})",
+      "reason": "Reason",
+      "description": "Description",
+      "evidence": "Evidence",
+      "noEvidence": "No evidence attached.",
+      "resolution": "Resolution",
+      "noResolution": "Awaiting admin decision.",
+      "withdraw": "Withdraw dispute",
+      "withdrawConfirm": "Withdraw this dispute? You can re-open later if needed.",
+      "withdrawn": "Dispute withdrawn."
+    },
+    "status": {
+      "OPEN": "Open",
+      "UNDER_REVIEW": "Under review",
+      "RESOLVED_FOR_TRAINER": "Resolved for trainer",
+      "RESOLVED_FOR_COMPANY": "Resolved for company",
+      "REJECTED": "Rejected",
+      "WITHDRAWN": "Withdrawn"
+    },
+    "role": {
+      "COMPANY": "Company",
+      "TRAINER": "Trainer"
+    },
+    "admin": {
+      "title": "Disputes queue",
+      "subtitle": "Resolve open and active disputes across the platform.",
+      "empty": "No disputes match the current filter.",
+      "openCount": "{count} open",
+      "underReviewCount": "{count} under review",
+      "resolvedCount": "{count} resolved",
+      "queueLink": "Open disputes",
+      "review": "Review",
+      "resolve": {
+        "title": "Resolve dispute",
+        "statusLabel": "Outcome",
+        "statusOptions": {
+          "UNDER_REVIEW": "Mark under review",
+          "RESOLVED_FOR_TRAINER": "Resolve for trainer",
+          "RESOLVED_FOR_COMPANY": "Resolve for company",
+          "REJECTED": "Reject (no merit)"
+        },
+        "resolutionLabel": "Decision note",
+        "resolutionPlaceholder": "Explain the rationale (≥10 chars for terminal outcomes).",
+        "submit": "Apply decision",
+        "errorGeneric": "Could not apply decision. Please try again."
+      }
+    }
   }
 }
