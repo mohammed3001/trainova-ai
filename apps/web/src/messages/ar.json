@@ -1013,12 +1013,20 @@
       "cmsCategories": "الأقسام",
       "cmsFaqs": "الأسئلة الشائعة",
       "featureFlags": "رايات الميزات",
+      "emailTemplates": "قوالب البريد",
+      "disputes": "النزاعات",
+      "ads": "الإعلانات",
       "finance": "المالية",
       "settings": "الإعدادات"
     },
     "userRole": {
       "SUPER_ADMIN": "أدمن أعلى",
       "ADMIN": "أدمن",
+      "MODERATOR": "مشرف محتوى",
+      "FINANCE": "المالية",
+      "SUPPORT": "الدعم",
+      "CONTENT_MANAGER": "إدارة المحتوى",
+      "ADS_MANAGER": "إدارة الإعلانات",
       "COMPANY_OWNER": "مالك شركة",
       "COMPANY_MEMBER": "عضو شركة",
       "TRAINER": "مدرب"

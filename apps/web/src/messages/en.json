@@ -1013,12 +1013,20 @@
       "cmsCategories": "Categories",
       "cmsFaqs": "FAQ",
       "featureFlags": "Feature flags",
+      "emailTemplates": "Email templates",
+      "disputes": "Disputes",
+      "ads": "Ads",
       "finance": "Finance",
       "settings": "Settings"
     },
     "userRole": {
       "SUPER_ADMIN": "Super admin",
       "ADMIN": "Admin",
+      "MODERATOR": "Moderator",
+      "FINANCE": "Finance",
+      "SUPPORT": "Support",
+      "CONTENT_MANAGER": "Content manager",
+      "ADS_MANAGER": "Ads manager",
       "COMPANY_OWNER": "Company owner",
       "COMPANY_MEMBER": "Company member",
       "TRAINER": "Trainer"

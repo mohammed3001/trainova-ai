@@ -1,5 +1,7 @@
 import Link from 'next/link';
 import { getTranslations, getLocale } from 'next-intl/server';
+import { isAdminRole, type UserRole } from '@trainova/shared';
+import { adminLandingHref } from '@/lib/admin-landing';
 import { getToken, getRole } from '@/lib/session';
 import { authedFetch } from '@/lib/authed-fetch';
 import { LocaleSwitcher } from './locale-switcher';
@@ -16,14 +18,19 @@ export async function SiteHeader() {
         .catch(() => 0)
     : 0;
 
+  // T7.D — SUPER_ADMIN/ADMIN go to /admin; specialized admin roles go to
+  // the first surface they can actually load (see admin-landing.ts).
+  // Authenticated non-admin users without a dashboard fall back to home,
+  // never to /login.
+  const typedRole = (role ?? null) as UserRole | null;
   const dashboardHref =
-    role === 'COMPANY_OWNER'
+    role === 'COMPANY_OWNER' || role === 'COMPANY_MEMBER'
       ? `/${locale}/company/dashboard`
       : role === 'TRAINER'
         ? `/${locale}/trainer/dashboard`
-        : role === 'ADMIN' || role === 'SUPER_ADMIN'
-          ? `/${locale}/admin`
-          : `/${locale}/login`;
+        : isAdminRole(typedRole)
+          ? adminLandingHref(locale, typedRole)
+          : `/${locale}`;
 
   const ta = await getTranslations('a11y');
 

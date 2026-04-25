@@ -28,6 +28,7 @@ import {
   type AdminPlanUpdateInput,
   type AdminRefundMilestoneInput,
   type AdminSubscriptionsQuery,
+  ADMIN_ROLE_GROUPS,
 } from '@trainova/shared';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
@@ -44,7 +45,7 @@ function actor(user: AuthUser, req: Request) {
 @ApiTags('admin-finance')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Roles('SUPER_ADMIN', 'ADMIN')
+@Roles(...ADMIN_ROLE_GROUPS.FINANCE)
 @Controller('admin/finance')
 export class AdminFinanceController {
   constructor(private readonly finance: AdminFinanceService) {}

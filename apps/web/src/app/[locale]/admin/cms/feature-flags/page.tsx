@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { getLocale, getTranslations } from 'next-intl/server';
 import { authedFetch } from '@/lib/authed-fetch';
+import { requireAdminGroup } from '@/lib/admin-guard';
 import { deleteFeatureFlagAction } from '@/lib/cms-actions';
 
 interface Row {
@@ -15,6 +16,7 @@ interface Row {
 export default async function AdminCmsFeatureFlagsPage() {
   const t = await getTranslations();
   const locale = await getLocale();
+  await requireAdminGroup('SUPER_ONLY', `/${locale}/admin/cms/feature-flags`);
   const rows = await authedFetch<Row[]>(`/admin/cms/feature-flags`);
 
   return (

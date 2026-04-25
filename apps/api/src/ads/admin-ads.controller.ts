@@ -14,6 +14,7 @@ import {
   rejectCampaignInputSchema,
   type AdCampaignStatus,
   type RejectCampaignInput,
+  ADMIN_ROLE_GROUPS,
 } from '@trainova/shared';
 import { CurrentUser, type AuthUser } from '../auth/current-user.decorator';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
@@ -25,18 +26,17 @@ import { AdsService } from './ads.service';
 @ApiTags('ads')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard, RolesGuard)
+@Roles(...ADMIN_ROLE_GROUPS.ADS)
 @Controller('admin/ads')
 export class AdminAdsController {
   constructor(private readonly ads: AdsService) {}
 
   @Get('pending')
-  @Roles('ADMIN', 'SUPER_ADMIN')
   listPending() {
     return this.ads.listPendingForAdmin();
   }
 
   @Get('all')
-  @Roles('ADMIN', 'SUPER_ADMIN')
   listAll(@Query('status') status?: string) {
     const filter =
       status && (AD_CAMPAIGN_STATUSES as readonly string[]).includes(status)
@@ -46,13 +46,11 @@ export class AdminAdsController {
   }
 
   @Post(':id/approve')
-  @Roles('ADMIN', 'SUPER_ADMIN')
   approve(@CurrentUser() admin: AuthUser, @Param('id') id: string) {
     return this.ads.approveCampaign(admin.id, id);
   }
 
   @Post(':id/reject')
-  @Roles('ADMIN', 'SUPER_ADMIN')
   @UsePipes(new ZodValidationPipe(rejectCampaignInputSchema))
   reject(
     @CurrentUser() admin: AuthUser,
@@ -63,13 +61,11 @@ export class AdminAdsController {
   }
 
   @Post(':id/pause')
-  @Roles('ADMIN', 'SUPER_ADMIN')
   pause(@CurrentUser() admin: AuthUser, @Param('id') id: string) {
     return this.ads.pauseCampaign(admin.id, id, true);
   }
 
   @Post(':id/resume')
-  @Roles('ADMIN', 'SUPER_ADMIN')
   resume(@CurrentUser() admin: AuthUser, @Param('id') id: string) {
     return this.ads.resumeCampaign(admin.id, id, true);
   }

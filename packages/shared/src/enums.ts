@@ -1,11 +1,67 @@
 export const UserRoles = [
   'SUPER_ADMIN',
   'ADMIN',
+  'MODERATOR',
+  'FINANCE',
+  'SUPPORT',
+  'CONTENT_MANAGER',
+  'ADS_MANAGER',
   'COMPANY_OWNER',
   'COMPANY_MEMBER',
   'TRAINER',
 ] as const;
 export type UserRole = (typeof UserRoles)[number];
+
+/**
+ * Admin role groups (T7.D). Each group is the set of roles that may
+ * access a specific admin domain. SUPER_ADMIN and ADMIN have access to
+ * every group except SUPER_ONLY; specialized roles only see their own
+ * surface.
+ *
+ * Use these tuples in @Roles(...ADMIN_ROLE_GROUPS.FINANCE) on the API
+ * side so the policy is centralized — adding a new role only requires
+ * editing this file.
+ */
+export const ADMIN_ROLE_GROUPS = {
+  /** Anything an admin can do (users mgmt, broad reads). */
+  ALL: ['SUPER_ADMIN', 'ADMIN'] as const,
+  /** Reports, message redaction, conversation locks, dispute review. */
+  MODERATION: ['SUPER_ADMIN', 'ADMIN', 'MODERATOR'] as const,
+  /** Finance dashboard, payouts, invoices, plans, refunds. */
+  FINANCE: ['SUPER_ADMIN', 'ADMIN', 'FINANCE'] as const,
+  /** Support inbox, contact submissions, user assistance. */
+  SUPPORT: ['SUPER_ADMIN', 'ADMIN', 'SUPPORT', 'MODERATOR'] as const,
+  /** Pages, articles, FAQ, email templates, contract templates, blog. */
+  CONTENT: ['SUPER_ADMIN', 'ADMIN', 'CONTENT_MANAGER'] as const,
+  /** Ad campaigns approval, placements, sponsorship pricing. */
+  ADS: ['SUPER_ADMIN', 'ADMIN', 'ADS_MANAGER'] as const,
+  /** Verification reviews (identity, business). */
+  VERIFICATION: ['SUPER_ADMIN', 'ADMIN', 'MODERATOR', 'SUPPORT'] as const,
+  /** Settings, secrets, integrations — most sensitive. */
+  SUPER_ONLY: ['SUPER_ADMIN'] as const,
+} as const;
+export type AdminRoleGroup = keyof typeof ADMIN_ROLE_GROUPS;
+
+/**
+ * Roles that have any kind of admin surface in the dashboard. Useful for
+ * the web layout to decide whether to show /admin nav at all.
+ */
+export const ADMIN_ROLES = [
+  'SUPER_ADMIN',
+  'ADMIN',
+  'MODERATOR',
+  'FINANCE',
+  'SUPPORT',
+  'CONTENT_MANAGER',
+  'ADS_MANAGER',
+] as const satisfies readonly UserRole[];
+export type AdminRole = (typeof ADMIN_ROLES)[number];
+
+/** True if the role has any admin section visible. */
+export function isAdminRole(role: UserRole | null | undefined): role is AdminRole {
+  if (!role) return false;
+  return (ADMIN_ROLES as readonly string[]).includes(role);
+}
 
 export const JobRequestStatuses = [
   'DRAFT',

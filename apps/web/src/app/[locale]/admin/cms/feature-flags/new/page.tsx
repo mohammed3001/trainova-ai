@@ -1,8 +1,11 @@
-import { getTranslations } from 'next-intl/server';
+import { getLocale, getTranslations } from 'next-intl/server';
+import { requireAdminGroup } from '@/lib/admin-guard';
 import { FeatureFlagForm } from '../_form';
 
 export default async function NewCmsFeatureFlagPage() {
   const t = await getTranslations();
+  const locale = await getLocale();
+  await requireAdminGroup('SUPER_ONLY', `/${locale}/admin/cms/feature-flags/new`);
   return (
     <div className="space-y-6">
       <header>

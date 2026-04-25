@@ -1,5 +1,6 @@
-import { getTranslations } from 'next-intl/server';
+import { getLocale, getTranslations } from 'next-intl/server';
 import { authedFetch } from '@/lib/authed-fetch';
+import { requireAdminGroup } from '@/lib/admin-guard';
 import { FeatureFlagForm } from '../_form';
 import { deleteFeatureFlagAction } from '@/lib/cms-actions';
 
@@ -19,7 +20,12 @@ export default async function EditCmsFeatureFlagPage({
   params: Promise<{ key: string }>;
 }) {
   const t = await getTranslations();
+  const locale = await getLocale();
   const { key } = await params;
+  await requireAdminGroup(
+    'SUPER_ONLY',
+    `/${locale}/admin/cms/feature-flags/${encodeURIComponent(key)}`,
+  );
   const row = await authedFetch<FlagRow>(
     `/admin/cms/feature-flags/${encodeURIComponent(key)}`,
   );

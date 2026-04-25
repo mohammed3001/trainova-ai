@@ -993,15 +993,23 @@
       "cmsCategories": "Categories",
       "cmsFaqs": "FAQ",
       "featureFlags": "Feature flags",
+      "emailTemplates": "Modèles d'e-mails",
+      "disputes": "Litiges",
+      "ads": "Publicités",
       "finance": "Finance",
       "settings": "Settings"
     },
     "userRole": {
-      "SUPER_ADMIN": "Super admin",
-      "ADMIN": "Admin",
-      "COMPANY_OWNER": "Company owner",
-      "COMPANY_MEMBER": "Company member",
-      "TRAINER": "Trainer"
+      "SUPER_ADMIN": "Super administrateur",
+      "ADMIN": "Administrateur",
+      "MODERATOR": "Modérateur",
+      "FINANCE": "Finance",
+      "SUPPORT": "Support",
+      "CONTENT_MANAGER": "Responsable contenu",
+      "ADS_MANAGER": "Responsable publicité",
+      "COMPANY_OWNER": "Propriétaire d'entreprise",
+      "COMPANY_MEMBER": "Membre d'entreprise",
+      "TRAINER": "Formateur"
     },
     "userStatus": {
       "ACTIVE": "Active",

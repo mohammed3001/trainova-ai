@@ -31,6 +31,7 @@ import {
   type UpsertFeatureFlagInput,
   type UpsertPageInput,
   type UserRole,
+  ADMIN_ROLE_GROUPS,
 } from '@trainova/shared';
 import { CurrentUser, type AuthUser } from '../auth/current-user.decorator';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
@@ -52,7 +53,7 @@ function ctx(user: AuthUser, req: Request): AdminContext {
 @ApiTags('admin-cms')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Roles('SUPER_ADMIN', 'ADMIN')
+@Roles(...ADMIN_ROLE_GROUPS.CONTENT)
 @Controller('admin/cms')
 export class AdminCmsController {
   constructor(private readonly cms: CmsService) {}
@@ -229,18 +230,25 @@ export class AdminCmsController {
   }
 
   // Feature flags ------------------------------------------------------------
+  // T7.D — feature flags control rollout buckets and platform behavior, so
+  // they are SUPER_ONLY even though they live in the CMS controller. The
+  // class-level @Roles widens to CONTENT_MANAGER for normal CMS surfaces;
+  // each feature-flag handler must override back to SUPER_ONLY.
 
   @Get('feature-flags')
+  @Roles(...ADMIN_ROLE_GROUPS.SUPER_ONLY)
   listFeatureFlags() {
     return this.cms.listFeatureFlags();
   }
 
   @Get('feature-flags/:key')
+  @Roles(...ADMIN_ROLE_GROUPS.SUPER_ONLY)
   getFeatureFlag(@Param('key') key: string) {
     return this.cms.getFeatureFlag(key);
   }
 
   @Post('feature-flags')
+  @Roles(...ADMIN_ROLE_GROUPS.SUPER_ONLY)
   @UsePipes(new ZodValidationPipe(upsertFeatureFlagSchema))
   upsertFeatureFlag(
     @CurrentUser() user: AuthUser,
@@ -251,6 +259,7 @@ export class AdminCmsController {
   }
 
   @Delete('feature-flags/:key')
+  @Roles(...ADMIN_ROLE_GROUPS.SUPER_ONLY)
   deleteFeatureFlag(
     @CurrentUser() user: AuthUser,
     @Req() req: Request,

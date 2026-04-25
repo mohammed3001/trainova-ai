@@ -3,7 +3,7 @@ import { redirect } from 'next/navigation';
 import { getLocale, getTranslations } from 'next-intl/server';
 import { authedFetch } from '@/lib/authed-fetch';
 import { getRole, getToken } from '@/lib/session';
-import type { EmailTemplateKey, EmailTemplateSpec } from '@trainova/shared';
+import { ADMIN_ROLE_GROUPS, type EmailTemplateKey, type EmailTemplateSpec } from '@trainova/shared';
 import { NewTemplateForm } from './new-form';
 
 interface SpecsResponse {
@@ -20,7 +20,9 @@ export default async function NewEmailTemplatePage({ searchParams }: PageProps) 
   const locale = await getLocale();
   const [token, role] = await Promise.all([getToken(), getRole()]);
   if (!token) redirect(`/${locale}/login`);
-  if (role !== 'ADMIN' && role !== 'SUPER_ADMIN') redirect(`/${locale}`);
+  if (!(ADMIN_ROLE_GROUPS.CONTENT as readonly string[]).includes(role ?? '')) {
+    redirect(`/${locale}`);
+  }
 
   const specs = await authedFetch<SpecsResponse>('/admin/email-templates/specs');
 
