@@ -23,10 +23,12 @@ import {
   type TrainerEarningsSummary,
 } from '@trainova/shared';
 import type { Stripe } from 'stripe/cjs/stripe.core.js';
+import { CouponsService } from '../coupons/coupons.service';
 import { InvoiceService } from '../invoicing/invoice.service';
 import { TaxService } from '../invoicing/tax.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { StripeService } from './stripe.service';
+import { computeCouponDiscount } from '@trainova/shared';
 
 type ContractWithRelations = Prisma.ContractGetPayload<{
   include: {
@@ -76,6 +78,7 @@ export class PaymentsService {
     private readonly stripe: StripeService,
     private readonly tax: TaxService,
     private readonly invoices: InvoiceService,
+    private readonly coupons: CouponsService,
   ) {}
 
   // ===================================================================
@@ -286,8 +289,40 @@ export class PaymentsService {
       });
     }
 
+    // T7.E — pre-validate coupon (read-only) and compute discounted
+    // amount before charging Stripe. The CouponRedemption row is
+    // written *after* Stripe succeeds (in the same transaction as the
+    // PaymentIntent upsert) so a Stripe failure leaves the coupon
+    // counters untouched.
+    const ownerRole = await this.getUserRole(userId);
+    let chargeAmountCents = milestone.amountCents;
+    let couponPlan: {
+      couponId: string;
+      discountMinor: number;
+      finalMinor: number;
+    } | null = null;
+    if (input.couponCode) {
+      const preview = await this.coupons.preview(userId, ownerRole, {
+        code: input.couponCode,
+        scope: 'MILESTONE',
+        amountMinor: milestone.amountCents,
+        currency: milestone.contract.currency,
+      });
+      chargeAmountCents = preview.finalMinor;
+      const couponRow = await this.prisma.coupon.findUnique({
+        where: { code: input.couponCode },
+        select: { id: true },
+      });
+      if (!couponRow) throw new NotFoundException('Coupon not found');
+      couponPlan = {
+        couponId: couponRow.id,
+        discountMinor: preview.discountMinor,
+        finalMinor: preview.finalMinor,
+      };
+    }
+
     const pi = await this.stripe.createEscrowPaymentIntent({
-      amountCents: milestone.amountCents,
+      amountCents: chargeAmountCents,
       currency: milestone.contract.currency,
       customerId: customer.id,
       paymentMethodId: input.paymentMethodId,
@@ -298,28 +333,41 @@ export class PaymentsService {
         trainovaMilestoneId: milestone.id,
         trainovaCompanyId: milestone.contract.companyId,
         trainovaTrainerId: milestone.contract.trainerId,
+        ...(couponPlan ? { trainovaCouponId: couponPlan.couponId } : {}),
       },
       idempotencyKey: `fund-${milestone.id}`,
     });
 
     const mapped = this.mapStripePiStatus(pi.status);
-    await this.prisma.paymentIntent.upsert({
-      where: { stripePaymentIntentId: pi.id },
-      create: {
-        milestoneId: milestone.id,
-        stripePaymentIntentId: pi.id,
-        clientSecret: pi.client_secret,
-        amountCents: milestone.amountCents,
-        currency: milestone.contract.currency,
-        status: mapped,
-        receiptUrl: pi.latest_charge
-          ? await this.tryGetChargeReceipt(pi.latest_charge as string)
-          : null,
-      },
-      update: {
-        status: mapped,
-        clientSecret: pi.client_secret ?? null,
-      },
+    await this.prisma.$transaction(async (tx) => {
+      await tx.paymentIntent.upsert({
+        where: { stripePaymentIntentId: pi.id },
+        create: {
+          milestoneId: milestone.id,
+          stripePaymentIntentId: pi.id,
+          clientSecret: pi.client_secret,
+          amountCents: chargeAmountCents,
+          currency: milestone.contract.currency,
+          status: mapped,
+          receiptUrl: pi.latest_charge
+            ? await this.tryGetChargeReceipt(pi.latest_charge as string)
+            : null,
+        },
+        update: {
+          status: mapped,
+          clientSecret: pi.client_secret ?? null,
+        },
+      });
+      if (couponPlan) {
+        await this.coupons.applyToMilestone(tx, {
+          code: input.couponCode!,
+          userId,
+          userRole: ownerRole,
+          milestoneId: milestone.id,
+          originalMinor: milestone.amountCents,
+          currency: milestone.contract.currency,
+        });
+      }
     });
 
     if (mapped === 'SUCCEEDED') {
@@ -694,36 +742,98 @@ export class PaymentsService {
       });
     }
 
+    // T7.E — resolve coupon up front so we know which Stripe coupon id
+    // to attach to the subscription (Stripe owns the recurring discount;
+    // we just mirror it). The CouponRedemption row is written *after*
+    // Stripe accepts the subscription in the same DB transaction as
+    // our local Subscription row — keeping per-user limits and
+    // analytics counters truthful.
+    const userRole = await this.getUserRole(userId);
+    let stripeCouponId: string | undefined;
+    let resolvedCoupon: {
+      code: string;
+      originalMinor: number;
+      discountMinor: number;
+      finalMinor: number;
+      currency: string;
+    } | null = null;
+    if (input.couponCode) {
+      const resolved = await this.coupons.resolveForSubscription(input.couponCode, {
+        userId,
+        userRole,
+        planId: plan.id,
+      });
+      stripeCouponId = resolved.stripeCouponId;
+      const planCurrency = (resolved.coupon.currency ?? 'USD').toUpperCase();
+      const compute = computeCouponDiscount(
+        resolved.coupon,
+        plan.priceMonthly,
+        planCurrency,
+      );
+      if (!compute.applicable) {
+        throw new BadRequestException(
+          compute.reason ?? 'Coupon cannot be applied to this plan',
+        );
+      }
+      resolvedCoupon = {
+        code: resolved.coupon.code,
+        originalMinor: plan.priceMonthly,
+        discountMinor: compute.discountMinor,
+        finalMinor: compute.finalMinor,
+        currency: planCurrency,
+      };
+    }
+
     const subscription = await this.stripe.createSubscription({
       customerId: customer.id,
       priceId: plan.stripePriceId,
       paymentMethodId: input.paymentMethodId,
-      metadata: { userId: user.id, planId: plan.id },
+      metadata: {
+        userId: user.id,
+        planId: plan.id,
+        ...(resolvedCoupon ? { trainovaCouponCode: resolvedCoupon.code } : {}),
+      },
       idempotencyKey: `subscribe-${user.id}-${plan.id}`,
+      couponId: stripeCouponId,
     });
 
-    await this.prisma.subscription.create({
-      data: {
-        userId,
-        planId: plan.id,
-        status: subscription.status.toUpperCase(),
-        stripeSubscriptionId: subscription.id,
-        stripeCustomerId: customer.id,
-        currentPeriodStart: (subscription as unknown as { current_period_start?: number })
-          .current_period_start
-          ? new Date(
-              ((subscription as unknown as { current_period_start: number })
-                .current_period_start) * 1000,
-            )
-          : null,
-        currentPeriodEnd: (subscription as unknown as { current_period_end?: number })
-          .current_period_end
-          ? new Date(
-              ((subscription as unknown as { current_period_end: number })
-                .current_period_end) * 1000,
-            )
-          : null,
-      },
+    await this.prisma.$transaction(async (tx) => {
+      const created = await tx.subscription.create({
+        data: {
+          userId,
+          planId: plan.id,
+          status: subscription.status.toUpperCase(),
+          stripeSubscriptionId: subscription.id,
+          stripeCustomerId: customer.id,
+          currentPeriodStart: (subscription as unknown as { current_period_start?: number })
+            .current_period_start
+            ? new Date(
+                ((subscription as unknown as { current_period_start: number })
+                  .current_period_start) * 1000,
+              )
+            : null,
+          currentPeriodEnd: (subscription as unknown as { current_period_end?: number })
+            .current_period_end
+            ? new Date(
+                ((subscription as unknown as { current_period_end: number })
+                  .current_period_end) * 1000,
+              )
+            : null,
+        },
+      });
+      if (resolvedCoupon) {
+        await this.coupons.applyToSubscription(tx, {
+          code: resolvedCoupon.code,
+          userId,
+          userRole,
+          planId: plan.id,
+          subscriptionId: created.id,
+          originalMinor: resolvedCoupon.originalMinor,
+          discountMinor: resolvedCoupon.discountMinor,
+          finalMinor: resolvedCoupon.finalMinor,
+          currency: resolvedCoupon.currency,
+        });
+      }
     });
 
     const invoice = subscription.latest_invoice as Stripe.Invoice | null | undefined;
@@ -887,6 +997,15 @@ export class PaymentsService {
         data: { status: 'COMPLETED', completedAt: new Date() },
       });
     }
+  }
+
+  private async getUserRole(userId: string): Promise<string> {
+    const u = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { role: true },
+    });
+    if (!u) throw new NotFoundException('User not found');
+    return u.role;
   }
 
   private async tryGetChargeReceipt(chargeId: string): Promise<string | null> {

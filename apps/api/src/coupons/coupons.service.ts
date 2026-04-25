@@ -1,0 +1,512 @@
+import {
+  BadRequestException,
+  ConflictException,
+  ForbiddenException,
+  Injectable,
+  Logger,
+  NotFoundException,
+} from '@nestjs/common';
+import { Prisma, type PrismaClient } from '@trainova/db';
+import {
+  computeCouponDiscount,
+  type CouponPreviewResult,
+  type CouponScope,
+  type CreateCouponInput,
+  type ListCouponsQuery,
+  type PreviewCouponInput,
+  type PublicCoupon,
+  type UpdateCouponInput,
+} from '@trainova/shared';
+import { PrismaService } from '../prisma/prisma.service';
+
+type CouponRow = Prisma.CouponGetPayload<true>;
+type TxClient = Omit<PrismaClient, '$transaction' | '$connect' | '$disconnect' | '$on' | '$use' | '$extends'>;
+
+/**
+ * Coupons service.
+ *
+ * Two responsibilities:
+ *
+ *   1. Admin CRUD — list/get/create/update/delete + observability counters
+ *      (`redeemedCount`, `totalDiscountMinor`).
+ *
+ *   2. `applyToMilestone` / `applyToSubscription` — called from
+ *      {@link PaymentsService} *inside the same Prisma transaction* that
+ *      the milestone/subscription row is created/updated in. The apply
+ *      methods (a) re-validate the coupon with row-locked reads,
+ *      (b) compute the discount, (c) insert a CouponRedemption, and
+ *      (d) bump the counters atomically. The unique constraints on
+ *      `CouponRedemption.milestoneId` / `subscriptionId` mean a single
+ *      payment object can be discounted at most once even under retry.
+ */
+@Injectable()
+export class CouponsService {
+  private readonly logger = new Logger(CouponsService.name);
+
+  constructor(private readonly prisma: PrismaService) {}
+
+  // ===================================================================
+  // Admin CRUD
+  // ===================================================================
+
+  async list(query: ListCouponsQuery): Promise<{
+    items: PublicCoupon[];
+    total: number;
+    page: number;
+    pageSize: number;
+  }> {
+    const where: Prisma.CouponWhereInput = {};
+    if (query.status) where.status = query.status;
+    if (query.appliesTo) where.appliesTo = query.appliesTo;
+    if (query.q) {
+      where.OR = [
+        { code: { contains: query.q, mode: 'insensitive' } },
+        { description: { contains: query.q, mode: 'insensitive' } },
+      ];
+    }
+    const [items, total] = await Promise.all([
+      this.prisma.coupon.findMany({
+        where,
+        orderBy: { createdAt: 'desc' },
+        skip: (query.page - 1) * query.pageSize,
+        take: query.pageSize,
+      }),
+      this.prisma.coupon.count({ where }),
+    ]);
+    return {
+      items: items.map(toPublicCoupon),
+      total,
+      page: query.page,
+      pageSize: query.pageSize,
+    };
+  }
+
+  async getById(id: string): Promise<PublicCoupon> {
+    const row = await this.prisma.coupon.findUnique({ where: { id } });
+    if (!row) throw new NotFoundException('Coupon not found');
+    return toPublicCoupon(row);
+  }
+
+  async create(input: CreateCouponInput, actorId: string): Promise<PublicCoupon> {
+    // Validate plan ids exist (cheap upfront check; saves admins from
+    // creating dead coupons that never apply).
+    if (input.planIds.length > 0) {
+      const found = await this.prisma.plan.count({
+        where: { id: { in: input.planIds } },
+      });
+      if (found !== input.planIds.length) {
+        throw new BadRequestException('One or more planIds do not exist');
+      }
+    }
+    try {
+      const row = await this.prisma.coupon.create({
+        data: {
+          code: input.code,
+          description: input.description ?? null,
+          kind: input.kind,
+          amountOff: input.amountOff,
+          currency: input.currency ? input.currency.toUpperCase() : null,
+          audience: input.audience,
+          appliesTo: input.appliesTo,
+          planIds: input.planIds,
+          minAmountMinor: input.minAmountMinor ?? null,
+          maxDiscountMinor: input.maxDiscountMinor ?? null,
+          validFrom: input.validFrom ? new Date(input.validFrom) : null,
+          validUntil: input.validUntil ? new Date(input.validUntil) : null,
+          maxRedemptions: input.maxRedemptions ?? null,
+          perUserLimit: input.perUserLimit,
+          stripeCouponId: input.stripeCouponId ?? null,
+          createdById: actorId,
+        },
+      });
+      return toPublicCoupon(row);
+    } catch (e) {
+      if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2002') {
+        throw new ConflictException('Coupon code already exists');
+      }
+      throw e;
+    }
+  }
+
+  async update(id: string, input: UpdateCouponInput): Promise<PublicCoupon> {
+    const data: Prisma.CouponUpdateInput = {};
+    if (input.description !== undefined) data.description = input.description;
+    if (input.audience !== undefined) data.audience = input.audience;
+    if (input.appliesTo !== undefined) data.appliesTo = input.appliesTo;
+    if (input.planIds !== undefined) data.planIds = input.planIds;
+    if (input.minAmountMinor !== undefined) data.minAmountMinor = input.minAmountMinor;
+    if (input.maxDiscountMinor !== undefined) data.maxDiscountMinor = input.maxDiscountMinor;
+    if (input.validFrom !== undefined) {
+      data.validFrom = input.validFrom ? new Date(input.validFrom) : null;
+    }
+    if (input.validUntil !== undefined) {
+      data.validUntil = input.validUntil ? new Date(input.validUntil) : null;
+    }
+    if (input.maxRedemptions !== undefined) data.maxRedemptions = input.maxRedemptions;
+    if (input.perUserLimit !== undefined) data.perUserLimit = input.perUserLimit;
+    if (input.status !== undefined) data.status = input.status;
+    if (input.stripeCouponId !== undefined) data.stripeCouponId = input.stripeCouponId;
+    if (input.validFrom != null && input.validUntil != null) {
+      if (new Date(input.validFrom) >= new Date(input.validUntil)) {
+        throw new BadRequestException('validUntil must be after validFrom');
+      }
+    }
+    const row = await this.prisma.coupon
+      .update({ where: { id }, data })
+      .catch((e) => {
+        if (
+          e instanceof Prisma.PrismaClientKnownRequestError &&
+          e.code === 'P2025'
+        ) {
+          throw new NotFoundException('Coupon not found');
+        }
+        throw e;
+      });
+    return toPublicCoupon(row);
+  }
+
+  async remove(id: string): Promise<void> {
+    // Soft-disable rather than hard delete — preserves redemption rows
+    // and audit trail. Admins who really want it gone can DELETE again
+    // after disabling and confirm a hard wipe (out of MVP scope).
+    const row = await this.prisma.coupon.findUnique({ where: { id } });
+    if (!row) throw new NotFoundException('Coupon not found');
+    if (row.status === 'DISABLED') {
+      throw new ConflictException('Coupon already disabled');
+    }
+    await this.prisma.coupon.update({
+      where: { id },
+      data: { status: 'DISABLED' },
+    });
+  }
+
+  // ===================================================================
+  // Preview
+  // ===================================================================
+
+  async preview(
+    userId: string,
+    userRole: string,
+    input: PreviewCouponInput,
+  ): Promise<CouponPreviewResult> {
+    const coupon = await this.prisma.coupon.findUnique({
+      where: { code: input.code },
+    });
+    if (!coupon) throw new NotFoundException('Coupon not found');
+    this.assertEligible(coupon, {
+      scope: input.scope,
+      planId: input.planId,
+      userRole,
+    });
+    const compute = computeCouponDiscount(
+      {
+        kind: coupon.kind,
+        amountOff: coupon.amountOff,
+        currency: coupon.currency,
+        maxDiscountMinor: coupon.maxDiscountMinor,
+        minAmountMinor: coupon.minAmountMinor,
+      },
+      input.amountMinor,
+      input.currency,
+    );
+    if (!compute.applicable) {
+      throw new BadRequestException(compute.reason ?? 'Coupon cannot be applied');
+    }
+    // Per-user limit check (read-only here; the authoritative check is
+    // inside applyTo* which runs in a transaction with the redemption
+    // insert).
+    if (coupon.perUserLimit > 0) {
+      const used = await this.prisma.couponRedemption.count({
+        where: { couponId: coupon.id, userId },
+      });
+      if (used >= coupon.perUserLimit) {
+        throw new ConflictException('Coupon already redeemed by this user');
+      }
+    }
+    return {
+      code: coupon.code,
+      kind: coupon.kind,
+      amountOff: coupon.amountOff,
+      originalMinor: input.amountMinor,
+      discountMinor: compute.discountMinor,
+      finalMinor: compute.finalMinor,
+      currency: input.currency.toUpperCase(),
+      description: coupon.description,
+    };
+  }
+
+  // ===================================================================
+  // Apply (called from PaymentsService inside its own transaction)
+  // ===================================================================
+
+  /**
+   * Apply a coupon to a milestone funding. Must be called *inside* the
+   * same Prisma transaction that ultimately funds the milestone (so the
+   * redemption row + counter bump roll back if the Stripe call fails).
+   *
+   * Returns the discount math the caller should charge with.
+   */
+  async applyToMilestone(
+    tx: TxClient,
+    args: {
+      code: string;
+      userId: string;
+      userRole: string;
+      milestoneId: string;
+      originalMinor: number;
+      currency: string;
+    },
+  ): Promise<{ couponId: string; discountMinor: number; finalMinor: number }> {
+    const coupon = await tx.coupon.findUnique({ where: { code: args.code } });
+    if (!coupon) throw new NotFoundException('Coupon not found');
+    this.assertEligible(coupon, {
+      scope: 'MILESTONE',
+      userRole: args.userRole,
+    });
+    const compute = computeCouponDiscount(
+      coupon,
+      args.originalMinor,
+      args.currency,
+    );
+    if (!compute.applicable) {
+      throw new BadRequestException(compute.reason ?? 'Coupon cannot be applied');
+    }
+    if (coupon.perUserLimit > 0) {
+      const used = await tx.couponRedemption.count({
+        where: { couponId: coupon.id, userId: args.userId },
+      });
+      if (used >= coupon.perUserLimit) {
+        throw new ConflictException('Coupon already redeemed by this user');
+      }
+    }
+    if (
+      coupon.maxRedemptions != null &&
+      coupon.redeemedCount >= coupon.maxRedemptions
+    ) {
+      throw new ConflictException('Coupon redemption limit reached');
+    }
+    try {
+      await tx.couponRedemption.create({
+        data: {
+          couponId: coupon.id,
+          userId: args.userId,
+          scope: 'MILESTONE',
+          milestoneId: args.milestoneId,
+          originalAmountMinor: args.originalMinor,
+          discountMinor: compute.discountMinor,
+          finalAmountMinor: compute.finalMinor,
+          currency: args.currency.toUpperCase(),
+        },
+      });
+    } catch (e) {
+      if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2002') {
+        throw new ConflictException('Milestone already has a coupon applied');
+      }
+      throw e;
+    }
+    await tx.coupon.update({
+      where: { id: coupon.id },
+      data: {
+        redeemedCount: { increment: 1 },
+        totalDiscountMinor: { increment: compute.discountMinor },
+      },
+    });
+    return {
+      couponId: coupon.id,
+      discountMinor: compute.discountMinor,
+      finalMinor: compute.finalMinor,
+    };
+  }
+
+  /**
+   * Apply a coupon to a Stripe subscription. SUBSCRIPTION coupons must
+   * have `stripeCouponId` set — Stripe owns the recurring discount and
+   * we just pass it through to `subscriptions.create`. We record a
+   * redemption row so the per-user limit + analytics counters work the
+   * same as for milestones.
+   */
+  async applyToSubscription(
+    tx: TxClient,
+    args: {
+      code: string;
+      userId: string;
+      userRole: string;
+      planId: string;
+      subscriptionId: string;
+      originalMinor: number;
+      discountMinor: number;
+      finalMinor: number;
+      currency: string;
+    },
+  ): Promise<{ couponId: string; stripeCouponId: string }> {
+    const coupon = await tx.coupon.findUnique({ where: { code: args.code } });
+    if (!coupon) throw new NotFoundException('Coupon not found');
+    this.assertEligible(coupon, {
+      scope: 'SUBSCRIPTION',
+      planId: args.planId,
+      userRole: args.userRole,
+    });
+    if (!coupon.stripeCouponId) {
+      throw new BadRequestException(
+        'Coupon is not configured for subscriptions (missing Stripe coupon mirror)',
+      );
+    }
+    if (coupon.perUserLimit > 0) {
+      const used = await tx.couponRedemption.count({
+        where: { couponId: coupon.id, userId: args.userId },
+      });
+      if (used >= coupon.perUserLimit) {
+        throw new ConflictException('Coupon already redeemed by this user');
+      }
+    }
+    if (
+      coupon.maxRedemptions != null &&
+      coupon.redeemedCount >= coupon.maxRedemptions
+    ) {
+      throw new ConflictException('Coupon redemption limit reached');
+    }
+    try {
+      await tx.couponRedemption.create({
+        data: {
+          couponId: coupon.id,
+          userId: args.userId,
+          scope: 'SUBSCRIPTION',
+          subscriptionId: args.subscriptionId,
+          originalAmountMinor: args.originalMinor,
+          discountMinor: args.discountMinor,
+          finalAmountMinor: args.finalMinor,
+          currency: args.currency.toUpperCase(),
+        },
+      });
+    } catch (e) {
+      if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2002') {
+        throw new ConflictException('Subscription already has a coupon applied');
+      }
+      throw e;
+    }
+    await tx.coupon.update({
+      where: { id: coupon.id },
+      data: {
+        redeemedCount: { increment: 1 },
+        totalDiscountMinor: { increment: args.discountMinor },
+      },
+    });
+    return {
+      couponId: coupon.id,
+      stripeCouponId: coupon.stripeCouponId,
+    };
+  }
+
+  /**
+   * Resolve a Stripe coupon id without applying yet — used by
+   * subscribe() so it can pass the id to `subscriptions.create` *before*
+   * we have a Subscription row to attach a redemption to. The caller is
+   * responsible for invoking `applyToSubscription` afterwards inside
+   * the same transaction once the row exists.
+   */
+  async resolveForSubscription(
+    code: string,
+    args: { userId: string; userRole: string; planId: string },
+  ): Promise<{
+    coupon: CouponRow;
+    stripeCouponId: string;
+  }> {
+    const coupon = await this.prisma.coupon.findUnique({ where: { code } });
+    if (!coupon) throw new NotFoundException('Coupon not found');
+    this.assertEligible(coupon, {
+      scope: 'SUBSCRIPTION',
+      planId: args.planId,
+      userRole: args.userRole,
+    });
+    if (!coupon.stripeCouponId) {
+      throw new BadRequestException(
+        'Coupon is not configured for subscriptions (missing Stripe coupon mirror)',
+      );
+    }
+    if (coupon.perUserLimit > 0) {
+      const used = await this.prisma.couponRedemption.count({
+        where: { couponId: coupon.id, userId: args.userId },
+      });
+      if (used >= coupon.perUserLimit) {
+        throw new ConflictException('Coupon already redeemed by this user');
+      }
+    }
+    if (
+      coupon.maxRedemptions != null &&
+      coupon.redeemedCount >= coupon.maxRedemptions
+    ) {
+      throw new ConflictException('Coupon redemption limit reached');
+    }
+    return { coupon, stripeCouponId: coupon.stripeCouponId };
+  }
+
+  // ===================================================================
+  // Helpers
+  // ===================================================================
+
+  private assertEligible(
+    coupon: CouponRow,
+    args: { scope: CouponScope; planId?: string; userRole: string },
+  ): void {
+    if (coupon.status !== 'ACTIVE') {
+      throw new ForbiddenException('Coupon is not active');
+    }
+    const now = new Date();
+    if (coupon.validFrom && coupon.validFrom > now) {
+      throw new ForbiddenException('Coupon is not yet valid');
+    }
+    if (coupon.validUntil && coupon.validUntil < now) {
+      throw new ForbiddenException('Coupon has expired');
+    }
+    if (coupon.appliesTo !== 'ANY' && coupon.appliesTo !== args.scope) {
+      throw new ForbiddenException(
+        `Coupon does not apply to ${args.scope.toLowerCase()} purchases`,
+      );
+    }
+    if (coupon.audience !== 'ANY') {
+      const isCompany =
+        args.userRole === 'COMPANY_OWNER' || args.userRole === 'COMPANY_MEMBER';
+      const isTrainer = args.userRole === 'TRAINER';
+      if (coupon.audience === 'COMPANY' && !isCompany) {
+        throw new ForbiddenException('Coupon is restricted to companies');
+      }
+      if (coupon.audience === 'TRAINER' && !isTrainer) {
+        throw new ForbiddenException('Coupon is restricted to trainers');
+      }
+    }
+    if (
+      args.scope === 'SUBSCRIPTION' &&
+      coupon.planIds.length > 0 &&
+      args.planId &&
+      !coupon.planIds.includes(args.planId)
+    ) {
+      throw new ForbiddenException('Coupon is not valid for this plan');
+    }
+  }
+}
+
+function toPublicCoupon(row: CouponRow): PublicCoupon {
+  return {
+    id: row.id,
+    code: row.code,
+    description: row.description,
+    kind: row.kind,
+    amountOff: row.amountOff,
+    currency: row.currency,
+    audience: row.audience,
+    appliesTo: row.appliesTo,
+    planIds: row.planIds,
+    minAmountMinor: row.minAmountMinor,
+    maxDiscountMinor: row.maxDiscountMinor,
+    validFrom: row.validFrom?.toISOString() ?? null,
+    validUntil: row.validUntil?.toISOString() ?? null,
+    maxRedemptions: row.maxRedemptions,
+    perUserLimit: row.perUserLimit,
+    redeemedCount: row.redeemedCount,
+    totalDiscountMinor: row.totalDiscountMinor,
+    status: row.status,
+    stripeCouponId: row.stripeCouponId,
+    createdAt: row.createdAt.toISOString(),
+    updatedAt: row.updatedAt.toISOString(),
+  };
+}

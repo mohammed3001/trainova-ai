@@ -765,6 +765,17 @@
       "subscribeFailed": "We couldn't start the subscription. Please try again.",
       "cancelFailed": "We couldn't cancel the subscription. Please try again.",
       "portalFailed": "Stripe billing portal is not reachable right now."
+    },
+    "coupon": {
+      "toggle": "Have a coupon?",
+      "label": "Coupon code",
+      "placeholder": "e.g. LAUNCH20",
+      "apply": "Apply",
+      "applying": "Checking…",
+      "remove": "Remove",
+      "applied": "Coupon applied",
+      "discountSummary": "You save {discount} — you'll be charged {final}.",
+      "invalid": "This coupon isn't valid for this purchase."
     }
   },
   "contracts": {
@@ -1014,6 +1025,7 @@
       "cmsFaqs": "FAQ",
       "featureFlags": "Feature flags",
       "emailTemplates": "Email templates",
+      "coupons": "Coupons",
       "disputes": "Disputes",
       "ads": "Ads",
       "finance": "Finance",
@@ -1669,6 +1681,95 @@
         "creating": "Creating…",
         "delete": "Delete template",
         "deleting": "Deleting…"
+      }
+    },
+    "coupons": {
+      "title": "Coupons & promotions",
+      "subtitle": "Create discount codes for milestone funding or recurring subscriptions. Subscription coupons mirror to Stripe; milestone coupons are absorbed by the platform.",
+      "new": "New coupon",
+      "newTitle": "New coupon",
+      "newSubtitle": "Code, kind, audience, and validity. Once created, code/kind/amount are immutable.",
+      "detailEyebrow": "Coupon",
+      "backToList": "Back to coupons",
+      "empty": "No coupons yet. Create one to start running promotions.",
+      "create": "Create coupon",
+      "save": "Save changes",
+      "saving": "Saving…",
+      "disable": "Disable",
+      "disabling": "Disabling…",
+      "disableConfirm": "Disable this coupon? Existing redemptions are kept; no new ones will be accepted.",
+      "filter": {
+        "search": "Search",
+        "searchPlaceholder": "Code or description…",
+        "status": "Status",
+        "appliesTo": "Applies to",
+        "all": "All",
+        "apply": "Apply"
+      },
+      "col": {
+        "code": "Code",
+        "kind": "Kind",
+        "amount": "Off",
+        "appliesTo": "Applies to",
+        "audience": "Audience",
+        "redemptions": "Redemptions",
+        "totalDiscount": "Total discount",
+        "status": "Status",
+        "edit": "Edit"
+      },
+      "metric": {
+        "redemptions": "Redemptions",
+        "totalDiscount": "Total discount",
+        "status": "Status"
+      },
+      "kind": {
+        "PERCENT": "Percent",
+        "FIXED": "Fixed"
+      },
+      "status": {
+        "ACTIVE": "Active",
+        "DISABLED": "Disabled",
+        "EXPIRED": "Expired"
+      },
+      "audience": {
+        "ANY": "Anyone",
+        "COMPANY": "Companies",
+        "TRAINER": "Trainers"
+      },
+      "appliesTo": {
+        "ANY": "Anything",
+        "SUBSCRIPTION": "Subscriptions",
+        "MILESTONE": "Milestones"
+      },
+      "field": {
+        "code": "Code",
+        "codeHint": "3–40 characters: A–Z, 0–9, dash, underscore. Case-insensitive at apply time.",
+        "description": "Description",
+        "descriptionPlaceholder": "Internal note shown on the admin panel only.",
+        "kind": "Kind",
+        "amountOffBps": "Discount (basis points)",
+        "amountOffBpsHint": "10000 = 100%, 2000 = 20%, 500 = 5%.",
+        "amountOffMinor": "Discount (minor units)",
+        "amountOffMinorHint": "Whole cents/halalas. e.g. 1000 = $10.00 / 10 SAR.",
+        "currency": "Currency",
+        "currencyOptional": "Optional",
+        "audience": "Audience",
+        "appliesTo": "Applies to",
+        "perUserLimit": "Per-user redemption limit",
+        "planIds": "Eligible plans",
+        "planIdsHint": "If set, the coupon only applies to subscriptions for these plans. Leave empty to apply to all.",
+        "planIdsEmpty": "No plans configured yet.",
+        "minAmountMinor": "Minimum order (minor units)",
+        "minAmountMinorPlaceholder": "Optional",
+        "maxDiscountMinor": "Maximum discount cap (minor units)",
+        "maxDiscountMinorPlaceholder": "Caps PERCENT discounts (optional)",
+        "validFrom": "Valid from",
+        "validUntil": "Valid until",
+        "maxRedemptions": "Total redemption cap",
+        "maxRedemptionsPlaceholder": "Optional",
+        "stripeCouponId": "Stripe coupon ID",
+        "stripeCouponIdHint": "Required for SUBSCRIPTION coupons. Create the matching coupon in Stripe first.",
+        "status": "Status"
       }
     }
   },

@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { CouponsModule } from '../coupons/coupons.module';
 import { InvoicingModule } from '../invoicing/invoicing.module';
 import { PrismaModule } from '../prisma/prisma.module';
 import { BillingController } from './billing.controller';
@@ -18,7 +19,7 @@ import { StripeWebhookController } from './webhook.controller';
  * change, and so contract creation resolves VAT/GST up front.
  */
 @Module({
-  imports: [PrismaModule, InvoicingModule],
+  imports: [PrismaModule, InvoicingModule, CouponsModule],
   controllers: [
     ContractsController,
     BillingController,

@@ -747,6 +747,17 @@
     "cancelledOk": "Cancellation scheduled — access stays until the end of this period.",
     "noActiveCompany": "You are on the free workspace tier.",
     "noActiveTrainer": "You are on the free trainer tier.",
+    "coupon": {
+      "toggle": "¿Tienes un cupón?",
+      "label": "Código de cupón",
+      "placeholder": "p. ej. LAUNCH20",
+      "apply": "Aplicar",
+      "applying": "Comprobando…",
+      "remove": "Quitar",
+      "applied": "Cupón aplicado",
+      "discountSummary": "Ahorras {discount} — se te cobrarán {final}.",
+      "invalid": "Este cupón no es válido para esta compra."
+    },
     "errors": {
       "subscribeFailed": "We couldn't start the subscription. Please try again.",
       "cancelFailed": "We couldn't cancel the subscription. Please try again.",
@@ -994,6 +1005,7 @@
       "cmsFaqs": "FAQ",
       "featureFlags": "Feature flags",
       "emailTemplates": "Plantillas de correo",
+      "coupons": "Cupones",
       "disputes": "Disputas",
       "ads": "Anuncios",
       "finance": "Finance",
@@ -1649,6 +1661,95 @@
         "creating": "Creating…",
         "delete": "Delete template",
         "deleting": "Deleting…"
+      }
+    },
+    "coupons": {
+      "title": "Cupones y promociones",
+      "subtitle": "Crea códigos de descuento para financiación de hitos o suscripciones recurrentes. Los cupones de suscripción se replican en Stripe; los de hito los absorbe la plataforma.",
+      "new": "Nuevo cupón",
+      "newTitle": "Nuevo cupón",
+      "newSubtitle": "Código, tipo, audiencia y validez. Una vez creados, código/tipo/importe son inmutables.",
+      "detailEyebrow": "Cupón",
+      "backToList": "Volver a cupones",
+      "empty": "Aún no hay cupones. Crea uno para lanzar promociones.",
+      "create": "Crear cupón",
+      "save": "Guardar cambios",
+      "saving": "Guardando…",
+      "disable": "Desactivar",
+      "disabling": "Desactivando…",
+      "disableConfirm": "¿Desactivar este cupón? Se conservan los canjes existentes; no se aceptarán nuevos.",
+      "filter": {
+        "search": "Buscar",
+        "searchPlaceholder": "Código o descripción…",
+        "status": "Estado",
+        "appliesTo": "Se aplica a",
+        "all": "Todo",
+        "apply": "Aplicar"
+      },
+      "col": {
+        "code": "Código",
+        "kind": "Tipo",
+        "amount": "Descuento",
+        "appliesTo": "Se aplica a",
+        "audience": "Audiencia",
+        "redemptions": "Canjes",
+        "totalDiscount": "Descuento total",
+        "status": "Estado",
+        "edit": "Editar"
+      },
+      "metric": {
+        "redemptions": "Canjes",
+        "totalDiscount": "Descuento total",
+        "status": "Estado"
+      },
+      "kind": {
+        "PERCENT": "Porcentaje",
+        "FIXED": "Importe fijo"
+      },
+      "status": {
+        "ACTIVE": "Activo",
+        "DISABLED": "Desactivado",
+        "EXPIRED": "Expirado"
+      },
+      "audience": {
+        "ANY": "Cualquiera",
+        "COMPANY": "Empresas",
+        "TRAINER": "Formadores"
+      },
+      "appliesTo": {
+        "ANY": "Todo",
+        "SUBSCRIPTION": "Suscripciones",
+        "MILESTONE": "Hitos"
+      },
+      "field": {
+        "code": "Código",
+        "codeHint": "3–40 caracteres: A–Z, 0–9, guion, guion bajo. No distingue mayúsculas.",
+        "description": "Descripción",
+        "descriptionPlaceholder": "Nota interna visible solo en el panel de admin.",
+        "kind": "Tipo",
+        "amountOffBps": "Descuento (puntos básicos)",
+        "amountOffBpsHint": "10000 = 100 %, 2000 = 20 %, 500 = 5 %.",
+        "amountOffMinor": "Descuento (unidades menores)",
+        "amountOffMinorHint": "Céntimos enteros. Ej. 1000 = 10,00 €.",
+        "currency": "Moneda",
+        "currencyOptional": "Opcional",
+        "audience": "Audiencia",
+        "appliesTo": "Se aplica a",
+        "perUserLimit": "Límite por usuario",
+        "planIds": "Planes elegibles",
+        "planIdsHint": "Si se establece, el cupón solo se aplica a estos planes. Déjalo vacío para todos.",
+        "planIdsEmpty": "No hay planes configurados.",
+        "minAmountMinor": "Pedido mínimo (unidades menores)",
+        "minAmountMinorPlaceholder": "Opcional",
+        "maxDiscountMinor": "Descuento máximo (unidades menores)",
+        "maxDiscountMinorPlaceholder": "Limita los % (opcional)",
+        "validFrom": "Válido desde",
+        "validUntil": "Válido hasta",
+        "maxRedemptions": "Límite total de canjes",
+        "maxRedemptionsPlaceholder": "Opcional",
+        "stripeCouponId": "ID de cupón Stripe",
+        "stripeCouponIdHint": "Obligatorio para cupones de suscripción. Crea el cupón en Stripe primero.",
+        "status": "Estado"
       }
     }
   },

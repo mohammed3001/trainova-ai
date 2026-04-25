@@ -90,6 +90,13 @@ export const fundMilestoneInputSchema = z.object({
   /** Stripe PaymentMethod id (pm_...) returned by the client-side Elements flow. */
   paymentMethodId: z.string().trim().min(3).max(200),
   returnUrl: z.string().url().optional(),
+  /** T7.E — optional coupon code applied to this milestone funding. */
+  couponCode: z
+    .string()
+    .trim()
+    .toUpperCase()
+    .regex(/^[A-Z0-9_-]{3,40}$/)
+    .optional(),
 });
 export type FundMilestoneInput = z.infer<typeof fundMilestoneInputSchema>;
 
@@ -108,6 +115,13 @@ export type RefundMilestoneInput = z.infer<typeof refundMilestoneInputSchema>;
 export const subscribePlanInputSchema = z.object({
   planId: z.string().cuid(),
   paymentMethodId: z.string().trim().min(3).max(200).optional(),
+  /** T7.E — optional coupon code applied to this subscription. */
+  couponCode: z
+    .string()
+    .trim()
+    .toUpperCase()
+    .regex(/^[A-Z0-9_-]{3,40}$/)
+    .optional(),
 });
 export type SubscribePlanInput = z.infer<typeof subscribePlanInputSchema>;
 
