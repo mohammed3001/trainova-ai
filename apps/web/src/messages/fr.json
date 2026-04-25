@@ -1817,7 +1817,7 @@
         "next": "Suivant"
       }
     },
-        "emailMarketing": {
+    "emailMarketing": {
       "title": "Marketing par e-mail",
       "subtitle": "Campagnes marketing rédigées par l'admin et séquences automatiques. Les envois sont traités en arrière-plan et suivis par destinataire.",
       "open": "Ouvrir",
@@ -2124,6 +2124,21 @@
       "TRAINER": "Trainer",
       "ADMIN": "Admin",
       "SUPER_ADMIN": "Admin"
+    },
+    "ai": {
+      "title": "Copilote IA",
+      "summaryTitle": "Résumé",
+      "tasksTitle": "Actions à mener",
+      "summarize": "Résumer",
+      "extract": "Extraire les tâches",
+      "regenerate": "Régénérer",
+      "working": "Traitement…",
+      "summaryHint": "Obtenez un résumé en un paragraphe de cette conversation et les points clés à retenir.",
+      "tasksHint": "Listez toutes les actions convenues, avec le responsable et l'échéance lorsqu'ils sont mentionnés.",
+      "tasksEmpty": "Aucune action détectée pour l'instant.",
+      "owner": "Responsable",
+      "due": "Échéance",
+      "errorGeneric": "Une erreur est survenue. Réessayez."
     }
   },
   "matching": {
