@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation';
 import { getLocale, getTranslations } from 'next-intl/server';
-import { EmailDripTriggers } from '@trainova/shared';
+import { ADMIN_ROLE_GROUPS, EmailDripTriggers } from '@trainova/shared';
 import { getRole, getToken } from '@/lib/session';
 import { createDripSequenceAction } from '../../actions';
 
@@ -9,7 +9,9 @@ export default async function NewDripSequencePage() {
   const locale = await getLocale();
   const [token, role] = await Promise.all([getToken(), getRole()]);
   if (!token) redirect(`/${locale}/login`);
-  if (role !== 'ADMIN' && role !== 'SUPER_ADMIN') redirect(`/${locale}`);
+  if (!(ADMIN_ROLE_GROUPS.CONTENT as readonly string[]).includes(role ?? '')) {
+    redirect(`/${locale}`);
+  }
 
   return (
     <div className="space-y-6">
