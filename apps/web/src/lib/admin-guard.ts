@@ -22,15 +22,19 @@ export async function requireAdminGroup(
   redirectPath: string,
 ): Promise<void> {
   const [token, role] = await Promise.all([getToken(), getRole()]);
+  // `redirectPath` always begins with `/<locale>/admin/...` so the second
+  // segment is the active locale. Reuse it for the login bounce so an
+  // Arabic user at /ar/admin/settings doesn't get sent to /en/login by
+  // next-intl's default-locale fallback.
+  const locale = redirectPath.split('/')[1] ?? 'en';
   if (!token) {
-    redirect(`/login?redirect=${encodeURIComponent(redirectPath)}`);
+    redirect(`/${locale}/login?redirect=${encodeURIComponent(redirectPath)}`);
   }
   const allowed = ADMIN_ROLE_GROUPS[group] as readonly string[];
   if (!allowed.includes(role ?? '')) {
     // Send the user to the surface they CAN reach — their landing page —
     // rather than a hard /dashboard fallback that may itself 403 and
     // produce a redirect loop for specialized admin roles.
-    const locale = redirectPath.split('/')[1] ?? 'en';
     redirect(adminLandingHref(locale, (role as never) ?? null));
   }
 }
