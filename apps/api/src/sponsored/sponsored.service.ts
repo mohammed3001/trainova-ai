@@ -393,9 +393,19 @@ export class SponsoredService {
     });
     if (!placement) return;
     if (placement.status === 'ACTIVE' || placement.status === 'REJECTED') return;
+    // Preserve any admin-written notes — append the failure reason instead
+    // of overwriting. When Stripe gives no reason (e.g. `last_payment_error`
+    // is undefined) leave notes untouched rather than nulling the column.
     await this.prisma.sponsoredPlacement.update({
       where: { id: placement.id },
-      data: { status: 'DRAFT', notes: reason ?? null },
+      data: {
+        status: 'DRAFT',
+        notes: reason
+          ? placement.notes
+            ? `${placement.notes}\n---\nPayment failed: ${reason}`
+            : `Payment failed: ${reason}`
+          : undefined,
+      },
     });
     this.logger.warn(
       `Sponsored placement ${placement.id} payment failed (PI=${stripePaymentIntentId}): ${
