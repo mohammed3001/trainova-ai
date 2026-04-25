@@ -15,3 +15,4 @@ export * from './preferences';
 export * from './reviews';
 export * from './invoicing';
 export * from './ai-assist';
+export * from './contact';

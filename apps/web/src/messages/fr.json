@@ -21,7 +21,12 @@
     "cancel": "Cancel",
     "submit": "Submit",
     "loading": "Loading…",
-    "error": "Something went wrong"
+    "error": "Something went wrong",
+    "howItWorks": "Fonctionnement",
+    "blog": "Blog",
+    "faq": "FAQ",
+    "contact": "Contact",
+    "advertise": "Annoncer"
   },
   "nav": {
     "home": "Home",
@@ -67,6 +72,34 @@
     "skill": {
       "titleTemplate": "{name} — AI Trainers, Experts and Open Requests",
       "descriptionTemplate": "Find {name} specialists on Trainova AI. Browse verified trainers, review open requests and test candidates on your live model."
+    },
+    "howItWorks": {
+      "title": "Comment Trainova AI fonctionne",
+      "description": "De la publication d’une demande à l’évaluation, au contrat et au paiement — découvrez le flux complet pour les entreprises et formateurs."
+    },
+    "forCompanies": {
+      "title": "Trainova AI pour les entreprises",
+      "description": "Recrutez, testez et contractualisez des formateurs IA vérifiés sur votre modèle. Builder de demandes, moteur d’évaluation, paiements escrow et analytics."
+    },
+    "forTrainers": {
+      "title": "Trainova AI pour les formateurs",
+      "description": "Décrochez des contrats IA mondiaux, prouvez vos compétences sur de vrais modèles d’entreprise et soyez payé via un escrow sécurisé."
+    },
+    "blog": {
+      "title": "Blog Trainova AI",
+      "description": "Articles, tutoriels et retours terrain sur fine-tuning, RLHF, prompt engineering, évaluation, alignement de sécurité, etc."
+    },
+    "faq": {
+      "title": "Foire aux questions",
+      "description": "Réponses sur Trainova AI : tarifs, évaluation, paiements, vérification, gestion des litiges et fonctionnement de la plateforme."
+    },
+    "contact": {
+      "title": "Contacter Trainova AI",
+      "description": "Contactez nos équipes support, ventes, presse ou partenariats. Réponse sous un jour ouvré."
+    },
+    "advertise": {
+      "title": "Annoncer sur Trainova AI",
+      "description": "Touchez les équipes IA, les responsables MLOps et les spécialistes vérifiés via des placements premium et du sponsoring de catégorie."
     }
   },
   "landing": {
@@ -1942,5 +1975,343 @@
         }
       }
     }
+  },
+  "marketing": {
+    "howItWorks": {
+      "hero": {
+        "eyebrow": "Fonctionnement",
+        "title": "Du brief au contrat payé — sur une seule plateforme",
+        "body": "Trainova AI réunit marketplace, moteur d’évaluation et espace de collaboration pour les projets de formation IA. Voici le parcours."
+      },
+      "threeProducts": {
+        "title": "Trois produits sur une plateforme",
+        "marketplace": {
+          "eyebrow": "Marketplace",
+          "title": "Trouvez des spécialistes vérifiés",
+          "body": "Filtrez par compétence, langue, pays, expérience modèle et notation."
+        },
+        "evaluation": {
+          "eyebrow": "Évaluation",
+          "title": "Testez sur votre modèle",
+          "body": "Connectez votre API, sandbox ou environnement et notez les candidats sur le vrai problème."
+        },
+        "workspace": {
+          "eyebrow": "Espace de travail",
+          "title": "Négociez, contractualisez, payez",
+          "body": "Chat, fichiers, tâches, signature, escrow et avis — dans un seul espace audité."
+        }
+      },
+      "steps": {
+        "title": "Le parcours complet, étape par étape",
+        "1": {
+          "title": "Publiez une demande",
+          "body": "Le builder assisté par IA structure les compétences, conditions, environnement de test et budget."
+        },
+        "2": {
+          "title": "Recevez les candidatures",
+          "body": "Les formateurs vérifiés postulent. Le moteur de matching les classe par adéquation."
+        },
+        "3": {
+          "title": "Lancez l’évaluation",
+          "body": "Test de présélection, mission sur votre modèle ou workflow multi-étapes — notation auto + manuelle."
+        },
+        "4": {
+          "title": "Choisissez un finaliste",
+          "body": "Comparez les tentatives, échangez via le chat et passez en acceptation en un clic."
+        },
+        "5": {
+          "title": "Signez et payez via escrow",
+          "body": "Générez le contrat (NDA / MSA / SOW), signez, financez l’escrow et démarrez le jour même."
+        },
+        "6": {
+          "title": "Évaluez et recommencez",
+          "body": "Libérez l’escrow par jalon, échangez des avis vérifiés et réengagez vos meilleurs formateurs."
+        }
+      },
+      "cta": {
+        "bottomTitle": "Prêt à lancer de meilleurs projets IA ?",
+        "bottomBody": "Côté entreprise comme côté formateur — l’inscription est gratuite.",
+        "forCompanies": "Pour les entreprises",
+        "forTrainers": "Pour les formateurs",
+        "pricing": "Voir les tarifs",
+        "companyPrimary": "Publier une demande",
+        "trainerSecondary": "Postuler comme formateur"
+      }
+    },
+    "forCompanies": {
+      "hero": {
+        "eyebrow": "Pour les entreprises",
+        "title": "Recrutez et testez l’élite des formateurs IA",
+        "body": "Stop aux CV : évaluez sur votre vrai modèle — fine-tuning, RLHF, évaluation, sécurité, prompt engineering, etc.",
+        "ctaPrimary": "Démarrer gratuitement",
+        "ctaSecondary": "Parler aux ventes"
+      },
+      "features": {
+        "requestBuilder": {
+          "title": "Builder de demande IA",
+          "body": "Génère une demande structurée à partir d’un brief, avec compétences et critères d’évaluation."
+        },
+        "evaluation": {
+          "title": "Évaluation modèle live",
+          "body": "Branchez API, sandbox ou dataset et notez sur le vrai problème."
+        },
+        "matching": {
+          "title": "Shortlist intelligente",
+          "body": "Le matching IA classe les meilleurs formateurs par adéquation et historique."
+        },
+        "chat": {
+          "title": "Espace de négociation",
+          "body": "Chat chiffré, partage de fichiers, scan d’annexes et résumés IA."
+        },
+        "contracts": {
+          "title": "Escrow + signature",
+          "body": "Modèles NDA / MSA / SOW, signature numérique, escrow par jalon, factures TVA conformes."
+        },
+        "analytics": {
+          "title": "Dépense + ROI",
+          "body": "Suivez candidatures, time-to-hire, coût-par-hire et performance des formateurs."
+        }
+      },
+      "tiers": {
+        "title": "Choisissez votre niveau",
+        "free": {
+          "eyebrow": "Pour démarrer",
+          "title": "Gratuit",
+          "price": "0 $",
+          "bullet1": "1 demande active",
+          "bullet2": "Jusqu’à 10 tentatives / mois",
+          "bullet3": "Chat + escrow standard",
+          "bullet4": "Support email",
+          "cta": "Démarrer gratuitement"
+        },
+        "pro": {
+          "eyebrow": "La plupart des équipes",
+          "title": "Pro",
+          "price": "199 $ / mois",
+          "bullet1": "Demandes illimitées",
+          "bullet2": "Matching IA + assistant IA",
+          "bullet3": "Outils d’évaluation avancés",
+          "bullet4": "Support prioritaire",
+          "cta": "Passer au Pro"
+        },
+        "enterprise": {
+          "eyebrow": "Grandes équipes IA",
+          "title": "Enterprise",
+          "price": "Sur devis",
+          "bullet1": "SSO, SCIM et audit log",
+          "bullet2": "CSM dédié + onboarding",
+          "bullet3": "Modèles de contrat sur mesure",
+          "bullet4": "Tarif escrow au volume",
+          "cta": "Contacter les ventes"
+        }
+      },
+      "cta": {
+        "bottomTitle": "Prêt à trouver le bon formateur IA ?",
+        "bottomBody": "Publier une demande est gratuit — sans CB.",
+        "startFree": "Publier une demande",
+        "howItWorks": "Comment ça marche"
+      }
+    },
+    "forTrainers": {
+      "hero": {
+        "eyebrow": "Pour les formateurs",
+        "title": "Construisez votre carrière en formation IA",
+        "body": "Décrochez des contrats globaux, prouvez vos compétences sur de vrais modèles et soyez payé via escrow.",
+        "ctaPrimary": "Créer mon profil",
+        "ctaSecondary": "Voir les demandes ouvertes"
+      },
+      "benefits": {
+        "discoverability": {
+          "title": "Soyez vu par les bons clients",
+          "body": "Profils vérifiés, pages compétences et matching IA pour ne plus passer inaperçu."
+        },
+        "fairTests": {
+          "title": "Tests équitables sur modèle",
+          "body": "Vous êtes testé sur le vrai problème — vos résultats parlent pour vous."
+        },
+        "escrow": {
+          "title": "Paiement par escrow",
+          "body": "Escrow financé par jalon : pas de fantôme après livraison."
+        },
+        "workbench": {
+          "title": "Workbench intégré",
+          "body": "Lancez vos prompts, évaluez les outputs et joignez la preuve de travail."
+        },
+        "badges": {
+          "title": "Badges vérifiés",
+          "body": "Obtenez des certifications par compétence et démarquez-vous."
+        },
+        "global": {
+          "title": "Portée mondiale",
+          "body": "Travaillez partout : prix, taxes et contrats localisés dans 100+ pays."
+        }
+      },
+      "path": {
+        "title": "Votre parcours sur Trainova AI",
+        "1": {
+          "title": "Bâtissez votre profil",
+          "body": "Compétences, langues, certifications, échantillons, portfolio."
+        },
+        "2": {
+          "title": "Validez les certifications",
+          "body": "Décrochez des badges pour débloquer la mise en avant."
+        },
+        "3": {
+          "title": "Postulez et passez les tests",
+          "body": "Postulez et prouvez-vous sur le modèle live de l’entreprise."
+        },
+        "4": {
+          "title": "Soyez payé et noté",
+          "body": "Livrez les jalons, libérez l’escrow et collectez des avis vérifiés."
+        }
+      },
+      "earnings": {
+        "title": "Revenus réels, vraies protections",
+        "body": "Notre escrow détient l’argent de l’entreprise avant que vous ne commenciez.",
+        "bullet1": "Jusqu’à 90 % de part de revenus",
+        "bullet2": "Factures TVA automatiques",
+        "bullet3": "Versements instantanés via Stripe Connect"
+      },
+      "verification": {
+        "eyebrow": "Vérification",
+        "body": "Vérifié une fois, mis en avant pour toujours.",
+        "cta": "Faire vérifier mon compte"
+      },
+      "cta": {
+        "bottomTitle": "Prêt à faire grandir votre activité IA ?",
+        "bottomBody": "Inscription gratuite. Nous gagnons quand vous gagnez.",
+        "signUp": "Créer mon profil",
+        "howItWorks": "Voir le fonctionnement"
+      }
+    },
+    "blog": {
+      "hero": {
+        "eyebrow": "Blog",
+        "title": "Insights de la frontière IA",
+        "body": "Retours terrain, deep-dives et mises à jour de l’écosystème par l’équipe Trainova AI."
+      },
+      "empty": "Pas encore d’article. Revenez bientôt.",
+      "loadMore": "Charger plus",
+      "related": "Articles liés",
+      "breadcrumb": "Fil d’Ariane",
+      "nav": {
+        "home": "Accueil",
+        "blog": "Blog"
+      }
+    },
+    "faq": {
+      "hero": {
+        "eyebrow": "FAQ",
+        "title": "Questions fréquentes",
+        "body": "Réponses rapides aux questions les plus courantes sur Trainova AI."
+      },
+      "empty": "FAQ bientôt disponible. Contactez-nous via le formulaire en attendant."
+    },
+    "contact": {
+      "hero": {
+        "eyebrow": "Contact",
+        "title": "Parlez à l’équipe Trainova AI",
+        "body": "Ventes, support ou partenariats — réponse sous un jour ouvré."
+      },
+      "form": {
+        "name": "Votre nom",
+        "email": "Adresse email",
+        "topic": "À quel sujet ?",
+        "company": "Société (optionnel)",
+        "message": "Votre message",
+        "messageHelp": "Quelques phrases suffisent pour que l’on route votre demande.",
+        "submit": "Envoyer",
+        "submitting": "Envoi…"
+      },
+      "topics": {
+        "GENERAL": "Demande générale",
+        "SALES": "Ventes / tarification",
+        "SUPPORT": "Support client",
+        "PRESS": "Presse / médias",
+        "PARTNERSHIP": "Partenariat",
+        "ADVERTISING": "Publicité"
+      },
+      "success": {
+        "title": "Message reçu.",
+        "body": "Merci — un membre de l’équipe vous répondra sous un jour ouvré."
+      },
+      "contactInfo": {
+        "title": "Adresses directes",
+        "support": "Support",
+        "sales": "Ventes",
+        "press": "Presse"
+      },
+      "faqLink": {
+        "title": "Une réponse rapide ?",
+        "body": "La plupart des questions sont déjà dans la FAQ.",
+        "cta": "Lire la FAQ"
+      }
+    },
+    "advertise": {
+      "hero": {
+        "eyebrow": "Annoncer",
+        "title": "Atteignez l’écosystème IA",
+        "body": "Mises en avant, résultats sponsorisés, sponsoring de catégories et encarts newsletter."
+      },
+      "packagesSection": {
+        "title": "Packs sponsoring"
+      },
+      "packages": {
+        "FEATURED_COMPANY": {
+          "eyebrow": "Notoriété",
+          "title": "Entreprise mise en avant",
+          "body": "Épinglez votre entreprise sur la page d’accueil et les résultats de recherche.",
+          "price": "À partir de 1 200 $/mois"
+        },
+        "SPONSORED_TRAINER": {
+          "eyebrow": "Croissance formateur",
+          "title": "Formateur sponsorisé",
+          "body": "Boostez la visibilité d’un formateur dans ses catégories et pages de compétences.",
+          "price": "À partir de 200 $/mois"
+        },
+        "CATEGORY_SPONSOR": {
+          "eyebrow": "Verrou catégorie",
+          "title": "Sponsoring de catégorie",
+          "body": "Possédez une page de spécialité IA (RLHF, Prompt Engineering…) pour le trimestre.",
+          "price": "À partir de 4 000 $/trimestre"
+        },
+        "NEWSLETTER": {
+          "eyebrow": "Atteinte directe",
+          "title": "Encart newsletter",
+          "body": "Placez un bloc sponsorisé dans notre newsletter hebdomadaire.",
+          "price": "À partir de 1 800 $/envoi"
+        },
+        "CUSTOM": {
+          "eyebrow": "Parlons-en",
+          "title": "Campagne sur mesure",
+          "body": "Sponsoring multi-canaux, retargeting, collaborations de contenu.",
+          "price": "Devis par campagne"
+        }
+      },
+      "enquiry": {
+        "title": "Parlez-nous de votre projet",
+        "body": "Audience, cible, budget et timing — nous revenons avec une proposition sur mesure."
+      },
+      "form": {
+        "name": "Votre nom",
+        "email": "Email",
+        "company": "Entreprise",
+        "package": "Pack souhaité",
+        "budget": "Budget USD (optionnel)",
+        "message": "Objectifs et notes",
+        "submit": "Demander une proposition",
+        "submitting": "Envoi…"
+      },
+      "success": {
+        "title": "Demande reçue.",
+        "body": "Merci — l’équipe partenariats répond sous un jour ouvré."
+      }
+    }
+  },
+  "footer": {
+    "product": "Produit",
+    "resources": "Ressources",
+    "company": "Société",
+    "legal": "Légal"
   }
 }

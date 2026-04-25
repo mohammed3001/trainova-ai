@@ -35,7 +35,12 @@
     "cancel": "Cancel",
     "submit": "Submit",
     "loading": "Loading…",
-    "error": "Something went wrong"
+    "error": "Something went wrong",
+    "howItWorks": "How it works",
+    "blog": "Blog",
+    "faq": "FAQ",
+    "contact": "Contact",
+    "advertise": "Advertise"
   },
   "nav": {
     "home": "Home",
@@ -81,6 +86,34 @@
     "skill": {
       "titleTemplate": "{name} — AI Trainers, Experts and Open Requests",
       "descriptionTemplate": "Find {name} specialists on Trainova AI. Browse verified trainers, review open requests and test candidates on your live model."
+    },
+    "howItWorks": {
+      "title": "How Trainova AI works",
+      "description": "From posting a request to evaluating, contracting and paying — see the end-to-end Trainova AI workflow for companies and trainers."
+    },
+    "forCompanies": {
+      "title": "Trainova AI for companies",
+      "description": "Hire, test and contract verified AI trainers on your live model. Request builder, evaluation engine, escrow payments and analytics in one place."
+    },
+    "forTrainers": {
+      "title": "Trainova AI for trainers",
+      "description": "Get matched with global AI training contracts, prove your skills on real company models, and get paid via secure escrow."
+    },
+    "blog": {
+      "title": "Trainova AI blog",
+      "description": "Articles, tutorials and field reports on fine-tuning, RLHF, prompt engineering, evaluation, safety alignment and more."
+    },
+    "faq": {
+      "title": "Frequently asked questions",
+      "description": "Answers about Trainova AI: pricing, evaluation, payments, verification, dispute resolution and how the platform works for both sides."
+    },
+    "contact": {
+      "title": "Contact Trainova AI",
+      "description": "Get in touch with our support, sales, press or partnership teams. We respond within one business day."
+    },
+    "advertise": {
+      "title": "Advertise on Trainova AI",
+      "description": "Reach AI training teams, MLOps leads and verified specialists with featured placements, sponsored search results and category sponsorships."
     }
   },
   "landing": {
@@ -2076,5 +2109,343 @@
         }
       }
     }
+  },
+  "marketing": {
+    "howItWorks": {
+      "hero": {
+        "eyebrow": "How it works",
+        "title": "From a brief to a paid contract — in one platform",
+        "body": "Trainova AI is the marketplace, evaluation system and collaboration workspace built for AI training work. Here is what the journey looks like."
+      },
+      "threeProducts": {
+        "title": "Three products in one platform",
+        "marketplace": {
+          "eyebrow": "Marketplace",
+          "title": "Find verified specialists",
+          "body": "Search trainers by skill, language, country, model experience and rating. Filter to the people who have actually shipped what you need."
+        },
+        "evaluation": {
+          "eyebrow": "Evaluation",
+          "title": "Test on your live model",
+          "body": "Connect your API, sandbox or evaluation environment. Candidates are scored automatically and reviewed by your team — no take-home guesswork."
+        },
+        "workspace": {
+          "eyebrow": "Workspace",
+          "title": "Negotiate, contract, pay",
+          "body": "Chat, share files, track tasks, sign the contract, release escrow and review — all in one audit-ready workspace."
+        }
+      },
+      "steps": {
+        "title": "The full workflow, step by step",
+        "1": {
+          "title": "Post a request",
+          "body": "Use the AI-assisted request builder to define skills, conditions, evaluation environment and budget. We auto-suggest pricing from comparable contracts."
+        },
+        "2": {
+          "title": "Receive applications",
+          "body": "Verified trainers apply. The matching engine ranks them by skills, languages, prior models and rating fit."
+        },
+        "3": {
+          "title": "Run the evaluation",
+          "body": "Send a screening test, a hands-on task on your model, or a multi-stage workflow. Auto + manual scoring with full audit trail."
+        },
+        "4": {
+          "title": "Pick a finalist",
+          "body": "Compare attempts side-by-side, chat with finalists, then move them to acceptance with one click."
+        },
+        "5": {
+          "title": "Sign + pay via escrow",
+          "body": "Generate the contract (NDA / MSA / SOW), sign digitally, fund the escrow. The trainer can begin work the same day."
+        },
+        "6": {
+          "title": "Review + repeat",
+          "body": "Release escrow on milestone approval, exchange verified reviews and re-engage your top trainers for future projects."
+        }
+      },
+      "cta": {
+        "bottomTitle": "Ready to ship better AI training projects?",
+        "bottomBody": "Start as a company or as a trainer — both sides are free to join.",
+        "forCompanies": "Explore for companies",
+        "forTrainers": "Explore for trainers",
+        "pricing": "See pricing",
+        "companyPrimary": "Post a request",
+        "trainerSecondary": "Apply as a trainer"
+      }
+    },
+    "forCompanies": {
+      "hero": {
+        "eyebrow": "For companies",
+        "title": "Hire, test and contract elite AI trainers",
+        "body": "Stop guessing from CVs. Vet candidates on your actual model — fine-tuning, RLHF, evaluation, safety, prompt engineering and more.",
+        "ctaPrimary": "Get started for free",
+        "ctaSecondary": "Talk to sales"
+      },
+      "features": {
+        "requestBuilder": {
+          "title": "AI-assisted request builder",
+          "body": "Generate a structured request from a brief. Skill list, screening questions and evaluation criteria included."
+        },
+        "evaluation": {
+          "title": "Live model evaluation",
+          "body": "Plug in your API, sandbox or dataset and score candidates on the actual problem they will solve."
+        },
+        "matching": {
+          "title": "Smart shortlist",
+          "body": "AI matching ranks the top trainers by skill fit, response time, ratings and prior model experience."
+        },
+        "chat": {
+          "title": "Negotiation workspace",
+          "body": "Encrypted chat, file sharing, attachment scanning and AI-generated summaries — built for hiring decisions."
+        },
+        "contracts": {
+          "title": "Escrow + e-signature",
+          "body": "NDA / MSA / SOW templates, digital signature, milestone-funded escrow and automatic VAT-compliant invoices."
+        },
+        "analytics": {
+          "title": "Spend + ROI analytics",
+          "body": "Track applications, time-to-hire, cost-per-hire and trainer performance across all your projects."
+        }
+      },
+      "tiers": {
+        "title": "Pick the tier that fits",
+        "free": {
+          "eyebrow": "Get started",
+          "title": "Free",
+          "price": "$0",
+          "bullet1": "Post 1 active request",
+          "bullet2": "Up to 10 evaluation attempts / month",
+          "bullet3": "Standard chat + escrow",
+          "bullet4": "Email support",
+          "cta": "Start for free"
+        },
+        "pro": {
+          "eyebrow": "Most teams pick this",
+          "title": "Pro",
+          "price": "$199 / month",
+          "bullet1": "Unlimited active requests",
+          "bullet2": "AI matching + AI assistant",
+          "bullet3": "Advanced evaluation tooling",
+          "bullet4": "Priority support",
+          "cta": "Upgrade to Pro"
+        },
+        "enterprise": {
+          "eyebrow": "For large model teams",
+          "title": "Enterprise",
+          "price": "Custom",
+          "bullet1": "SSO, SCIM and audit log",
+          "bullet2": "Dedicated CSM + onboarding",
+          "bullet3": "Custom contract templates",
+          "bullet4": "Volume escrow pricing",
+          "cta": "Contact sales"
+        }
+      },
+      "cta": {
+        "bottomTitle": "Ready to find the right AI trainer?",
+        "bottomBody": "Free to post a request — no credit card required.",
+        "startFree": "Post a request",
+        "howItWorks": "How it works"
+      }
+    },
+    "forTrainers": {
+      "hero": {
+        "eyebrow": "For trainers",
+        "title": "Build your AI training career",
+        "body": "Get matched with global contracts, prove your skills on real company models, and get paid securely via escrow.",
+        "ctaPrimary": "Create your trainer profile",
+        "ctaSecondary": "Browse open requests"
+      },
+      "benefits": {
+        "discoverability": {
+          "title": "Be found by real buyers",
+          "body": "Verified profiles, skill pages and AI matching make sure companies hiring for your specialty actually see you."
+        },
+        "fairTests": {
+          "title": "Fair, on-model tests",
+          "body": "Companies test you on the real problem. No vague take-homes — your results speak for themselves."
+        },
+        "escrow": {
+          "title": "Get paid via escrow",
+          "body": "Funded escrow per milestone. We hold the money so the company can’t ghost you after delivery."
+        },
+        "workbench": {
+          "title": "Built-in workbench",
+          "body": "Run prompts, evaluate outputs, attach proof of work — all from one tested AI workbench."
+        },
+        "badges": {
+          "title": "Verified badges",
+          "body": "Pass our skill-specific certifications and stand out with badges that companies trust."
+        },
+        "global": {
+          "title": "Global reach",
+          "body": "Work from anywhere. We localise pricing, taxes and contracts for over 100 countries."
+        }
+      },
+      "path": {
+        "title": "Your path on Trainova AI",
+        "1": {
+          "title": "Build your profile",
+          "body": "Add skills, languages, certifications, sample work and a portfolio."
+        },
+        "2": {
+          "title": "Pass certifications",
+          "body": "Earn badges in your specialties to unlock priority placement."
+        },
+        "3": {
+          "title": "Apply + pass tests",
+          "body": "Apply to open requests and prove yourself on the company’s live model."
+        },
+        "4": {
+          "title": "Get paid + reviewed",
+          "body": "Deliver milestones, release escrow, collect verified reviews and re-engage."
+        }
+      },
+      "earnings": {
+        "title": "Real earnings, real protections",
+        "body": "Trainova AI’s escrow holds the company’s funds before you start work, so you never deliver without security.",
+        "bullet1": "Up to 90 % payout share",
+        "bullet2": "Auto VAT-compliant invoices",
+        "bullet3": "Instant payouts via Stripe Connect"
+      },
+      "verification": {
+        "eyebrow": "Verification",
+        "body": "Get verified once and unlock featured placement, sponsored category pages and direct invitations from companies.",
+        "cta": "Get verified"
+      },
+      "cta": {
+        "bottomTitle": "Ready to grow your AI training career?",
+        "bottomBody": "Free to join. We only earn when you do.",
+        "signUp": "Create your profile",
+        "howItWorks": "See how it works"
+      }
+    },
+    "blog": {
+      "hero": {
+        "eyebrow": "Blog",
+        "title": "Insights from the AI training frontier",
+        "body": "Field reports, technique deep-dives and ecosystem updates from the Trainova AI team and our specialists."
+      },
+      "empty": "No articles published yet. Check back soon.",
+      "loadMore": "Load more",
+      "related": "Related articles",
+      "breadcrumb": "Breadcrumb",
+      "nav": {
+        "home": "Home",
+        "blog": "Blog"
+      }
+    },
+    "faq": {
+      "hero": {
+        "eyebrow": "FAQ",
+        "title": "Frequently asked questions",
+        "body": "Quick answers to the most common questions about Trainova AI for companies and trainers."
+      },
+      "empty": "FAQ coming soon. In the meantime, ping us via the contact form."
+    },
+    "contact": {
+      "hero": {
+        "eyebrow": "Contact",
+        "title": "Talk to the Trainova AI team",
+        "body": "Whether it’s sales, support or partnerships — we read every message and respond within one business day."
+      },
+      "form": {
+        "name": "Your name",
+        "email": "Email address",
+        "topic": "What is this about?",
+        "company": "Company (optional)",
+        "message": "Your message",
+        "messageHelp": "Tell us in 1–2 paragraphs so we can route this to the right team.",
+        "submit": "Send message",
+        "submitting": "Sending…"
+      },
+      "topics": {
+        "GENERAL": "General enquiry",
+        "SALES": "Sales / pricing",
+        "SUPPORT": "Customer support",
+        "PRESS": "Press / media",
+        "PARTNERSHIP": "Partnership",
+        "ADVERTISING": "Advertising"
+      },
+      "success": {
+        "title": "Message received.",
+        "body": "Thanks — a teammate will reply within one business day. If your enquiry is urgent, please email support@trainova.ai directly."
+      },
+      "contactInfo": {
+        "title": "Direct emails",
+        "support": "Support",
+        "sales": "Sales",
+        "press": "Press"
+      },
+      "faqLink": {
+        "title": "Looking for a quick answer?",
+        "body": "Most questions are already answered in our FAQ.",
+        "cta": "Read the FAQ"
+      }
+    },
+    "advertise": {
+      "hero": {
+        "eyebrow": "Advertise",
+        "title": "Reach the AI training ecosystem",
+        "body": "Featured placements, sponsored search results, category sponsorships and newsletter slots — built for AI tools, cloud providers, dataset platforms and labeling vendors."
+      },
+      "packagesSection": {
+        "title": "Sponsorship packages"
+      },
+      "packages": {
+        "FEATURED_COMPANY": {
+          "eyebrow": "Brand awareness",
+          "title": "Featured Company",
+          "body": "Pin your company to homepage and search results so AI trainers see you first.",
+          "price": "From $1,200 / month"
+        },
+        "SPONSORED_TRAINER": {
+          "eyebrow": "Trainer growth",
+          "title": "Sponsored Trainer",
+          "body": "Boost individual trainer visibility in their categories and skill pages.",
+          "price": "From $200 / month"
+        },
+        "CATEGORY_SPONSOR": {
+          "eyebrow": "Category lock-in",
+          "title": "Category Sponsorship",
+          "body": "Own an entire AI specialty page (e.g. RLHF, Prompt Engineering) for the quarter.",
+          "price": "From $4,000 / quarter"
+        },
+        "NEWSLETTER": {
+          "eyebrow": "Direct reach",
+          "title": "Newsletter Slot",
+          "body": "Place a sponsored block in our weekly newsletter to companies and trainers.",
+          "price": "From $1,800 / send"
+        },
+        "CUSTOM": {
+          "eyebrow": "Talk to us",
+          "title": "Custom Campaign",
+          "body": "Multi-channel sponsorship, retargeting, content collaborations.",
+          "price": "Quoted per campaign"
+        }
+      },
+      "enquiry": {
+        "title": "Tell us what you’re thinking",
+        "body": "Share your audience, target, budget and timing. We’ll come back with a tailored proposal."
+      },
+      "form": {
+        "name": "Your name",
+        "email": "Email address",
+        "company": "Company name",
+        "package": "Package of interest",
+        "budget": "Budget (USD, optional)",
+        "message": "Goals and notes",
+        "submit": "Request a proposal",
+        "submitting": "Sending…"
+      },
+      "success": {
+        "title": "Request received.",
+        "body": "Thanks — our partnerships team will reply within one business day with package options."
+      }
+    }
+  },
+  "footer": {
+    "product": "Product",
+    "resources": "Resources",
+    "company": "Company",
+    "legal": "Legal"
   }
 }

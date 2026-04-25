@@ -1599,3 +1599,44 @@ model AiAssistRequest {
   @@index([contextEntityType, contextEntityId])
   @@index([status])
 }
+
+/// Public contact-form submissions from the marketing pages.
+/// Stored so the admin can audit / reply outside of email, and so we can
+/// do anti-spam analytics later. No PII beyond what the visitor typed.
+enum ContactSubmissionStatus {
+  NEW
+  IN_PROGRESS
+  RESOLVED
+  SPAM
+}
+
+enum ContactSubmissionTopic {
+  GENERAL
+  SALES
+  SUPPORT
+  PRESS
+  PARTNERSHIP
+  ADVERTISING
+}
+
+model ContactSubmission {
+  id        String                  @id @default(cuid())
+  name      String
+  email     String
+  topic     ContactSubmissionTopic  @default(GENERAL)
+  /// Optional company / organisation name.
+  company   String?
+  message   String
+  /// IP, captured server-side from the trusted proxy header.
+  ip        String?
+  /// User agent string at submission time.
+  userAgent String?
+  /// Locale of the page the visitor was on when they submitted.
+  locale    String?
+  status    ContactSubmissionStatus @default(NEW)
+  createdAt DateTime                @default(now())
+  updatedAt DateTime                @updatedAt
+
+  @@index([status, createdAt(sort: Desc)])
+  @@index([email])
+}
