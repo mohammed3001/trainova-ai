@@ -14,6 +14,7 @@ import {
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import {
+  ADMIN_ROLE_GROUPS,
   CreateEmailCampaignSchema,
   CreateEmailDripSequenceSchema,
   CreateEmailDripStepSchema,
@@ -56,7 +57,7 @@ interface RequestWithUser extends Request {
 @ApiTags('email-marketing')
 @Controller('admin/email')
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Roles('SUPER_ADMIN', 'ADMIN')
+@Roles(...ADMIN_ROLE_GROUPS.CONTENT)
 export class EmailMarketingController {
   constructor(private readonly svc: EmailMarketingService) {}
 
