@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation';
 import { getLocale, getTranslations } from 'next-intl/server';
-import type { SponsoredPlacementList } from '@trainova/shared';
+import { ADMIN_ROLE_GROUPS, type SponsoredPlacementList } from '@trainova/shared';
 import { getRole, getToken } from '@/lib/session';
 import { authedFetch } from '@/lib/authed-fetch';
 import { AdminSponsoredClient } from './admin-sponsored-client';
@@ -8,18 +8,23 @@ import { AdminSponsoredClient } from './admin-sponsored-client';
 /**
  * T7.G — Sponsored placements admin grid.
  *
- * Server-rendered shell that gates access (ADMIN / SUPER_ADMIN), seeds
- * the first 25 rows for fast first paint, and hands off to the client
- * island for filter/CRUD interactions. We never trust the seed beyond
- * first paint — the client component reloads after every mutation so
- * `sponsoredUntil` mirrors stay in sync with the latest server state.
+ * Server-rendered shell that gates access via `ADMIN_ROLE_GROUPS.ADS`
+ * (SUPER_ADMIN / ADMIN / ADS_MANAGER — same group used by the admin
+ * nav so any role that sees the sidebar link can also reach this
+ * page), seeds the first 25 rows for fast first paint, and hands off
+ * to the client island for filter/CRUD interactions. We never trust
+ * the seed beyond first paint — the client component reloads after
+ * every mutation so `sponsoredUntil` mirrors stay in sync with the
+ * latest server state.
  */
 export default async function AdminSponsoredPage() {
   const t = await getTranslations('admin.sponsored');
   const locale = await getLocale();
   const [token, role] = await Promise.all([getToken(), getRole()]);
   if (!token) redirect(`/${locale}/login`);
-  if (role !== 'ADMIN' && role !== 'SUPER_ADMIN') redirect(`/${locale}`);
+  if (!(ADMIN_ROLE_GROUPS.ADS as readonly string[]).includes(role ?? '')) {
+    redirect(`/${locale}`);
+  }
 
   const initial = await authedFetch<SponsoredPlacementList>(
     '/admin/sponsored?limit=25&offset=0',

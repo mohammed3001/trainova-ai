@@ -34,14 +34,14 @@ export class AdminSponsoredController {
   constructor(private readonly service: SponsoredService) {}
 
   @Get()
-  @Roles('ADMIN', 'SUPER_ADMIN')
+  @Roles('ADMIN', 'SUPER_ADMIN', 'ADS_MANAGER')
   @UsePipes(new ZodValidationPipe(adminListSponsoredQuerySchema))
   list(@Query() query: AdminListSponsoredQuery) {
     return this.service.adminList(query);
   }
 
   @Post()
-  @Roles('ADMIN', 'SUPER_ADMIN')
+  @Roles('ADMIN', 'SUPER_ADMIN', 'ADS_MANAGER')
   @UsePipes(new ZodValidationPipe(adminCreateSponsoredSchema))
   create(
     @CurrentUser() admin: AuthUser,
@@ -51,7 +51,7 @@ export class AdminSponsoredController {
   }
 
   @Patch(':id')
-  @Roles('ADMIN', 'SUPER_ADMIN')
+  @Roles('ADMIN', 'SUPER_ADMIN', 'ADS_MANAGER')
   @UsePipes(new ZodValidationPipe(adminUpdateSponsoredSchema))
   update(
     @CurrentUser() admin: AuthUser,
@@ -62,7 +62,7 @@ export class AdminSponsoredController {
   }
 
   @Delete(':id')
-  @Roles('ADMIN', 'SUPER_ADMIN')
+  @Roles('ADMIN', 'SUPER_ADMIN', 'ADS_MANAGER')
   delete(@CurrentUser() admin: AuthUser, @Param('id') id: string) {
     return this.service.adminDelete(admin.id, id);
   }
