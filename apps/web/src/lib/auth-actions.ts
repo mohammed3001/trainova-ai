@@ -2,6 +2,7 @@
 
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
+import { isAdminRole, type UserRole } from '@trainova/shared';
 import { apiFetch } from './api';
 import { AUTH_COOKIE, ROLE_COOKIE } from './session';
 
@@ -40,7 +41,9 @@ async function setAuthCookies(token: string, role: string) {
 function redirectForRole(locale: string, role: string): string {
   if (role === 'COMPANY_OWNER' || role === 'COMPANY_MEMBER') return `/${locale}/company/dashboard`;
   if (role === 'TRAINER') return `/${locale}/trainer/dashboard`;
-  if (role === 'ADMIN' || role === 'SUPER_ADMIN') return `/${locale}/admin`;
+  // T7.D — every admin role (SUPER_ADMIN/ADMIN + 5 specialized) lands on
+  // /admin; AdminLayout filters the nav for what they can actually see.
+  if (isAdminRole(role as UserRole)) return `/${locale}/admin`;
   return `/${locale}`;
 }
 
