@@ -9,6 +9,7 @@ import {
 } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
 import { ApiExcludeController } from '@nestjs/swagger';
+import { SkipThrottle } from '@nestjs/throttler';
 import type { Request } from 'express';
 import type { Stripe } from 'stripe/cjs/stripe.core.js';
 import { Prisma } from '@trainova/db';
@@ -26,6 +27,7 @@ import { StripeService } from './stripe.service';
  * uses the raw request body (see `main.ts` for the raw-body hook).
  */
 @ApiExcludeController()
+@SkipThrottle()
 @Controller('payments/webhook')
 export class StripeWebhookController {
   private readonly logger = new Logger(StripeWebhookController.name);
