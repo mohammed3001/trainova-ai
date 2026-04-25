@@ -7,6 +7,7 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { TestsService } from '../tests/tests.service';
+import { NotificationsService } from '../notifications/notifications.service';
 import {
   APPLICATION_STATUS_TRANSITIONS,
   AUDIT_ACTIONS,
@@ -17,6 +18,7 @@ import {
   type ApplyToRequestInput,
 } from '@trainova/shared';
 import type { ApplicationStatus, Prisma } from '@trainova/db';
+import { escapeHtml } from '../email/templates/layout';
 
 interface StatusUpdateContext {
   ip?: string | null;
@@ -29,6 +31,7 @@ export class ApplicationsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly tests: TestsService,
+    private readonly notifications: NotificationsService,
   ) {}
 
   async listMine(trainerId: string) {
@@ -83,7 +86,7 @@ export class ApplicationsService {
       });
     }
 
-    return this.prisma.application.create({
+    const created = await this.prisma.application.create({
       data: {
         requestId: input.requestId,
         trainerId,
@@ -93,6 +96,42 @@ export class ApplicationsService {
         answers: validated.answers as Prisma.InputJsonValue,
       },
     });
+
+    // Best-effort notify the company owner. Must include the supporting
+    // lookups inside the try/catch — otherwise a transient DB hiccup on
+    // either findUnique would bubble a 500 to the trainer even though the
+    // Application row is already committed, and a retry would collide on
+    // the unique (requestId, trainerId) constraint and surface the
+    // misleading "Already applied" ConflictException.
+    try {
+      const withCompany = await this.prisma.jobRequest.findUnique({
+        where: { id: input.requestId },
+        select: {
+          slug: true,
+          title: true,
+          company: { select: { ownerId: true } },
+        },
+      });
+      const trainerUser = await this.prisma.user.findUnique({
+        where: { id: trainerId },
+        select: { name: true },
+      });
+      if (withCompany?.company.ownerId) {
+        await this.notifications.emit({
+          userId: withCompany.company.ownerId,
+          type: 'application.received',
+          payload: {
+            title: `New application on "${withCompany.title}"`,
+            body: `${trainerUser?.name ?? 'A trainer'} applied to your request.`,
+            href: `/company/requests/${withCompany.slug}/applications/${created.id}`,
+            meta: { applicationId: created.id, requestSlug: withCompany.slug },
+          },
+        });
+      }
+    } catch {
+      /* swallow — application already persisted, notification is best-effort */
+    }
+    return created;
   }
 
   async updateStatus(
@@ -165,6 +204,68 @@ export class ApplicationsService {
       });
 
       return tx.application.findUniqueOrThrow({ where: { id: applicationId } });
+    }).then(async (updated) => {
+      try {
+        await this.notifyTrainerOfStatus(
+          app.trainerId,
+          updated.id,
+          toStatus,
+          app.request.title,
+          app.request.slug,
+        );
+      } catch {
+        /* swallow — status change is authoritative */
+      }
+      return updated;
+    });
+  }
+
+  private async notifyTrainerOfStatus(
+    trainerUserId: string,
+    applicationId: string,
+    status: ApplicationStatus,
+    requestTitle: string,
+    requestSlug: string,
+  ) {
+    const typeMap: Partial<Record<ApplicationStatus, 'application.shortlisted' | 'application.accepted' | 'application.rejected'>> = {
+      SHORTLISTED: 'application.shortlisted',
+      ACCEPTED: 'application.accepted',
+      REJECTED: 'application.rejected',
+    };
+    const t = typeMap[status];
+    if (!t) return;
+    // The company-owner-controlled `requestTitle` appears in both the JSON
+    // in-app notification (safe — rendered as text by the client) and the
+    // email HTML body (unsafe — must be escaped to prevent a malicious
+    // company from injecting markup or phishing buttons into the trainer's
+    // inbox). Build two parallel title maps so JSON stays readable while
+    // the email body uses the escaped form.
+    const safeTitle = escapeHtml(requestTitle);
+    const titles = {
+      'application.shortlisted': `Shortlisted for "${requestTitle}"`,
+      'application.accepted': `You were accepted for "${requestTitle}"`,
+      'application.rejected': `Application not selected: "${requestTitle}"`,
+    } as const;
+    const htmlTitles = {
+      'application.shortlisted': `Shortlisted for &quot;${safeTitle}&quot;`,
+      'application.accepted': `You were accepted for &quot;${safeTitle}&quot;`,
+      'application.rejected': `Application not selected: &quot;${safeTitle}&quot;`,
+    } as const;
+    await this.notifications.emit({
+      userId: trainerUserId,
+      type: t,
+      payload: {
+        title: titles[t],
+        href: `/trainer/applications/${applicationId}`,
+        meta: { applicationId, requestSlug, status },
+      },
+      email:
+        t === 'application.accepted' || t === 'application.rejected'
+          ? {
+              subject: titles[t],
+              html: `<p>${htmlTitles[t]}.</p><p>Open the request on Trainova AI to see details.</p>`,
+            }
+          : null,
     });
   }
 
@@ -238,6 +339,21 @@ export class ApplicationsService {
     // roll back the status change. Failures are logged but not fatal.
     try {
       await this.tests.sendAssignmentEmail(applicationId, testId);
+    } catch {
+      /* swallow — status change is authoritative */
+    }
+
+    try {
+      await this.notifications.emit({
+        userId: app.trainerId,
+        type: 'test.assigned',
+        payload: {
+          title: `Test assigned for "${app.request.title}"`,
+          body: 'Open your application to start the evaluation.',
+          href: `/trainer/applications/${applicationId}/test`,
+          meta: { applicationId, testId, requestSlug: app.request.slug },
+        },
+      });
     } catch {
       /* swallow — status change is authoritative */
     }

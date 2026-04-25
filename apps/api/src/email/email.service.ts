@@ -126,6 +126,30 @@ export class EmailService implements OnModuleInit {
   }
 
   /**
+   * Generic transactional/notification send. Derives a readable plaintext
+   * fallback from the supplied HTML: block-level tags become whitespace so
+   * sentences don't run together, then HTML entities are decoded so the
+   * reader doesn't see literal `&quot;` / `&amp;` strings.
+   */
+  async sendRaw(to: string, subject: string, html: string): Promise<SendEmailResult> {
+    const text = html
+      // Insert whitespace around block boundaries so adjacent sentences split.
+      .replace(/<\/?(p|div|br|h[1-6]|li|tr|table|section|article)[^>]*>/gi, ' ')
+      // Strip every remaining tag.
+      .replace(/<[^>]*>/g, '')
+      // Decode the entities our renderers actually emit (escapeHtml() output).
+      .replace(/&quot;/g, '"')
+      .replace(/&#39;/g, "'")
+      .replace(/&lt;/g, '<')
+      .replace(/&gt;/g, '>')
+      .replace(/&amp;/g, '&')
+      // Collapse runs of whitespace introduced by the boundary substitutions.
+      .replace(/\s+/g, ' ')
+      .trim();
+    return this.provider.send({ to, subject, html, text });
+  }
+
+  /**
    * Normalize an arbitrary locale string to one of the supported locales.
    * Defaults to `en` for unknown inputs so callers can pass raw user locale.
    */

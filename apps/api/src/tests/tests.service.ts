@@ -9,6 +9,8 @@ import { ConfigService } from '@nestjs/config';
 import { Prisma } from '@trainova/db';
 import { PrismaService } from '../prisma/prisma.service';
 import { EmailService } from '../email/email.service';
+import { escapeHtml } from '../email/templates/layout';
+import { NotificationsService } from '../notifications/notifications.service';
 import {
   AUDIT_ACTIONS,
   type CreateTestInput,
@@ -30,6 +32,7 @@ export class TestsService {
     private readonly prisma: PrismaService,
     private readonly email: EmailService,
     private readonly config: ConfigService,
+    private readonly notifications: NotificationsService,
   ) {}
 
   // =========================================================================
@@ -393,6 +396,44 @@ export class TestsService {
       }
 
       return updatedAttempt;
+    }).then(async (result) => {
+      // Notify the company owner that a test was submitted and awaits review.
+      // Best-effort: the submission transaction is already committed, so a
+      // notification-layer failure must not surface as a 500 to the trainer.
+      try {
+        if (attempt.applicationId) {
+          const app = await this.prisma.application.findUnique({
+            where: { id: attempt.applicationId },
+            include: {
+              trainer: { select: { name: true } },
+              request: {
+                select: {
+                  slug: true,
+                  title: true,
+                  company: { select: { ownerId: true } },
+                },
+              },
+            },
+          });
+          if (app?.request.company.ownerId) {
+            await this.notifications.emit({
+              userId: app.request.company.ownerId,
+              type: 'test.submitted',
+              payload: {
+                title: `Test submitted for "${app.request.title}"`,
+                body: `${app.trainer?.name ?? 'A trainer'} submitted the evaluation. ${
+                  hasManualTask ? 'Manual grading required.' : `Auto-score: ${autoPercent}%.`
+                }`,
+                href: `/company/requests/${app.request.slug}/applications/${app.id}`,
+                meta: { applicationId: app.id, attemptId, testId: attempt.testId },
+              },
+            });
+          }
+        }
+      } catch {
+        /* swallow — submission is authoritative */
+      }
+      return result;
     });
   }
 
@@ -564,6 +605,57 @@ export class TestsService {
 
       return updated;
     });
+
+    // Notify trainer that the test was graded. Best-effort: the grading
+    // transaction is already committed, so a notification-layer failure
+    // must not surface as a 500 to the reviewer.
+    if (updatedAttempt) {
+      try {
+        const app = attempt.applicationId
+          ? await this.prisma.application.findUnique({
+              where: { id: attempt.applicationId },
+              include: {
+                request: { select: { slug: true, title: true } },
+              },
+            })
+          : null;
+        const passed =
+          updatedAttempt.totalScore != null &&
+          updatedAttempt.totalScore >= attempt.test.passingScore;
+        await this.notifications.emit({
+          userId: attempt.trainerId,
+          type: 'test.graded',
+          payload: {
+            title: `Your test was graded${app?.request.title ? ` — "${app.request.title}"` : ''}`,
+            body: `Final score: ${updatedAttempt.totalScore ?? 0}/100 — ${
+              passed ? 'passed.' : 'did not pass.'
+            }`,
+            href: app ? `/trainer/applications/${app.id}/test` : '/trainer/dashboard',
+            meta: {
+              attemptId,
+              applicationId: attempt.applicationId,
+              totalScore: updatedAttempt.totalScore,
+              passed,
+            },
+          },
+          email: {
+            subject: `Your Trainova AI test was graded`,
+            // attempt.test.title is company-owner-controlled; every other
+            // email template in the codebase funnels user values through
+            // escapeHtml() before interpolating — follow the same pattern
+            // here so a crafted test title can't inject markup or phishing
+            // buttons into the trainer's inbox.
+            html: `<p>Your attempt on <strong>${escapeHtml(
+              attempt.test.title,
+            )}</strong> has been graded.</p><p>Final score: <strong>${
+              updatedAttempt.totalScore ?? 0
+            }/100</strong> — ${passed ? 'you passed.' : 'you did not pass this time.'}</p>`,
+          },
+        });
+      } catch {
+        /* swallow — grading is authoritative */
+      }
+    }
 
     return updatedAttempt;
   }
