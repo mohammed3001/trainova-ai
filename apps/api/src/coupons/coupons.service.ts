@@ -319,9 +319,12 @@ export class CouponsService {
       currency: string;
     },
   ): Promise<{ couponId: string; discountMinor: number; finalMinor: number }> {
-    const coupon = await tx.coupon.findUnique({ where: { code: args.code } });
-    if (!coupon) throw new NotFoundException('Coupon not found');
-
+    // Two-step read: resolve the coupon by code first, then take the
+    // row lock by id, then RE-READ to get the post-lock state. The
+    // first read can't itself be FOR UPDATE because we only have the
+    // code here (and FOR UPDATE on a SELECT-by-unique-text via Prisma
+    // is awkward); the lock + re-read pattern below is equivalent.
+    //
     // Serialize all redemption attempts for this coupon. SELECT ... FOR
     // UPDATE on the Coupon row makes the maxRedemptions / perUserLimit
     // check-then-write below atomic w.r.t. concurrent transactions:
@@ -331,7 +334,16 @@ export class CouponsService {
     // observe redeemedCount == maxRedemptions - 1, both pass the cap
     // check, and both insert a redemption + increment the counter,
     // exceeding the cap by one.
-    await tx.$executeRaw`SELECT 1 FROM "Coupon" WHERE id = ${coupon.id} FOR UPDATE`;
+    const couponPreLock = await tx.coupon.findUnique({ where: { code: args.code } });
+    if (!couponPreLock) throw new NotFoundException('Coupon not found');
+    await tx.$executeRaw`SELECT 1 FROM "Coupon" WHERE id = ${couponPreLock.id} FOR UPDATE`;
+    // Re-read after the lock so `redeemedCount` and `status` reflect
+    // any commit that landed between the unique-by-code read and the
+    // lock acquisition. Without this re-read the cap check at the
+    // bottom of the method uses the pre-lock counter and admits the
+    // (maxRedemptions + 1)-th redemption.
+    const coupon = await tx.coupon.findUnique({ where: { id: couponPreLock.id } });
+    if (!coupon) throw new NotFoundException('Coupon not found');
 
     // Idempotency for fundMilestone retries: the unique constraint on
     // CouponRedemption.milestoneId means a concurrent/retry path that
@@ -514,13 +526,16 @@ export class CouponsService {
       currency: string;
     },
   ): Promise<{ couponId: string; stripeCouponId: string }> {
-    const coupon = await tx.coupon.findUnique({ where: { code: args.code } });
+    // Lock + re-read pattern — see applyToMilestone for the full
+    // rationale. The first read resolves the coupon by code; the FOR
+    // UPDATE locks the row by id; the second read returns the
+    // post-lock counters/status so the cap and assertEligible checks
+    // below are not stale.
+    const couponPreLock = await tx.coupon.findUnique({ where: { code: args.code } });
+    if (!couponPreLock) throw new NotFoundException('Coupon not found');
+    await tx.$executeRaw`SELECT 1 FROM "Coupon" WHERE id = ${couponPreLock.id} FOR UPDATE`;
+    const coupon = await tx.coupon.findUnique({ where: { id: couponPreLock.id } });
     if (!coupon) throw new NotFoundException('Coupon not found');
-    // Lock the coupon row to serialize redemption writes for this coupon
-    // — see applyToMilestone for the full rationale on why a plain
-    // check-then-write would lose the maxRedemptions / perUserLimit cap
-    // under concurrency.
-    await tx.$executeRaw`SELECT 1 FROM "Coupon" WHERE id = ${coupon.id} FOR UPDATE`;
     this.assertEligible(coupon, {
       scope: 'SUBSCRIPTION',
       planId: args.planId,
