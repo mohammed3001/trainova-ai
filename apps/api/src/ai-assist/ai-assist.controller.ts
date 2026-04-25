@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Get,
@@ -64,7 +65,14 @@ export class AiAssistController {
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard)
   list(@CurrentUser() user: AuthUser, @Req() req: Request, @Query() rawQuery: Record<string, unknown>) {
-    const query = aiAssistListQuerySchema.parse(rawQuery) as AiAssistListQuery;
+    const parsed = aiAssistListQuerySchema.safeParse(rawQuery);
+    if (!parsed.success) {
+      throw new BadRequestException({
+        message: 'Invalid query',
+        issues: parsed.error.flatten(),
+      });
+    }
+    const query = parsed.data as AiAssistListQuery;
     return this.service.listForUser(actorOf(user, req), query.kind, query.limit);
   }
 
