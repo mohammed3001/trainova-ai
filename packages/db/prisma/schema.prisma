@@ -93,6 +93,9 @@ model User {
   emailCampaignSends            EmailCampaignSend[]       @relation("EmailCampaignSendRecipient")
   emailDripSequencesCreated     EmailDripSequence[]       @relation("EmailDripCreator")
   emailDripEnrollments          EmailDripEnrollment[]     @relation("EmailDripEnrollee")
+  interviewsScheduledByMe       InterviewMeeting[]        @relation("InterviewScheduler")
+  interviewsAsTrainer           InterviewMeeting[]        @relation("InterviewTrainer")
+  interviewsCancelledByMe       InterviewMeeting[]        @relation("InterviewCanceller")
 
   @@index([role, status])
 }
@@ -290,20 +293,20 @@ model ModelCall {
 // =========================
 
 model TrainerProfile {
-  id                String   @id @default(cuid())
-  userId            String   @unique
-  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  slug              String   @unique
+  id                String    @id @default(cuid())
+  userId            String    @unique
+  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  slug              String    @unique
   headline          String?
   bio               String?
   country           String?
-  languages         String[] @default([])
+  languages         String[]  @default([])
   timezone          String?
   hourlyRateMin     Int?
   hourlyRateMax     Int?
   availability      String?
   responseTimeHours Int?
-  verified          Boolean  @default(false)
+  verified          Boolean   @default(false)
   linkedinUrl       String?
   githubUrl         String?
   websiteUrl        String?
@@ -313,8 +316,8 @@ model TrainerProfile {
   /// without fan-out joins. Read-time correctness is enforced by an
   /// additional `endsAt >= now()` filter when boost weights are applied.
   sponsoredUntil    DateTime?
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
 
   skills              TrainerSkill[]
   assets              TrainerAsset[]
@@ -494,6 +497,7 @@ model Application {
   attachments ApplicationAttachment[]
   modelCalls  ModelCall[]
   contracts   Contract[]
+  interviews  InterviewMeeting[]
 
   @@unique([requestId, trainerId])
   @@index([trainerId])
@@ -617,6 +621,7 @@ model Conversation {
   request      JobRequest?               @relation(fields: [requestId], references: [id], onDelete: SetNull)
   participants ConversationParticipant[]
   messages     Message[]
+  interviews   InterviewMeeting[]
 
   @@index([lockedAt])
 }
@@ -1058,11 +1063,11 @@ model Milestone {
   createdAt      DateTime        @default(now())
   updatedAt      DateTime        @updatedAt
 
-  contract          Contract          @relation(fields: [contractId], references: [id], onDelete: Cascade)
-  paymentIntents    PaymentIntent[]
-  payouts           Payout[]
-  invoices          Invoice[]
-  couponRedemption  CouponRedemption?
+  contract         Contract          @relation(fields: [contractId], references: [id], onDelete: Cascade)
+  paymentIntents   PaymentIntent[]
+  payouts          Payout[]
+  invoices         Invoice[]
+  couponRedemption CouponRedemption?
 
   @@index([contractId, order])
 }
@@ -2147,4 +2152,74 @@ model EmailDripEnrollment {
 
   @@unique([sequenceId, userId])
   @@index([nextRunAt, completedAt, cancelledAt])
+}
+
+// =========================
+// Interview scheduling (T8.C)
+// =========================
+
+enum InterviewStatus {
+  /// Active, in-the-future meeting that has not yet happened.
+  SCHEDULED
+  /// Either party cancelled before it took place. Final.
+  CANCELLED
+  /// Marked completed by the company after it took place. Final.
+  COMPLETED
+}
+
+/// A scheduled interview between a company-side user and a trainer,
+/// always anchored to an existing chat conversation. Optionally linked
+/// to a specific Application so it surfaces on the application detail
+/// page. We keep the conversation as the source of truth for who can
+/// participate (both rows of `ConversationParticipant` already cover
+/// auth), and limit creation to the company side of that chat.
+///
+/// Reschedules are modeled as cancel-and-create with `rescheduledFromId`
+/// linking the new meeting to the cancelled one — keeping a single
+/// status enum per row keeps queries simple ("show me my upcoming
+/// interviews" is just `status = SCHEDULED`).
+model InterviewMeeting {
+  id                String          @id @default(cuid())
+  conversationId    String
+  applicationId     String?
+  scheduledById     String
+  trainerId         String
+  /// UTC instant the meeting starts. The originating user's IANA tz
+  /// is stored separately so the chat banner / list page can format
+  /// for either participant without ambiguity.
+  scheduledAt       DateTime
+  durationMin       Int             @default(30)
+  /// IANA tz identifier of the user who scheduled the meeting. The
+  /// trainer's view formats with their own profile timezone — this
+  /// field is informational ("scheduled by NY office") only.
+  timezone          String
+  /// Optional external join URL (Zoom / Meet / Teams). We deliberately
+  /// don't host a video provider ourselves at this tier — see T8.B.
+  meetingUrl        String?
+  agenda            String?
+  /// Free-text notes visible to *both* participants.
+  notes             String?
+  status            InterviewStatus @default(SCHEDULED)
+  cancelReason      String?
+  cancelledAt       DateTime?
+  cancelledById     String?
+  /// Set when this row was created as a reschedule of a cancelled
+  /// meeting. The cancelled row stays in the table for audit.
+  rescheduledFromId String?         @unique
+  completedAt       DateTime?
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+
+  conversation    Conversation      @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  application     Application?      @relation(fields: [applicationId], references: [id], onDelete: SetNull)
+  scheduledBy     User              @relation("InterviewScheduler", fields: [scheduledById], references: [id], onDelete: Cascade)
+  trainer         User              @relation("InterviewTrainer", fields: [trainerId], references: [id], onDelete: Cascade)
+  cancelledBy     User?             @relation("InterviewCanceller", fields: [cancelledById], references: [id])
+  rescheduledFrom InterviewMeeting? @relation("InterviewReschedule", fields: [rescheduledFromId], references: [id])
+  rescheduledTo   InterviewMeeting? @relation("InterviewReschedule")
+
+  @@index([conversationId, scheduledAt])
+  @@index([trainerId, status, scheduledAt])
+  @@index([scheduledById, status, scheduledAt])
+  @@index([status, scheduledAt])
 }

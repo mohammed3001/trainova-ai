@@ -67,6 +67,7 @@ export default async function ChatRoomPage({
         key={conversation.id}
         conversationId={conversation.id}
         currentUserId={me.id}
+        currentUserRole={me.role}
         otherName={otherName}
         otherRole={other?.user.role ?? ''}
         initialMessages={messages}

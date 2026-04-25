@@ -2159,6 +2159,45 @@
       "owner": "Owner",
       "due": "Due",
       "errorGeneric": "Something went wrong. Please try again."
+    },
+    "interviews": {
+      "title": "Interviews",
+      "scheduleCta": "Schedule interview",
+      "emptyCompany": "No interviews scheduled. Pick a time to meet the trainer.",
+      "emptyTrainer": "No interviews scheduled yet.",
+      "joinLink": "Join",
+      "minutes": "min",
+      "agenda": "Agenda",
+      "notes": "Notes",
+      "cancelledFor": "Cancelled",
+      "reschedule": "Reschedule",
+      "cancel": "Cancel",
+      "markComplete": "Mark complete",
+      "cancelPrompt": "Optional reason for cancelling:",
+      "showHistory": "Show history",
+      "hideHistory": "Hide history",
+      "newInterview": "New interview",
+      "rescheduleInterview": "Reschedule interview",
+      "fields": {
+        "scheduledAt": "Date & time",
+        "durationMin": "Duration (minutes)",
+        "timezone": "Timezone",
+        "meetingUrl": "Meeting URL",
+        "agenda": "Agenda",
+        "notes": "Notes",
+        "reason": "Reason"
+      },
+      "formCancel": "Discard",
+      "confirm": "Schedule",
+      "confirmReschedule": "Reschedule",
+      "working": "Saving…",
+      "invalidDate": "Pick a future date and time.",
+      "errorGeneric": "Something went wrong. Try again.",
+      "status": {
+        "SCHEDULED": "Scheduled",
+        "CANCELLED": "Cancelled",
+        "COMPLETED": "Completed"
+      }
     }
   },
   "matching": {

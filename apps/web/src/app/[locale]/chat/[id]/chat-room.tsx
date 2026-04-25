@@ -7,10 +7,15 @@ import { getChatSocket } from '@/lib/chat-socket';
 import type { ChatMessage } from '@/lib/chat-api';
 import { TemplatesPicker } from './templates-picker';
 import { AiPanel } from './ai-panel';
+import { InterviewsPanel } from './interviews-panel';
 
 interface Props {
   conversationId: string;
   currentUserId: string;
+  /** Role of the *current* (calling) user. Drives surfaces that gate on
+   *  company-side eligibility (e.g. the "Schedule interview" CTA in
+   *  `InterviewsPanel`). The chat itself works for any participant. */
+  currentUserRole: string;
   otherName: string;
   otherRole: string;
   initialMessages: ChatMessage[];
@@ -32,9 +37,12 @@ function formatTime(iso: string, locale: string): string {
   });
 }
 
+const COMPANY_ROLES = new Set(['COMPANY_OWNER', 'COMPANY_MEMBER']);
+
 export function ChatRoom({
   conversationId,
   currentUserId,
+  currentUserRole,
   otherName,
   otherRole,
   initialMessages,
@@ -233,6 +241,12 @@ export function ChatRoom({
 
       {/* AI co-pilot — collapsed by default, opt-in generation */}
       <AiPanel conversationId={conversationId} />
+
+      <InterviewsPanel
+        conversationId={conversationId}
+        canSchedule={COMPANY_ROLES.has(currentUserRole)}
+      />
+
 
       {/* Messages */}
       <div

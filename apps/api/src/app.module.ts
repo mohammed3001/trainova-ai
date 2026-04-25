@@ -36,6 +36,7 @@ import { ESignatureModule } from './e-signature/e-signature.module';
 import { CouponsModule } from './coupons/coupons.module';
 import { SponsoredModule } from './sponsored/sponsored.module';
 import { EmailMarketingModule } from './email-marketing/email-marketing.module';
+import { InterviewsModule } from './interviews/interviews.module';
 import { HealthController } from './health.controller';
 
 @Module({
@@ -78,6 +79,7 @@ import { HealthController } from './health.controller';
     CouponsModule,
     SponsoredModule,
     EmailMarketingModule,
+    InterviewsModule,
   ],
   controllers: [HealthController],
   providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],

@@ -2159,6 +2159,45 @@
       "owner": "المسؤول",
       "due": "الموعد",
       "errorGeneric": "حدث خطأ. حاول مرة أخرى."
+    },
+    "interviews": {
+      "title": "المقابلات",
+      "scheduleCta": "حدد موعد مقابلة",
+      "emptyCompany": "لا توجد مقابلات. اختر وقتاً لمقابلة المدرب.",
+      "emptyTrainer": "لا توجد مقابلات بعد.",
+      "joinLink": "انضم",
+      "minutes": "د",
+      "agenda": "جدول الأعمال",
+      "notes": "ملاحظات",
+      "cancelledFor": "ملغاة",
+      "reschedule": "إعادة جدولة",
+      "cancel": "إلغاء",
+      "markComplete": "تم الإنجاز",
+      "cancelPrompt": "سبب الإلغاء (اختياري):",
+      "showHistory": "عرض السجل",
+      "hideHistory": "إخفاء السجل",
+      "newInterview": "مقابلة جديدة",
+      "rescheduleInterview": "إعادة جدولة المقابلة",
+      "fields": {
+        "scheduledAt": "التاريخ والوقت",
+        "durationMin": "المدة (دقيقة)",
+        "timezone": "المنطقة الزمنية",
+        "meetingUrl": "رابط الاجتماع",
+        "agenda": "جدول الأعمال",
+        "notes": "ملاحظات",
+        "reason": "السبب"
+      },
+      "formCancel": "إلغاء",
+      "confirm": "جدولة",
+      "confirmReschedule": "إعادة الجدولة",
+      "working": "جارٍ الحفظ…",
+      "invalidDate": "اختر تاريخاً ووقتاً مستقبلياً.",
+      "errorGeneric": "حدث خطأ. حاول مرة أخرى.",
+      "status": {
+        "SCHEDULED": "مجدولة",
+        "CANCELLED": "ملغاة",
+        "COMPLETED": "منجزة"
+      }
     }
   },
   "matching": {
