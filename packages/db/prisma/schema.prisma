@@ -74,6 +74,7 @@ model User {
   disputesResolved              Dispute[]                 @relation("DisputeResolver")
   taxProfile                    TaxProfile?
   invoicesIssued                Invoice[]                 @relation("InvoiceIssuedBy")
+  aiAssistRequests              AiAssistRequest[]
 
   @@index([role, status])
 }
@@ -1537,4 +1538,64 @@ model ExchangeRate {
   fetchedAt DateTime @default(now())
 
   @@index([base, quote, fetchedAt(sort: Desc)])
+}
+
+// =========================
+// AI Assistant (T7.A)
+// =========================
+
+/// Discriminator for the type of LLM-backed task the platform performs on
+/// behalf of a user. Each kind has a dedicated controller endpoint with a
+/// typed input/output zod schema in `packages/shared/src/ai-assist.ts`.
+enum AiAssistKind {
+  REQUEST_DRAFT // Help a company draft a JobRequest from a brief.
+  APPLICATION_SCREEN // Score + summarize an Application against a JobRequest.
+  CHAT_SUMMARY // Summarize a Conversation up to a given cutoff message.
+  CHAT_TASKS // Extract action items from a Conversation.
+  SEO_META // Generate SEO title/description for a Page or Article.
+  EMAIL_DRAFT // Draft transactional/marketing email copy.
+  PRICING_SUGGEST // Suggest contract pricing range for a JobRequest.
+  TEST_GEN // Generate Test tasks from a JobRequest description.
+  PROFILE_OPT // Suggest improvements to a TrainerProfile bio + headline.
+}
+
+enum AiAssistStatus {
+  PENDING
+  SUCCEEDED
+  FAILED
+}
+
+/// Persistent log of every AI Assistant invocation. Used for: (a) cost
+/// accounting, (b) abuse detection, (c) showing recent generations to the
+/// user, and (d) replay/audit. The full prompt (`inputJson`) and model
+/// output (`outputJson`) are stored verbatim — keep PII minimization at
+/// the call site.
+model AiAssistRequest {
+  id                String         @id @default(cuid())
+  userId            String
+  user              User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  kind              AiAssistKind
+  status            AiAssistStatus @default(PENDING)
+  modelUsed         String? // e.g. "gpt-4o-mini"
+  provider          String? // "openai" | "mock" — what actually ran
+  inputJson         Json
+  outputJson        Json?
+  error             String?
+  promptTokens      Int            @default(0)
+  completionTokens  Int            @default(0)
+  /// Cost expressed in micro-cents (1e-6 USD cent) for sub-cent precision.
+  costMicros        Int            @default(0)
+  durationMs        Int?
+  /// Soft reference (no FK) to the entity this generation is attached to.
+  /// Allowed values mirror `AiAssistKind` semantics: 'JobRequest',
+  /// 'Application', 'Conversation', 'Page', 'Article', 'EmailTemplate',
+  /// 'TrainerProfile', 'Test'. Nullable for kinds without a context entity.
+  contextEntityType String?
+  contextEntityId   String?
+  ip                String?
+  createdAt         DateTime       @default(now())
+
+  @@index([userId, kind, createdAt(sort: Desc)])
+  @@index([contextEntityType, contextEntityId])
+  @@index([status])
 }

@@ -1833,5 +1833,114 @@
     "saved": "Preferencias guardadas.",
     "errorGeneric": "No se pudieron guardar las preferencias. Inténtalo de nuevo.",
     "fxStaleWarning": "Los tipos de cambio no están disponibles temporalmente; los montos se muestran en su moneda original."
+  },
+  "ai": {
+    "assist": {
+      "title": "Suite de Asistente IA",
+      "subtitle": "Nueve herramientas con LLM para redactar, filtrar, resumir, optimizar y tarifar.",
+      "badge": "IA · Beta",
+      "tabsLabel": "Herramientas IA",
+      "resultTitle": "Resultado",
+      "running": "Generando…",
+      "savedAs": "Guardado como",
+      "emptyResult": "Ejecute una herramienta para ver la salida IA aquí.",
+      "runButton": "Generar con IA",
+      "kinds": {
+        "REQUEST_DRAFT": {
+          "tab": "Redactar solicitud",
+          "heading": "Redactar una solicitud de proyecto",
+          "help": "Pegue un brief y generaremos una publicación completa con habilidades, presupuesto y condiciones.",
+          "fields": {
+            "brief": "Brief",
+            "industry": "Sector (opcional)",
+            "locale": "Idioma de salida"
+          },
+          "placeholders": {
+            "brief": "Buscamos un experto en fine-tuning para alinear nuestro LLM..."
+          }
+        },
+        "APPLICATION_SCREEN": {
+          "tab": "Filtrar candidatura",
+          "heading": "Filtrar una candidatura",
+          "help": "Indique el ID. Calcularemos adecuación, resumen, fortalezas y riesgos.",
+          "fields": {
+            "applicationId": "ID de candidatura"
+          },
+          "placeholders": {}
+        },
+        "CHAT_SUMMARY": {
+          "tab": "Resumir chat",
+          "heading": "Resumir una conversación",
+          "help": "Indique el ID. Resumiremos puntos clave y detectaremos el idioma.",
+          "fields": {
+            "conversationId": "ID de conversación",
+            "maxMessages": "Mensajes máx."
+          },
+          "placeholders": {}
+        },
+        "CHAT_TASKS": {
+          "tab": "Extraer tareas",
+          "heading": "Extraer tareas de una conversación",
+          "help": "Listaremos acciones con pistas de responsable y plazo.",
+          "fields": {
+            "conversationId": "ID de conversación",
+            "maxMessages": "Mensajes máx."
+          },
+          "placeholders": {}
+        },
+        "SEO_META": {
+          "tab": "Meta SEO",
+          "heading": "Generar meta SEO",
+          "help": "Genera título, descripción, slug y palabras clave optimizadas.",
+          "fields": {
+            "resource": "Recurso",
+            "topic": "Tema",
+            "body": "Cuerpo / contexto",
+            "locale": "Idioma de salida"
+          },
+          "placeholders": {}
+        },
+        "EMAIL_DRAFT": {
+          "tab": "Redactar email",
+          "heading": "Redactar un email",
+          "help": "Elija audiencia e intención. Generaremos asunto, preheader y cuerpo.",
+          "fields": {
+            "audience": "Audiencia",
+            "intent": "Intención",
+            "tone": "Tono (opcional)",
+            "locale": "Idioma de salida"
+          },
+          "placeholders": {}
+        },
+        "PRICING_SUGGEST": {
+          "tab": "Sugerir precio",
+          "heading": "Sugerir precio para una solicitud",
+          "help": "Comparamos con contratos similares y recomendamos mín./máx./punto.",
+          "fields": {
+            "jobRequestId": "ID de solicitud"
+          },
+          "placeholders": {}
+        },
+        "TEST_GEN": {
+          "tab": "Generar prueba",
+          "heading": "Generar tareas de evaluación",
+          "help": "Diseñamos tareas prácticas alineadas con las habilidades requeridas.",
+          "fields": {
+            "jobRequestId": "ID de solicitud",
+            "taskCount": "Número de tareas"
+          },
+          "placeholders": {}
+        },
+        "PROFILE_OPT": {
+          "tab": "Optimizar perfil",
+          "heading": "Optimizar un perfil de formador",
+          "help": "Refinamos titular, biografía, habilidades y damos consejos accionables.",
+          "fields": {
+            "trainerProfileId": "ID del perfil"
+          },
+          "placeholders": {}
+        }
+      }
+    }
   }
 }

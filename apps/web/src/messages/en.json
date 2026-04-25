@@ -1967,5 +1967,114 @@
         "errorGeneric": "Could not apply decision. Please try again."
       }
     }
+  },
+  "ai": {
+    "assist": {
+      "title": "AI Assistant Suite",
+      "subtitle": "Nine LLM-powered tools to draft, screen, summarise, optimise and price across the platform.",
+      "badge": "AI · Beta",
+      "tabsLabel": "AI tools",
+      "resultTitle": "Result",
+      "running": "Generating…",
+      "savedAs": "Saved as",
+      "emptyResult": "Run a tool to see structured AI output here.",
+      "runButton": "Generate with AI",
+      "kinds": {
+        "REQUEST_DRAFT": {
+          "tab": "Draft request",
+          "heading": "Draft a job request",
+          "help": "Paste a brief; we'll generate a polished posting with skills, budget and conditions.",
+          "fields": {
+            "brief": "Brief",
+            "industry": "Industry (optional)",
+            "locale": "Output locale"
+          },
+          "placeholders": {
+            "brief": "We need a fine-tuning expert to align our LLM with our medical Q&A use case..."
+          }
+        },
+        "APPLICATION_SCREEN": {
+          "tab": "Screen applicant",
+          "heading": "Screen an application",
+          "help": "Provide an application ID; we'll score fit, summarise, list strengths and risks.",
+          "fields": {
+            "applicationId": "Application ID"
+          },
+          "placeholders": {}
+        },
+        "CHAT_SUMMARY": {
+          "tab": "Summarise chat",
+          "heading": "Summarise a conversation",
+          "help": "Provide a conversation ID; we'll summarise key points and detect language.",
+          "fields": {
+            "conversationId": "Conversation ID",
+            "maxMessages": "Max messages"
+          },
+          "placeholders": {}
+        },
+        "CHAT_TASKS": {
+          "tab": "Extract tasks",
+          "heading": "Extract tasks from a conversation",
+          "help": "We'll list action items and assign hints for owner and due date.",
+          "fields": {
+            "conversationId": "Conversation ID",
+            "maxMessages": "Max messages"
+          },
+          "placeholders": {}
+        },
+        "SEO_META": {
+          "tab": "SEO meta",
+          "heading": "Generate SEO meta",
+          "help": "Generate optimized title, description, slug and keywords.",
+          "fields": {
+            "resource": "Resource",
+            "topic": "Topic",
+            "body": "Body / context",
+            "locale": "Output locale"
+          },
+          "placeholders": {}
+        },
+        "EMAIL_DRAFT": {
+          "tab": "Draft email",
+          "heading": "Draft a transactional email",
+          "help": "Pick audience and intent; we generate subject, preheader and body.",
+          "fields": {
+            "audience": "Audience",
+            "intent": "Intent",
+            "tone": "Tone (optional)",
+            "locale": "Output locale"
+          },
+          "placeholders": {}
+        },
+        "PRICING_SUGGEST": {
+          "tab": "Suggest pricing",
+          "heading": "Suggest pricing for a request",
+          "help": "We compare to similar contracts and recommend min/max/point estimates.",
+          "fields": {
+            "jobRequestId": "Job request ID"
+          },
+          "placeholders": {}
+        },
+        "TEST_GEN": {
+          "tab": "Generate test",
+          "heading": "Generate evaluation tasks",
+          "help": "We design practical tasks aligned with the request's skills.",
+          "fields": {
+            "jobRequestId": "Job request ID",
+            "taskCount": "Number of tasks"
+          },
+          "placeholders": {}
+        },
+        "PROFILE_OPT": {
+          "tab": "Optimise profile",
+          "heading": "Optimise a trainer profile",
+          "help": "We refine headline, bio, skills and provide actionable tips.",
+          "fields": {
+            "trainerProfileId": "Trainer profile ID"
+          },
+          "placeholders": {}
+        }
+      }
+    }
   }
 }
