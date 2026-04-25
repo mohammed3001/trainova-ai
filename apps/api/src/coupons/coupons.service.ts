@@ -232,6 +232,18 @@ export class CouponsService {
     if (!compute.applicable) {
       throw new BadRequestException(compute.reason ?? 'Coupon cannot be applied');
     }
+    // Global redemption cap — surface the failure at preview time so
+    // the buyer sees "Coupon redemption limit reached" up front instead
+    // of being held until the apply step at payment time. The
+    // authoritative cap is re-checked inside applyTo* under the
+    // redemption transaction so this preview check is safe under
+    // concurrency.
+    if (
+      coupon.maxRedemptions != null &&
+      coupon.redeemedCount >= coupon.maxRedemptions
+    ) {
+      throw new ConflictException('Coupon redemption limit reached');
+    }
     // Per-user limit check (read-only here; the authoritative check is
     // inside applyTo* which runs in a transaction with the redemption
     // insert).
@@ -279,6 +291,30 @@ export class CouponsService {
   ): Promise<{ couponId: string; discountMinor: number; finalMinor: number }> {
     const coupon = await tx.coupon.findUnique({ where: { code: args.code } });
     if (!coupon) throw new NotFoundException('Coupon not found');
+
+    // Idempotency for fundMilestone retries: the unique constraint on
+    // CouponRedemption.milestoneId means a concurrent/retry path that
+    // already wrote the redemption (with a possibly-discounted Stripe
+    // charge already on file under the same `fund-${milestoneId}`
+    // idempotency key) must see a *successful* re-apply with the same
+    // financial values it originally wrote. Reject only when the prior
+    // redemption was for a *different* coupon code or user.
+    const existing = await tx.couponRedemption.findUnique({
+      where: { milestoneId: args.milestoneId },
+    });
+    if (existing) {
+      if (existing.couponId !== coupon.id || existing.userId !== args.userId) {
+        throw new ConflictException(
+          'Milestone already has a different coupon applied',
+        );
+      }
+      return {
+        couponId: existing.couponId,
+        discountMinor: existing.discountMinor,
+        finalMinor: existing.finalAmountMinor,
+      };
+    }
+
     this.assertEligible(coupon, {
       scope: 'MILESTONE',
       userRole: args.userRole,
@@ -319,8 +355,27 @@ export class CouponsService {
         },
       });
     } catch (e) {
+      // A racing request could have inserted the redemption between our
+      // findUnique and create. Re-read and reconcile by code/user; this
+      // keeps fundMilestone retry-safe even under concurrency.
       if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2002') {
-        throw new ConflictException('Milestone already has a coupon applied');
+        const raced = await tx.couponRedemption.findUnique({
+          where: { milestoneId: args.milestoneId },
+        });
+        if (
+          raced &&
+          raced.couponId === coupon.id &&
+          raced.userId === args.userId
+        ) {
+          return {
+            couponId: raced.couponId,
+            discountMinor: raced.discountMinor,
+            finalMinor: raced.finalAmountMinor,
+          };
+        }
+        throw new ConflictException(
+          'Milestone already has a different coupon applied',
+        );
       }
       throw e;
     }
@@ -494,13 +549,20 @@ export class CouponsService {
         throw new ForbiddenException('Coupon is restricted to trainers');
       }
     }
-    if (
-      args.scope === 'SUBSCRIPTION' &&
-      coupon.planIds.length > 0 &&
-      args.planId &&
-      !coupon.planIds.includes(args.planId)
-    ) {
-      throw new ForbiddenException('Coupon is not valid for this plan');
+    if (args.scope === 'SUBSCRIPTION' && coupon.planIds.length > 0) {
+      // Plan-restricted coupon needs to know which plan the caller is
+      // checking against. Without that, an earlier `args.planId &&`
+      // short-circuit silently passed plan-restricted previews when no
+      // planId was provided — misleading the buyer with a discount
+      // that the apply step would later refuse.
+      if (!args.planId) {
+        throw new BadRequestException(
+          'planId is required to validate a plan-restricted coupon',
+        );
+      }
+      if (!coupon.planIds.includes(args.planId)) {
+        throw new ForbiddenException('Coupon is not valid for this plan');
+      }
     }
   }
 }
