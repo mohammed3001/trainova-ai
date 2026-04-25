@@ -216,11 +216,20 @@ export class InvoiceService {
     query: InvoiceListQuery,
   ): Promise<{ items: PublicInvoice[]; nextCursor: string | null }> {
     const limit = Math.min(query.limit ?? 20, 100);
+    // PURCHASE invoices have no `payout` relation — for a trainer, the
+    // ownership link to a PURCHASE is via `contract.trainerId`. Filtering
+    // only by `payout.userId` would silently drop PURCHASE rows even when
+    // the caller explicitly asked for `kind=PURCHASE`.
+    const kindFilter = query.kind ?? 'PAYOUT_STATEMENT';
+    const ownershipFilter: Prisma.InvoiceWhereInput =
+      kindFilter === 'PURCHASE'
+        ? { contract: { trainerId: userId } }
+        : { payout: { userId } };
     const rows = await this.prisma.invoice.findMany({
       where: {
-        kind: query.kind ?? 'PAYOUT_STATEMENT',
+        kind: kindFilter,
         status: query.status ?? undefined,
-        payout: { userId },
+        ...ownershipFilter,
       },
       orderBy: { issuedAt: 'desc' },
       take: limit + 1,

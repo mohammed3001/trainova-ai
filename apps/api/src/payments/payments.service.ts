@@ -131,8 +131,16 @@ export class PaymentsService {
       sellerCountry: trainer?.taxProfile?.countryCode ?? null,
       buyerCountry:
         companyOwner?.taxProfile?.countryCode ?? application.request.company.country ?? null,
-      sellerHasTaxId: !!trainer?.taxProfile?.taxId,
-      buyerHasTaxId: !!companyOwner?.taxProfile?.taxId,
+      // Reverse-charge is only lawful when the counterparty's tax id
+      // has been *verified* by an admin — self-entered ids cannot
+      // zero-rate a B2B invoice or HMRC/ZATCA will reject the return.
+      sellerHasTaxId: !!(
+        trainer?.taxProfile?.taxId && trainer.taxProfile.taxIdVerified
+      ),
+      buyerHasTaxId: !!(
+        companyOwner?.taxProfile?.taxId &&
+        companyOwner.taxProfile.taxIdVerified
+      ),
     });
     const contractSplit = computeTaxInclusive(total, resolvedTax.rateBps);
 
