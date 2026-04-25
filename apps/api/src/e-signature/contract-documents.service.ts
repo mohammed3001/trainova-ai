@@ -15,7 +15,7 @@ import {
   TemplateRenderError,
 } from '@trainova/shared';
 import type { TemplateVariable } from '@trainova/shared';
-import type { Prisma } from '@prisma/client';
+import { Prisma } from '@trainova/db';
 import { PrismaService } from '../prisma/prisma.service';
 
 /** SHA-256 hex of the exact UTF-8 body bytes. */
