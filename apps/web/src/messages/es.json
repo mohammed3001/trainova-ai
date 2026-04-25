@@ -2139,6 +2139,45 @@
       "owner": "Responsable",
       "due": "Fecha",
       "errorGeneric": "Algo salió mal. Inténtalo de nuevo."
+    },
+    "interviews": {
+      "title": "Entrevistas",
+      "scheduleCta": "Programar entrevista",
+      "emptyCompany": "No hay entrevistas programadas. Elige un horario para reunirte con el formador.",
+      "emptyTrainer": "Aún no hay entrevistas programadas.",
+      "joinLink": "Unirse",
+      "minutes": "min",
+      "agenda": "Agenda",
+      "notes": "Notas",
+      "cancelledFor": "Cancelado",
+      "reschedule": "Reprogramar",
+      "cancel": "Cancelar",
+      "markComplete": "Marcar como completada",
+      "cancelPrompt": "Motivo de la cancelación (opcional):",
+      "showHistory": "Mostrar historial",
+      "hideHistory": "Ocultar historial",
+      "newInterview": "Nueva entrevista",
+      "rescheduleInterview": "Reprogramar entrevista",
+      "fields": {
+        "scheduledAt": "Fecha y hora",
+        "durationMin": "Duración (minutos)",
+        "timezone": "Zona horaria",
+        "meetingUrl": "URL de la reunión",
+        "agenda": "Agenda",
+        "notes": "Notas",
+        "reason": "Motivo"
+      },
+      "formCancel": "Descartar",
+      "confirm": "Programar",
+      "confirmReschedule": "Reprogramar",
+      "working": "Guardando…",
+      "invalidDate": "Elige una fecha y hora futuras.",
+      "errorGeneric": "Algo salió mal. Inténtalo de nuevo.",
+      "status": {
+        "SCHEDULED": "Programada",
+        "CANCELLED": "Cancelada",
+        "COMPLETED": "Completada"
+      }
     }
   },
   "matching": {

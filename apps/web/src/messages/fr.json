@@ -2139,6 +2139,45 @@
       "owner": "Responsable",
       "due": "Échéance",
       "errorGeneric": "Une erreur est survenue. Réessayez."
+    },
+    "interviews": {
+      "title": "Entretiens",
+      "scheduleCta": "Planifier un entretien",
+      "emptyCompany": "Aucun entretien planifié. Choisissez un horaire pour rencontrer le formateur.",
+      "emptyTrainer": "Aucun entretien pour l'instant.",
+      "joinLink": "Rejoindre",
+      "minutes": "min",
+      "agenda": "Ordre du jour",
+      "notes": "Notes",
+      "cancelledFor": "Annulé",
+      "reschedule": "Reprogrammer",
+      "cancel": "Annuler",
+      "markComplete": "Marquer terminé",
+      "cancelPrompt": "Raison de l'annulation (facultatif) :",
+      "showHistory": "Afficher l'historique",
+      "hideHistory": "Masquer l'historique",
+      "newInterview": "Nouvel entretien",
+      "rescheduleInterview": "Reprogrammer l'entretien",
+      "fields": {
+        "scheduledAt": "Date et heure",
+        "durationMin": "Durée (minutes)",
+        "timezone": "Fuseau horaire",
+        "meetingUrl": "URL de la réunion",
+        "agenda": "Ordre du jour",
+        "notes": "Notes",
+        "reason": "Raison"
+      },
+      "formCancel": "Annuler",
+      "confirm": "Planifier",
+      "confirmReschedule": "Reprogrammer",
+      "working": "Enregistrement…",
+      "invalidDate": "Choisissez une date et heure futures.",
+      "errorGeneric": "Une erreur est survenue. Réessayez.",
+      "status": {
+        "SCHEDULED": "Planifié",
+        "CANCELLED": "Annulé",
+        "COMPLETED": "Terminé"
+      }
     }
   },
   "matching": {
