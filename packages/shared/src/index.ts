@@ -12,3 +12,4 @@ export * from './admin-finance';
 export * from './matching';
 export * from './currency';
 export * from './preferences';
+export * from './reviews';

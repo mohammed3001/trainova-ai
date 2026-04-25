@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useMemo, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
@@ -193,6 +194,12 @@ export function ContractDetailClient({ locale, contract, viewer }: Props) {
         </dl>
       </header>
 
+      <ContractActions
+        contractId={contract.id}
+        locale={locale}
+        status={contract.status}
+      />
+
       <section aria-labelledby="milestones-heading" className="space-y-4">
         <h2
           id="milestones-heading"
@@ -361,5 +368,58 @@ function MilestoneCard({
         </div>
       ) : null}
     </li>
+  );
+}
+
+/**
+ * Shortcut bar for T5.E flows accessible from a contract page:
+ * - Raise dispute (any non-terminal contract — only OPEN/UNDER_REVIEW
+ *   active disputes are blocked server-side, so we always offer the CTA
+ *   and let the API return 409 if there's already an active one).
+ * - Leave a review (only on COMPLETED contracts; the eligible-list page
+ *   re-checks ownership and dedupes). The /reviews route surfaces all
+ *   eligible rows for the actor; we link there so the form can prefill
+ *   counterparty + title without re-fetching here.
+ */
+function ContractActions({
+  contractId,
+  locale,
+  status,
+}: {
+  contractId: string;
+  locale: string;
+  status: string;
+}) {
+  const t = useTranslations('contracts.actions');
+  const canDispute = status !== 'CANCELLED';
+  const canReview = status === 'COMPLETED';
+  if (!canDispute && !canReview) return null;
+  return (
+    <nav
+      aria-label={t('label')}
+      className="flex flex-wrap items-center gap-2 rounded-2xl border border-white/40 bg-white/60 p-3 text-xs shadow-sm backdrop-blur-md dark:border-white/10 dark:bg-slate-900/40"
+    >
+      {canReview ? (
+        <Link
+          href={`/${locale}/reviews`}
+          className="btn-primary text-xs"
+          data-testid="contract-review-cta"
+        >
+          {t('leaveReview')}
+        </Link>
+      ) : null}
+      {canDispute ? (
+        <Link
+          href={`/${locale}/disputes/new?contractId=${encodeURIComponent(contractId)}`}
+          className="btn-ghost text-xs text-rose-700 dark:text-rose-300"
+          data-testid="contract-dispute-cta"
+        >
+          {t('raiseDispute')}
+        </Link>
+      ) : null}
+      <Link href={`/${locale}/disputes`} className="btn-ghost text-xs">
+        {t('viewDisputes')}
+      </Link>
+    </nav>
   );
 }

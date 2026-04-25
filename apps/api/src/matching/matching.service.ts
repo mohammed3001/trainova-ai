@@ -183,8 +183,13 @@ export class MatchingService {
     const matchedLangs = trainer.profile.languages.filter((l) =>
       jobLangs.has(l.toLowerCase()),
     );
+    // Trainer language arrays may contain case-variant duplicates (e.g.
+    // ['en', 'EN']) which would inflate the matched count past the deduped
+    // jobLangs Set size. Clamp to 100 so the breakdown bar never overflows.
     const langsScore =
-      jobLangs.size === 0 ? 50 : Math.round((matchedLangs.length / jobLangs.size) * 100);
+      jobLangs.size === 0
+        ? 50
+        : Math.min(100, Math.round((matchedLangs.length / jobLangs.size) * 100));
 
     // ---- Rate fit (15%) ----------------------------------------------------
     const rateScore = this.scoreRateFit(trainer, job);
@@ -363,13 +368,19 @@ export class MatchingService {
 
   private async candidateTrainersForJob(job: JobView, cap: number): Promise<TrainerView[]> {
     const skillIds = job.skills.map((s) => s.skillId);
+    // Build the OR clauses conditionally so a request with neither required
+    // skills nor required languages still recalls the freshest active
+    // trainers (mirrors candidateJobsForTrainer).
+    const orConditions: import('@trainova/db').Prisma.TrainerProfileWhereInput[] = [];
+    if (skillIds.length)
+      orConditions.push({ skills: { some: { skillId: { in: skillIds } } } });
+    if (job.languages.length)
+      orConditions.push({ languages: { hasSome: job.languages } });
+
     const profiles = await this.prisma.trainerProfile.findMany({
       where: {
         user: { status: 'ACTIVE' },
-        OR: [
-          skillIds.length ? { skills: { some: { skillId: { in: skillIds } } } } : { id: { equals: '' } },
-          job.languages.length ? { languages: { hasSome: job.languages } } : { id: { equals: '' } },
-        ],
+        ...(orConditions.length ? { OR: orConditions } : {}),
       },
       take: cap,
       orderBy: [{ verified: 'desc' }, { updatedAt: 'desc' }],

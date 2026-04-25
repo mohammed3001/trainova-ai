@@ -4,6 +4,7 @@ import { getLocale, getTranslations } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 import { apiFetch } from '@/lib/api';
 import { JsonLd } from '@/components/json-ld';
+import { ReviewsPanel } from '@/components/reviews/reviews-panel';
 import {
   absoluteUrl,
   breadcrumbLd,
@@ -375,6 +376,9 @@ export default async function TrainerDetailPage({
             </ul>
           </section>
         ) : null}
+
+        {/* Reviews (T5.E — verified contract reviews) */}
+        <ReviewsPanel trainerSlug={slug} locale={locale} />
       </article>
     </>
   );
