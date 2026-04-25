@@ -1,4 +1,4 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Get, Header } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { SUPPORTED_DISPLAY_CURRENCIES, type FxRate } from '@trainova/shared';
 import { CurrencyService } from './currency.service';
@@ -14,8 +14,10 @@ interface RatesResponse {
  * T6.A — Public FX endpoint. The web app reads this once on the
  * preferences-resolution path so client formatters can live entirely on
  * the edge (no per-render API call). Cache headers tell Vercel/Cloudflare
- * to share the response across users for one hour, matching the in-process
- * TTL on the service.
+ * to share the response across users for the same six-hour window the
+ * in-process cache uses (`RATE_TTL_MS`), with a short `stale-while-
+ * revalidate` window so the next request after expiry serves stale
+ * synchronously while a single client refreshes in the background.
  */
 @ApiTags('currency')
 @Controller('currency')
@@ -23,6 +25,7 @@ export class CurrencyController {
   constructor(private readonly currency: CurrencyService) {}
 
   @Get('rates')
+  @Header('Cache-Control', 'public, s-maxage=21600, stale-while-revalidate=600')
   async rates(): Promise<RatesResponse> {
     const rates = await this.currency.getRates();
     const fetchedAt = rates.length

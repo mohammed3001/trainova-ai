@@ -88,7 +88,7 @@ export default async function AdminDashboard() {
               {t('admin.verification.title')}
             </Link>
             <Link className="btn-ghost" href={`/${locale}/admin/requests`}>
-              {t('admin.requests')}
+              {t('admin.requests.title')}
             </Link>
             <Link className="btn-ghost" href={`/${locale}/admin/ads`}>
               {t('admin.ads.title')}
