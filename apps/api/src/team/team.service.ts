@@ -216,9 +216,24 @@ export class TeamService {
       // an admin tries to revoke it, fall back to owner-only authority.
       throw new ForbiddenException('Only the company owner can revoke an ADMIN invitation');
     }
-    const updated = await this.prisma.companyInvitation.update({
-      where: { id: invitation.id },
+    // Atomic claim: only flip PENDING → REVOKED. If `acceptInvitation`
+    // commits its own atomic claim between our read at line 205 and
+    // this write, `updateMany` matches zero rows and we surface a
+    // conflict instead of overwriting an already-`ACCEPTED` row (which
+    // would leave the system with a `CompanyMember` whose invitation
+    // still claims `REVOKED`). Reciprocal of the guard in
+    // `acceptInvitation` and mirrors `resetPassword` in `auth.service.ts`.
+    const claimed = await this.prisma.companyInvitation.updateMany({
+      where: { id: invitation.id, status: 'PENDING' },
       data: { status: 'REVOKED', revokedAt: new Date(), revokedById: callerId },
+    });
+    if (claimed.count === 0) {
+      throw new ConflictException(
+        'Invitation is no longer pending; it may have been accepted concurrently',
+      );
+    }
+    const updated = await this.prisma.companyInvitation.findUniqueOrThrow({
+      where: { id: invitation.id },
       include: invitationInclude,
     });
     return this.toInvitationDto(updated);
