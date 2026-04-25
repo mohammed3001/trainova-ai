@@ -26,7 +26,7 @@ import { RolesGuard } from '../auth/roles.guard';
 import { ZodValidationPipe } from '../common/zod-validation.pipe';
 import { SponsoredService } from './sponsored.service';
 
-@ApiTags('admin/sponsored')
+@ApiTags('admin-sponsored')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('admin/sponsored')
