@@ -17,6 +17,16 @@ export class TaxProfileService {
     input: TaxProfileInput,
   ): Promise<PublicTaxProfile> {
     const data = taxProfileInputSchema.parse(input);
+    const existing = await this.prisma.taxProfile.findUnique({
+      where: { userId },
+    });
+    const nextTaxId = data.taxId ?? null;
+    // Only invalidate prior admin verification when the taxId itself
+    // actually changes. Editing unrelated fields (address, legal name,
+    // etc.) must not silently downgrade a verified profile, otherwise
+    // a trainer who updates their address would lose reverse-charge
+    // eligibility on future contracts.
+    const taxIdChanged = !existing || existing.taxId !== nextTaxId;
     const row = await this.prisma.taxProfile.upsert({
       where: { userId },
       create: {
@@ -24,7 +34,7 @@ export class TaxProfileService {
         countryCode: data.countryCode.toUpperCase(),
         kind: data.kind,
         legalName: data.legalName ?? null,
-        taxId: data.taxId ?? null,
+        taxId: nextTaxId,
         addressLine1: data.addressLine1 ?? null,
         addressLine2: data.addressLine2 ?? null,
         city: data.city ?? null,
@@ -35,9 +45,8 @@ export class TaxProfileService {
         countryCode: data.countryCode.toUpperCase(),
         kind: data.kind,
         legalName: data.legalName ?? null,
-        // Resetting the taxId invalidates prior verification.
-        taxId: data.taxId ?? null,
-        taxIdVerified: false,
+        taxId: nextTaxId,
+        ...(taxIdChanged ? { taxIdVerified: false } : {}),
         addressLine1: data.addressLine1 ?? null,
         addressLine2: data.addressLine2 ?? null,
         city: data.city ?? null,
