@@ -108,7 +108,9 @@ export const signContractDocumentInputSchema = z.object({
 export type SignContractDocumentInput = z.input<typeof signContractDocumentInputSchema>;
 
 export const declineContractDocumentInputSchema = z.object({
-  reason: z.string().trim().min(5).max(2000),
+  // Reason is optional. When omitted or blank, no reason is shared with the
+  // counter-party; the decline still cancels the document.
+  reason: z.string().trim().max(2000).optional().default(''),
 });
 export type DeclineContractDocumentInput = z.input<
   typeof declineContractDocumentInputSchema

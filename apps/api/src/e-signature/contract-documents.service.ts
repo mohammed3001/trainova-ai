@@ -28,14 +28,20 @@ export class ContractDocumentsService {
 
   constructor(private readonly prisma: PrismaService) {}
 
-  /** Caller must be COMPANY_OWNER on the contract or platform admin. */
+  /** Caller must be the company owner on the contract or platform admin. */
   async generate(actorId: string, input: GenerateContractDocumentParsed) {
     const contract = await this.prisma.contract.findUnique({
       where: { id: input.contractId },
-      select: { id: true, companyId: true, trainerId: true, status: true },
+      select: {
+        id: true,
+        trainerId: true,
+        status: true,
+        company: { select: { ownerId: true } },
+      },
     });
     if (!contract) throw new NotFoundException('Contract not found');
-    await this.assertActorCanAuthorOnContract(actorId, contract.companyId);
+    const companyOwnerId = contract.company.ownerId;
+    await this.assertActorCanAuthorOnContract(actorId, companyOwnerId);
 
     let body = input.bodyMarkdown ?? '';
     let templateRecord: { id: string } | null = null;
@@ -81,7 +87,7 @@ export class ContractDocumentsService {
         signatures: {
           createMany: {
             data: [
-              { signerId: contract.companyId, role: 'COMPANY' },
+              { signerId: companyOwnerId, role: 'COMPANY' },
               { signerId: contract.trainerId, role: 'TRAINER' },
             ],
           },
@@ -107,7 +113,10 @@ export class ContractDocumentsService {
   async get(actorId: string, id: string) {
     const doc = await this.prisma.contractDocument.findUnique({
       where: { id },
-      include: { signatures: true, contract: true },
+      include: {
+        signatures: true,
+        contract: { include: { company: { select: { ownerId: true } } } },
+      },
     });
     if (!doc) throw new NotFoundException('Document not found');
     await this.assertActorCanReadContract(actorId, doc.contractId);
@@ -116,7 +125,7 @@ export class ContractDocumentsService {
     // the source of truth.
     const computed = hashDocumentBody(doc.bodyMarkdown);
     let viewerRole: SignatureRole | null = null;
-    if (doc.contract.companyId === actorId) viewerRole = 'COMPANY';
+    if (doc.contract.company.ownerId === actorId) viewerRole = 'COMPANY';
     else if (doc.contract.trainerId === actorId) viewerRole = 'TRAINER';
     const { contract: _contract, ...rest } = doc;
     return { ...rest, hashValid: computed === doc.bodyHash, viewerRole };
@@ -130,7 +139,10 @@ export class ContractDocumentsService {
   ) {
     const document = await this.prisma.contractDocument.findUnique({
       where: { id: documentId },
-      include: { signatures: true, contract: true },
+      include: {
+        signatures: true,
+        contract: { include: { company: { select: { ownerId: true } } } },
+      },
     });
     if (!document) throw new NotFoundException('Document not found');
     if (document.status === 'CANCELLED' || document.status === 'EXPIRED') {
@@ -214,7 +226,10 @@ export class ContractDocumentsService {
   ) {
     const document = await this.prisma.contractDocument.findUnique({
       where: { id: documentId },
-      include: { signatures: true, contract: true },
+      include: {
+        signatures: true,
+        contract: { include: { company: { select: { ownerId: true } } } },
+      },
     });
     if (!document) throw new NotFoundException('Document not found');
     if (document.status === 'CANCELLED' || document.status === 'EXPIRED') {
@@ -229,12 +244,13 @@ export class ContractDocumentsService {
     if (row.status === 'DECLINED') {
       throw new BadRequestException('Already declined');
     }
+    const reason = (input.reason ?? '').trim();
     const result = await this.prisma.$transaction(async (tx) => {
       const updatedRow = await tx.contractSignature.update({
         where: { documentId_role: { documentId, role } },
         data: {
           status: 'DECLINED',
-          declineReason: input.reason.trim(),
+          declineReason: reason.length > 0 ? reason : null,
           declinedAt: new Date(),
         },
       });
@@ -252,9 +268,11 @@ export class ContractDocumentsService {
 
   private resolveSignerRole(
     actorId: string,
-    document: { contract: { companyId: string; trainerId: string } },
+    document: {
+      contract: { trainerId: string; company: { ownerId: string } };
+    },
   ): SignatureRole {
-    if (document.contract.companyId === actorId) return 'COMPANY';
+    if (document.contract.company.ownerId === actorId) return 'COMPANY';
     if (document.contract.trainerId === actorId) return 'TRAINER';
     throw new ForbiddenException('You are not a party to this contract');
   }
@@ -262,10 +280,16 @@ export class ContractDocumentsService {
   private async assertActorCanReadContract(actorId: string, contractId: string) {
     const contract = await this.prisma.contract.findUnique({
       where: { id: contractId },
-      select: { companyId: true, trainerId: true },
+      select: {
+        trainerId: true,
+        company: { select: { ownerId: true } },
+      },
     });
     if (!contract) throw new NotFoundException('Contract not found');
-    if (contract.companyId !== actorId && contract.trainerId !== actorId) {
+    if (
+      contract.company.ownerId !== actorId &&
+      contract.trainerId !== actorId
+    ) {
       const actor = await this.prisma.user.findUnique({
         where: { id: actorId },
         select: { role: true },
@@ -276,8 +300,12 @@ export class ContractDocumentsService {
     }
   }
 
-  private async assertActorCanAuthorOnContract(actorId: string, companyId: string) {
-    if (companyId === actorId) return;
+  /** `companyOwnerId` is the User.id of the Company's owner. */
+  private async assertActorCanAuthorOnContract(
+    actorId: string,
+    companyOwnerId: string,
+  ) {
+    if (companyOwnerId === actorId) return;
     const actor = await this.prisma.user.findUnique({
       where: { id: actorId },
       select: { role: true },
