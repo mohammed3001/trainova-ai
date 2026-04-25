@@ -811,6 +811,11 @@
       "fundFailed": "We couldn't fund this milestone.",
       "releaseFailed": "We couldn't release this milestone.",
       "refundFailed": "We couldn't refund this milestone."
+    },
+    "documents": {
+      "title": "Documents contractuels",
+      "subtitle": "NDA, MSA, SOW et accords personnalisés avec signatures et trace d'audit.",
+      "open": "Ouvrir les documents"
     }
   },
   "payments": {
@@ -2315,5 +2320,121 @@
     "legal": "Légal",
     "privacy": "Confidentialité",
     "terms": "Conditions"
+  },
+  "contractDocs": {
+    "list": {
+      "title": "Documents contractuels",
+      "subtitle": "Générez, signez et auditez NDA, MSA, SOW et accords personnalisés liés à ce contrat.",
+      "empty": "Aucun document sur ce contrat pour l'instant.",
+      "generate": "Générer un document",
+      "back": "Retour au contrat",
+      "created": "Créé",
+      "expires": "Expire"
+    },
+    "generate": {
+      "title": "Générer un document contractuel",
+      "subtitle": "Choisissez un modèle publié ou collez un corps Markdown personnalisé. Les deux parties seront invitées à signer.",
+      "modeTemplate": "Depuis un modèle",
+      "modeCustom": "Markdown personnalisé",
+      "field": {
+        "title": "Titre du document",
+        "template": "Modèle",
+        "kind": "Type de document",
+        "body": "Corps (Markdown)",
+        "expiresAt": "Expire le (optionnel)"
+      },
+      "variables": "Variables du modèle",
+      "previewBody": "Aperçu du corps du modèle",
+      "submit": "Générer et inviter les signataires"
+    },
+    "detail": {
+      "body": "Corps du document",
+      "signers": "Signataires",
+      "created": "Généré",
+      "expires": "Expire",
+      "signedAt": "Signé le",
+      "signedBy": "Nom signé",
+      "declined": "Refusé",
+      "audit": "Audit",
+      "tamperTitle": "Altération détectée",
+      "tamperBody": "L'empreinte du corps stockée ne correspond pas au document actuel. La signature est désactivée jusqu'à enquête de l'admin.",
+      "signAs": "Signer en tant que {role}",
+      "signSubtitle": "Saisissez votre nom légal complet, déclarez votre intention et confirmez pour valider la signature.",
+      "signedName": "Nom légal complet",
+      "signedNameHint": "Enregistré comme votre signature avec une trace d'audit (IP et User-Agent).",
+      "intent": "Déclaration d'intention",
+      "intentHint": "ex. « Je, soussigné, accepte d'être lié par les termes ci-dessus. »",
+      "agree": "Je confirme être autorisé à signer et que ma signature est juridiquement contraignante.",
+      "signSubmit": "Signer le document",
+      "declineLink": "Refuser ce document",
+      "declineTitle": "Refuser le document",
+      "declineReason": "Motif (optionnel, partagé avec l'autre partie)",
+      "declineSubmit": "Refuser",
+      "confirmDecline": "Refuser ce document ? Les deux parties seront notifiées et le contrat n'avancera pas tant qu'un nouveau document n'est pas généré.",
+      "cancel": "Annuler"
+    },
+    "status": {
+      "DRAFT": "Brouillon",
+      "AWAITING_SIGNATURES": "En attente de signatures",
+      "PARTIALLY_SIGNED": "Partiellement signé",
+      "FULLY_SIGNED": "Entièrement signé",
+      "CANCELLED": "Annulé",
+      "EXPIRED": "Expiré"
+    },
+    "signature": {
+      "PENDING": "En attente",
+      "SIGNED": "Signé",
+      "DECLINED": "Refusé"
+    },
+    "role": {
+      "COMPANY": "Entreprise",
+      "TRAINER": "Formateur"
+    },
+    "errors": {
+      "generic": "Une erreur est survenue. Veuillez réessayer."
+    },
+    "admin": {
+      "title": "Modèles de contrats",
+      "subtitle": "Gérez des modèles Markdown réutilisables pour NDA, MSA et SOW avec variables nommées.",
+      "newTemplate": "Nouveau modèle",
+      "backToList": "Retour aux modèles",
+      "filterKind": "Type",
+      "filterStatus": "Statut",
+      "applyFilters": "Appliquer",
+      "all": "Tous",
+      "kindCustom": "Personnalisé",
+      "statusDraft": "Brouillon",
+      "statusPublished": "Publié",
+      "statusArchived": "Archivé",
+      "col": {
+        "name": "Nom",
+        "kind": "Type",
+        "locale": "Langue",
+        "status": "Statut",
+        "updated": "Mis à jour"
+      },
+      "empty": "Aucun modèle pour l'instant. Créez votre premier NDA / MSA / SOW.",
+      "field": {
+        "name": "Nom affiché",
+        "slug": "Slug (minuscules, tirets)",
+        "kind": "Type",
+        "locale": "Code de langue",
+        "description": "Description (optionnel)",
+        "status": "Statut",
+        "body": "Corps (Markdown, accepte {{variableName}})"
+      },
+      "bodyHint": "Utilisez les espaces réservés {{key}}. Les variables requises doivent être fournies lors de la génération.",
+      "variables": "Variables",
+      "variablesEmpty": "Aucune variable déclarée. Les documents utiliseront le corps tel quel.",
+      "varKey": "clé (ex. companyName)",
+      "varLabel": "Libellé affiché aux auteurs",
+      "varRequired": "requis",
+      "varRemove": "Supprimer",
+      "addVariable": "Ajouter une variable",
+      "create": "Créer le modèle",
+      "save": "Enregistrer",
+      "archive": "Archiver le modèle",
+      "confirmArchive": "Archiver ce modèle ? Les documents existants ne sont pas affectés, mais aucun nouveau document ne pourra y faire référence."
+    }
   }
 }

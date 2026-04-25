@@ -75,6 +75,9 @@ model User {
   taxProfile                    TaxProfile?
   invoicesIssued                Invoice[]                 @relation("InvoiceIssuedBy")
   aiAssistRequests              AiAssistRequest[]
+  contractTemplatesCreated      ContractTemplate[]        @relation("ContractTemplateCreator")
+  contractDocumentsCreated      ContractDocument[]        @relation("ContractDocumentCreator")
+  contractSignatures            ContractSignature[]       @relation("ContractSignatureSigner")
 
   @@index([role, status])
 }
@@ -798,13 +801,14 @@ model Contract {
   createdAt           DateTime       @default(now())
   updatedAt           DateTime       @updatedAt
 
-  application Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
-  company     Company     @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  trainer     User        @relation("ContractTrainer", fields: [trainerId], references: [id], onDelete: Cascade)
+  application Application        @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  company     Company            @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  trainer     User               @relation("ContractTrainer", fields: [trainerId], references: [id], onDelete: Cascade)
   milestones  Milestone[]
   reviews     Review[]
   disputes    Dispute[]
   invoices    Invoice[]
+  documents   ContractDocument[]
 
   @@index([companyId, status])
   @@index([trainerId, status])
@@ -1639,4 +1643,129 @@ model ContactSubmission {
 
   @@index([status, createdAt(sort: Desc)])
   @@index([email])
+}
+
+// -----------------------------------------------------------------------------
+// T7.C — E-Signature: ContractTemplate (NDA/MSA/SOW), ContractDocument
+// (frozen instance per Contract), ContractSignature (one row per required
+// signer). Templates are authored by Admins; Companies generate documents
+// from a template against a specific Contract; both COMPANY and TRAINER
+// must sign. The signed payload is hashed (SHA-256 over the frozen Markdown
+// body + signer + typed name + ISO timestamp) so any later mutation can be
+// detected.
+// -----------------------------------------------------------------------------
+
+enum ContractDocumentKind {
+  NDA
+  MSA
+  SOW
+  CUSTOM
+}
+
+enum ContractTemplateStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum ContractDocumentStatus {
+  DRAFT
+  AWAITING_SIGNATURES
+  PARTIALLY_SIGNED
+  FULLY_SIGNED
+  CANCELLED
+  EXPIRED
+}
+
+enum SignatureRole {
+  COMPANY
+  TRAINER
+}
+
+enum SignatureStatus {
+  PENDING
+  SIGNED
+  DECLINED
+}
+
+/// Reusable Markdown contract templates authored by Admins. Variables are
+/// declared once and resolved at document-generation time. `slug` is unique
+/// across all templates; `locale` lets a single kind have multiple
+/// translations (EN/AR/FR/ES).
+model ContractTemplate {
+  id           String                 @id @default(cuid())
+  kind         ContractDocumentKind
+  slug         String                 @unique
+  name         String
+  description  String?
+  bodyMarkdown String
+  locale       String                 @default("EN")
+  /// JSON array: [{ key: "companyName", label: "Company name", required: true, default?: string }]
+  variables    Json
+  status       ContractTemplateStatus @default(DRAFT)
+  createdById  String
+  createdAt    DateTime               @default(now())
+  updatedAt    DateTime               @updatedAt
+
+  createdBy User               @relation("ContractTemplateCreator", fields: [createdById], references: [id], onDelete: Restrict)
+  documents ContractDocument[]
+
+  @@index([kind, status])
+  @@index([locale])
+}
+
+/// A frozen, contract-bound instance of a template (or ad-hoc Markdown).
+/// `bodyMarkdown` is captured at creation time; any subsequent template
+/// edits do NOT mutate already-issued documents. `bodyHash` is the SHA-256
+/// over `bodyMarkdown` and is referenced from every signature row.
+model ContractDocument {
+  id           String                 @id @default(cuid())
+  contractId   String
+  templateId   String?
+  kind         ContractDocumentKind
+  title        String
+  bodyMarkdown String
+  bodyHash     String
+  status       ContractDocumentStatus @default(DRAFT)
+  createdById  String
+  expiresAt    DateTime?
+  signedAt     DateTime?
+  cancelledAt  DateTime?
+  createdAt    DateTime               @default(now())
+  updatedAt    DateTime               @updatedAt
+
+  contract   Contract            @relation(fields: [contractId], references: [id], onDelete: Cascade)
+  template   ContractTemplate?   @relation(fields: [templateId], references: [id], onDelete: SetNull)
+  createdBy  User                @relation("ContractDocumentCreator", fields: [createdById], references: [id], onDelete: Restrict)
+  signatures ContractSignature[]
+
+  @@index([contractId])
+  @@index([status])
+  @@index([templateId])
+}
+
+/// One row per required signer per document. Unique on (documentId, role)
+/// so a single document has at most one COMPANY + one TRAINER signature row.
+model ContractSignature {
+  id            String          @id @default(cuid())
+  documentId    String
+  signerId      String
+  role          SignatureRole
+  status        SignatureStatus @default(PENDING)
+  signedName    String?
+  intent        String?
+  signatureHash String?
+  ipAddress     String?
+  userAgent     String?
+  signedAt      DateTime?
+  declinedAt    DateTime?
+  declineReason String?
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+
+  document ContractDocument @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  signer   User             @relation("ContractSignatureSigner", fields: [signerId], references: [id], onDelete: Restrict)
+
+  @@unique([documentId, role])
+  @@index([signerId])
 }

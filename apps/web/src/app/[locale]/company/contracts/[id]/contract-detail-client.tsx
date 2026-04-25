@@ -200,6 +200,23 @@ export function ContractDetailClient({ locale, contract, viewer }: Props) {
         status={contract.status}
       />
 
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white/70 p-4 shadow-sm backdrop-blur dark:border-white/10 dark:bg-slate-900/40">
+        <div>
+          <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+            {t('documents.title')}
+          </h2>
+          <p className="text-xs text-slate-500 dark:text-slate-400">
+            {t('documents.subtitle')}
+          </p>
+        </div>
+        <Link
+          href={`/${locale}/contracts/${contract.id}/documents`}
+          className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-brand-600 to-brand-500 px-4 py-2 text-sm font-medium text-white shadow-sm shadow-brand-500/30 transition hover:from-brand-700 hover:to-brand-600"
+        >
+          {t('documents.open')}
+        </Link>
+      </div>
+
       <section aria-labelledby="milestones-heading" className="space-y-4">
         <h2
           id="milestones-heading"
