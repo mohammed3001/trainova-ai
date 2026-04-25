@@ -100,12 +100,12 @@ export async function SiteFooter() {
             <ul className="space-y-2">
               <li>
                 <Link href={`/${locale}/legal/privacy`} className={linkCls}>
-                  Privacy
+                  {tf('privacy')}
                 </Link>
               </li>
               <li>
                 <Link href={`/${locale}/legal/terms`} className={linkCls}>
-                  Terms
+                  {tf('terms')}
                 </Link>
               </li>
             </ul>

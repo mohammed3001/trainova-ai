@@ -2312,6 +2312,8 @@
     "product": "Producto",
     "resources": "Recursos",
     "company": "Empresa",
-    "legal": "Legal"
+    "legal": "Legal",
+    "privacy": "Privacidad",
+    "terms": "Términos"
   }
 }
