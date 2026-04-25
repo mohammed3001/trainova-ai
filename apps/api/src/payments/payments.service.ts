@@ -8,6 +8,7 @@ import {
 } from '@nestjs/common';
 import { Prisma } from '@trainova/db';
 import {
+  computeTaxInclusive,
   type CreateContractInput,
   type FundMilestoneInput,
   type PaymentIntentStatus,
@@ -22,6 +23,8 @@ import {
   type TrainerEarningsSummary,
 } from '@trainova/shared';
 import type { Stripe } from 'stripe/cjs/stripe.core.js';
+import { InvoiceService } from '../invoicing/invoice.service';
+import { TaxService } from '../invoicing/tax.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { StripeService } from './stripe.service';
 
@@ -71,6 +74,8 @@ export class PaymentsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly stripe: StripeService,
+    private readonly tax: TaxService,
+    private readonly invoices: InvoiceService,
   ) {}
 
   // ===================================================================
@@ -108,6 +113,29 @@ export class PaymentsService {
       0,
     );
 
+    // Resolve the tax treatment for this contract up front so every
+    // milestone invoice issued later carries the same rate / label /
+    // legal note — even if the admin edits the TaxRule catalog or the
+    // buyer/seller country between funding calls.
+    const [trainer, companyOwner] = await Promise.all([
+      this.prisma.user.findUnique({
+        where: { id: application.trainerId },
+        include: { taxProfile: true },
+      }),
+      this.prisma.user.findUnique({
+        where: { id: application.request.company.ownerId },
+        include: { taxProfile: true },
+      }),
+    ]);
+    const resolvedTax = await this.tax.resolve({
+      sellerCountry: trainer?.taxProfile?.countryCode ?? null,
+      buyerCountry:
+        companyOwner?.taxProfile?.countryCode ?? application.request.company.country ?? null,
+      sellerHasTaxId: !!trainer?.taxProfile?.taxId,
+      buyerHasTaxId: !!companyOwner?.taxProfile?.taxId,
+    });
+    const contractSplit = computeTaxInclusive(total, resolvedTax.rateBps);
+
     const contract = await this.prisma.contract.create({
       data: {
         applicationId: application.id,
@@ -117,17 +145,28 @@ export class PaymentsService {
         description: input.description ?? null,
         currency: input.currency,
         totalAmountCents: total,
+        subtotalAmountCents: contractSplit.subtotalCents,
+        taxRateBps: resolvedTax.rateBps,
+        taxAmountCents: contractSplit.taxAmountCents,
+        taxLabel: resolvedTax.label || null,
+        taxNote: resolvedTax.note,
+        reverseCharge: resolvedTax.reverseCharge,
         platformFeeBps: input.platformFeeBps ?? 1000,
         status: 'ACTIVE',
         acceptedAt: new Date(),
         milestones: {
-          create: input.milestones.map((m, idx) => ({
-            title: m.title,
-            description: m.description ?? null,
-            amountCents: m.amountCents,
-            order: idx,
-            dueDate: m.dueDate ? new Date(m.dueDate) : null,
-          })),
+          create: input.milestones.map((m, idx) => {
+            const msSplit = computeTaxInclusive(m.amountCents, resolvedTax.rateBps);
+            return {
+              title: m.title,
+              description: m.description ?? null,
+              amountCents: m.amountCents,
+              subtotalCents: msSplit.subtotalCents,
+              taxAmountCents: msSplit.taxAmountCents,
+              order: idx,
+              dueDate: m.dueDate ? new Date(m.dueDate) : null,
+            };
+          }),
         },
       },
       include: this.contractInclude,
@@ -320,7 +359,7 @@ export class PaymentsService {
       idempotencyKey: `release-${milestone.id}`,
     });
 
-    const [updated] = await this.prisma.$transaction([
+    const [updated, payout] = await this.prisma.$transaction([
       this.prisma.milestone.update({
         where: { id: milestone.id },
         data: {
@@ -334,11 +373,27 @@ export class PaymentsService {
           milestoneId: milestone.id,
           stripeTransferId: transfer.id,
           amountCents: netCents,
+          grossAmountCents: milestone.amountCents,
+          feeAmountCents: feeCents,
+          taxAmountCents: milestone.taxAmountCents,
           currency: milestone.contract.currency,
           status: 'IN_TRANSIT',
         },
       }),
     ]);
+
+    // Self-billing statement for the trainer — non-fatal if it fails
+    // (payout already hit Stripe). Webhook sync or an admin retry can
+    // re-issue from the standalone endpoint.
+    try {
+      await this.invoices.issueForPayout(payout.id);
+    } catch (err) {
+      this.logger.error(
+        `Failed to issue PAYOUT_STATEMENT for payout ${payout.id}: ${
+          err instanceof Error ? err.message : String(err)
+        }`,
+      );
+    }
 
     // If every milestone is RELEASED/REFUNDED/CANCELLED the contract as
     // a whole is complete.
@@ -460,6 +515,9 @@ export class PaymentsService {
       id: p.id,
       milestoneId: p.milestoneId,
       amountCents: p.amountCents,
+      grossAmountCents: p.grossAmountCents,
+      feeAmountCents: p.feeAmountCents,
+      taxAmountCents: p.taxAmountCents,
       currency: p.currency,
       status: p.status,
       stripeTransferId: p.stripeTransferId,
@@ -701,10 +759,25 @@ export class PaymentsService {
   // ===================================================================
 
   async markMilestoneFunded(milestoneId: string, _paymentIntentId: string): Promise<void> {
-    await this.prisma.milestone.updateMany({
+    const result = await this.prisma.milestone.updateMany({
       where: { id: milestoneId, status: 'PENDING' },
       data: { status: 'FUNDED', fundedAt: new Date() },
     });
+    // Only issue the invoice when we actually transitioned the row —
+    // webhook retries otherwise would mint duplicate documents. The
+    // invoice service itself is also idempotent on (kind, milestoneId)
+    // as a second line of defence.
+    if (result.count > 0) {
+      try {
+        await this.invoices.issueForMilestoneFunding(milestoneId);
+      } catch (err) {
+        this.logger.error(
+          `Failed to issue PURCHASE invoice for milestone ${milestoneId}: ${
+            err instanceof Error ? err.message : String(err)
+          }`,
+        );
+      }
+    }
   }
 
   async markPaymentIntentStatus(
@@ -838,6 +911,12 @@ export class PaymentsService {
       description: row.description,
       currency: row.currency,
       totalAmountCents: row.totalAmountCents,
+      subtotalAmountCents: row.subtotalAmountCents,
+      taxRateBps: row.taxRateBps,
+      taxAmountCents: row.taxAmountCents,
+      taxLabel: row.taxLabel,
+      taxNote: row.taxNote,
+      reverseCharge: row.reverseCharge,
       platformFeeBps: row.platformFeeBps,
       status: row.status,
       acceptedAt: row.acceptedAt?.toISOString() ?? null,
@@ -869,6 +948,8 @@ export class PaymentsService {
     title: string;
     description: string | null;
     amountCents: number;
+    subtotalCents: number;
+    taxAmountCents: number;
     order: number;
     dueDate: Date | null;
     status: PublicMilestone['status'];
@@ -883,6 +964,8 @@ export class PaymentsService {
       title: m.title,
       description: m.description,
       amountCents: m.amountCents,
+      subtotalCents: m.subtotalCents,
+      taxAmountCents: m.taxAmountCents,
       order: m.order,
       dueDate: m.dueDate?.toISOString() ?? null,
       status: m.status,
