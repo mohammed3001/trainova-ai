@@ -1816,6 +1816,151 @@
         "prev": "Anterior",
         "next": "Siguiente"
       }
+    },
+        "emailMarketing": {
+      "title": "Marketing por correo",
+      "subtitle": "Campañas de marketing redactadas por el administrador y secuencias automáticas. Los envíos se procesan en segundo plano y se rastrean por destinatario.",
+      "open": "Abrir",
+      "loading": "Cargando…",
+      "saving": "Guardando…",
+      "save": "Guardar",
+      "create": "Crear",
+      "empty": "Aún no hay campañas.",
+      "backToList": "Volver a campañas",
+      "locked": "Esta campaña está bloqueada. Las campañas en envío o enviadas ya no son editables.",
+      "editable": "Los borradores y campañas programadas son editables hasta que comience el envío.",
+      "campaigns": {
+        "title": "Campañas de correo",
+        "subtitle": "Difusiones puntuales a un segmento de usuarios. Programa o envía de inmediato.",
+        "new": "Nueva campaña",
+        "newSubtitle": "Compón una difusión puntual. Puedes previsualizar el segmento antes de guardar."
+      },
+      "drip": {
+        "title": "Secuencias automáticas",
+        "subtitle": "Pasos ordenados con retrasos que se disparan automáticamente al inscribir al usuario.",
+        "new": "Nueva secuencia",
+        "newSubtitle": "Define una secuencia de correos programados. Añade pasos tras crearla.",
+        "empty": "Aún no hay secuencias.",
+        "backToList": "Volver a secuencias",
+        "on": "Activa",
+        "off": "Inactiva",
+        "col_name": "Nombre",
+        "col_trigger": "Disparador",
+        "col_enabled": "Estado",
+        "col_steps": "Pasos",
+        "col_enrollments": "Inscripciones",
+        "trigger": {
+          "USER_REGISTERED": "Usuario registrado",
+          "TRAINER_PROFILE_INCOMPLETE": "Perfil de entrenador incompleto",
+          "COMPANY_FIRST_REQUEST_PENDING": "Primera solicitud de empresa pendiente",
+          "MANUAL": "Manual"
+        },
+        "fields": {
+          "name": "Nombre",
+          "slug": "Slug (minúsculas, guiones)",
+          "trigger": "Disparador",
+          "enabled": "Activa"
+        },
+        "actions": {
+          "enable": "Activar",
+          "disable": "Desactivar",
+          "delete": "Eliminar secuencia",
+          "cancelEnrollment": "Cancelar inscripción"
+        },
+        "confirm": {
+          "delete": "¿Eliminar esta secuencia con todos sus pasos e inscripciones?",
+          "cancelEnrollment": "¿Cancelar esta inscripción? El usuario no recibirá los pasos restantes."
+        },
+        "steps": {
+          "title": "Pasos",
+          "empty": "Aún no hay pasos. Añade el primero abajo.",
+          "indexLabel": "Paso {index}",
+          "delayMinutes": "Retraso (minutos desde la inscripción)",
+          "delete": "Eliminar paso",
+          "confirmDelete": "¿Eliminar este paso? Los pasos restantes se reenumerarán.",
+          "addNew": "Añadir paso"
+        },
+        "enrollments": "Inscripciones",
+        "enrollmentsEmpty": "No hay inscripciones en este estado.",
+        "totalCount": "{count} en total",
+        "enrollState": {
+          "ACTIVE": "Activa",
+          "COMPLETED": "Completada",
+          "CANCELLED": "Cancelada",
+          "ALL": "Todas"
+        },
+        "enroll": {
+          "user": "Usuario",
+          "step": "Paso actual",
+          "nextRun": "Próxima ejecución",
+          "state": "Estado"
+        }
+      },
+      "filters": {
+        "any": "Cualquiera",
+        "status": "Estado",
+        "search": "Buscar",
+        "apply": "Aplicar"
+      },
+      "columns": {
+        "name": "Nombre",
+        "status": "Estado",
+        "locale": "Idioma",
+        "scheduledFor": "Programada para",
+        "sent": "Enviado",
+        "failed": "Fallido"
+      },
+      "status": {
+        "DRAFT": "Borrador",
+        "SCHEDULED": "Programada",
+        "SENDING": "Enviando",
+        "SENT": "Enviada",
+        "CANCELLED": "Cancelada",
+        "FAILED": "Fallida"
+      },
+      "fields": {
+        "name": "Nombre",
+        "locale": "Idioma",
+        "scheduledFor": "Programada para",
+        "subject": "Asunto",
+        "bodyHtml": "Cuerpo (HTML)",
+        "bodyText": "Cuerpo (texto plano)"
+      },
+      "segment": {
+        "title": "Segmento de audiencia",
+        "subtitle": "Filtra destinatarios. Los filtros vacíos apuntan a todos los usuarios activos verificados.",
+        "roles": "Roles",
+        "statuses": "Estados de cuenta",
+        "locales": "Idiomas",
+        "onlyVerified": "Solo correos verificados",
+        "createdAfter": "Creado después de",
+        "createdBefore": "Creado antes de",
+        "preview": "Previsualizar audiencia",
+        "previewing": "Previsualizando…",
+        "previewCount": "{count} usuarios coincidentes",
+        "preview_name": "Nombre",
+        "preview_email": "Correo",
+        "preview_role": "Rol",
+        "preview_locale": "Idioma"
+      },
+      "actions": {
+        "sendNow": "Enviar ahora",
+        "schedule": "Programar",
+        "confirmSchedule": "Programar",
+        "cancel": "Cancelar campaña",
+        "delete": "Eliminar"
+      },
+      "confirm": {
+        "sendNow": "¿Enviar esta campaña inmediatamente a todos los destinatarios coincidentes?",
+        "cancel": "¿Cancelar esta campaña programada?",
+        "delete": "¿Eliminar permanentemente esta campaña?"
+      },
+      "stats": {
+        "status": "Estado",
+        "sent": "Enviado",
+        "failed": "Fallido",
+        "recipients": "Destinatarios"
+      }
     }
   },
   "ads": {

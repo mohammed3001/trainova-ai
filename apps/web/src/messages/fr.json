@@ -1816,6 +1816,151 @@
         "prev": "Précédent",
         "next": "Suivant"
       }
+    },
+        "emailMarketing": {
+      "title": "Marketing par e-mail",
+      "subtitle": "Campagnes marketing rédigées par l'admin et séquences automatiques. Les envois sont traités en arrière-plan et suivis par destinataire.",
+      "open": "Ouvrir",
+      "loading": "Chargement…",
+      "saving": "Enregistrement…",
+      "save": "Enregistrer",
+      "create": "Créer",
+      "empty": "Aucune campagne pour l'instant.",
+      "backToList": "Retour aux campagnes",
+      "locked": "Campagne verrouillée. Les campagnes en cours d'envoi ou envoyées ne sont plus modifiables.",
+      "editable": "Les brouillons et campagnes planifiées sont modifiables jusqu'au début de l'envoi.",
+      "campaigns": {
+        "title": "Campagnes e-mail",
+        "subtitle": "Diffusions ponctuelles vers un segment d'utilisateurs. Planifiez ou envoyez immédiatement.",
+        "new": "Nouvelle campagne",
+        "newSubtitle": "Composez une diffusion ponctuelle. Vous pouvez prévisualiser le segment avant d'enregistrer."
+      },
+      "drip": {
+        "title": "Séquences automatiques",
+        "subtitle": "Étapes ordonnées avec délais qui se déclenchent automatiquement une fois l'utilisateur inscrit.",
+        "new": "Nouvelle séquence",
+        "newSubtitle": "Définissez une séquence d'e-mails programmés. Ajoutez les étapes après création.",
+        "empty": "Aucune séquence pour l'instant.",
+        "backToList": "Retour aux séquences",
+        "on": "Activée",
+        "off": "Désactivée",
+        "col_name": "Nom",
+        "col_trigger": "Déclencheur",
+        "col_enabled": "État",
+        "col_steps": "Étapes",
+        "col_enrollments": "Inscriptions",
+        "trigger": {
+          "USER_REGISTERED": "Utilisateur inscrit",
+          "TRAINER_PROFILE_INCOMPLETE": "Profil formateur incomplet",
+          "COMPANY_FIRST_REQUEST_PENDING": "Première demande d'entreprise en attente",
+          "MANUAL": "Manuel"
+        },
+        "fields": {
+          "name": "Nom",
+          "slug": "Slug (minuscules, tirets)",
+          "trigger": "Déclencheur",
+          "enabled": "Activée"
+        },
+        "actions": {
+          "enable": "Activer",
+          "disable": "Désactiver",
+          "delete": "Supprimer la séquence",
+          "cancelEnrollment": "Annuler l'inscription"
+        },
+        "confirm": {
+          "delete": "Supprimer cette séquence et toutes ses étapes et inscriptions ?",
+          "cancelEnrollment": "Annuler cette inscription ? L'utilisateur ne recevra pas les étapes restantes."
+        },
+        "steps": {
+          "title": "Étapes",
+          "empty": "Aucune étape pour l'instant. Ajoutez la première étape ci-dessous.",
+          "indexLabel": "Étape {index}",
+          "delayMinutes": "Délai (minutes après inscription)",
+          "delete": "Supprimer l'étape",
+          "confirmDelete": "Supprimer cette étape ? Les étapes restantes seront renumérotées.",
+          "addNew": "Ajouter une étape"
+        },
+        "enrollments": "Inscriptions",
+        "enrollmentsEmpty": "Aucune inscription dans cet état.",
+        "totalCount": "{count} au total",
+        "enrollState": {
+          "ACTIVE": "Active",
+          "COMPLETED": "Terminée",
+          "CANCELLED": "Annulée",
+          "ALL": "Toutes"
+        },
+        "enroll": {
+          "user": "Utilisateur",
+          "step": "Étape actuelle",
+          "nextRun": "Prochaine exécution",
+          "state": "État"
+        }
+      },
+      "filters": {
+        "any": "Tous",
+        "status": "État",
+        "search": "Recherche",
+        "apply": "Appliquer"
+      },
+      "columns": {
+        "name": "Nom",
+        "status": "État",
+        "locale": "Langue",
+        "scheduledFor": "Planifié pour",
+        "sent": "Envoyé",
+        "failed": "Échec"
+      },
+      "status": {
+        "DRAFT": "Brouillon",
+        "SCHEDULED": "Planifiée",
+        "SENDING": "Envoi en cours",
+        "SENT": "Envoyée",
+        "CANCELLED": "Annulée",
+        "FAILED": "Échouée"
+      },
+      "fields": {
+        "name": "Nom",
+        "locale": "Langue",
+        "scheduledFor": "Planifié pour",
+        "subject": "Objet",
+        "bodyHtml": "Corps (HTML)",
+        "bodyText": "Corps (texte brut)"
+      },
+      "segment": {
+        "title": "Segment d'audience",
+        "subtitle": "Filtrer les destinataires. Des filtres vides ciblent tous les utilisateurs actifs vérifiés.",
+        "roles": "Rôles",
+        "statuses": "États du compte",
+        "locales": "Langues",
+        "onlyVerified": "E-mails vérifiés uniquement",
+        "createdAfter": "Créé après",
+        "createdBefore": "Créé avant",
+        "preview": "Prévisualiser l'audience",
+        "previewing": "Prévisualisation…",
+        "previewCount": "{count} utilisateurs correspondants",
+        "preview_name": "Nom",
+        "preview_email": "E-mail",
+        "preview_role": "Rôle",
+        "preview_locale": "Langue"
+      },
+      "actions": {
+        "sendNow": "Envoyer maintenant",
+        "schedule": "Planifier",
+        "confirmSchedule": "Planifier",
+        "cancel": "Annuler la campagne",
+        "delete": "Supprimer"
+      },
+      "confirm": {
+        "sendNow": "Envoyer immédiatement cette campagne à tous les destinataires ?",
+        "cancel": "Annuler cette campagne planifiée ?",
+        "delete": "Supprimer définitivement cette campagne ?"
+      },
+      "stats": {
+        "status": "État",
+        "sent": "Envoyé",
+        "failed": "Échec",
+        "recipients": "Destinataires"
+      }
     }
   },
   "ads": {

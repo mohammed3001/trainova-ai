@@ -1836,6 +1836,151 @@
         "prev": "Previous",
         "next": "Next"
       }
+    },
+        "emailMarketing": {
+      "title": "Email marketing",
+      "subtitle": "Admin-authored marketing campaigns and automated drip sequences. Sends are processed in the background and tracked per recipient.",
+      "open": "Open",
+      "loading": "Loading…",
+      "saving": "Saving…",
+      "save": "Save",
+      "create": "Create",
+      "empty": "No campaigns yet.",
+      "backToList": "Back to campaigns",
+      "locked": "This campaign is locked. Sending or sent campaigns can no longer be edited.",
+      "editable": "Drafts and scheduled campaigns can be edited until they start sending.",
+      "campaigns": {
+        "title": "Email campaigns",
+        "subtitle": "One-shot broadcasts to a segment of users. Schedule for later or send immediately.",
+        "new": "New campaign",
+        "newSubtitle": "Compose a one-shot broadcast. You can preview the segment before saving."
+      },
+      "drip": {
+        "title": "Drip sequences",
+        "subtitle": "Ordered, delay-based steps that fire automatically once a user is enrolled.",
+        "new": "New sequence",
+        "newSubtitle": "Define a sequence of timed emails. Add steps after creating it.",
+        "empty": "No sequences yet.",
+        "backToList": "Back to sequences",
+        "on": "On",
+        "off": "Off",
+        "col_name": "Name",
+        "col_trigger": "Trigger",
+        "col_enabled": "Status",
+        "col_steps": "Steps",
+        "col_enrollments": "Enrollments",
+        "trigger": {
+          "USER_REGISTERED": "User registered",
+          "TRAINER_PROFILE_INCOMPLETE": "Trainer profile incomplete",
+          "COMPANY_FIRST_REQUEST_PENDING": "Company first request pending",
+          "MANUAL": "Manual"
+        },
+        "fields": {
+          "name": "Name",
+          "slug": "Slug (lowercase, hyphens)",
+          "trigger": "Trigger",
+          "enabled": "Enabled"
+        },
+        "actions": {
+          "enable": "Enable",
+          "disable": "Disable",
+          "delete": "Delete sequence",
+          "cancelEnrollment": "Cancel enrollment"
+        },
+        "confirm": {
+          "delete": "Delete this drip sequence and all its steps and enrollments?",
+          "cancelEnrollment": "Cancel this enrollment? The user will not receive remaining steps."
+        },
+        "steps": {
+          "title": "Steps",
+          "empty": "No steps yet. Add the first step below.",
+          "indexLabel": "Step {index}",
+          "delayMinutes": "Delay (minutes from enrollment)",
+          "delete": "Delete step",
+          "confirmDelete": "Delete this step? The remaining steps will be re-numbered.",
+          "addNew": "Add step"
+        },
+        "enrollments": "Enrollments",
+        "enrollmentsEmpty": "No enrollments in this state.",
+        "totalCount": "{count} total",
+        "enrollState": {
+          "ACTIVE": "Active",
+          "COMPLETED": "Completed",
+          "CANCELLED": "Cancelled",
+          "ALL": "All"
+        },
+        "enroll": {
+          "user": "User",
+          "step": "Current step",
+          "nextRun": "Next run",
+          "state": "State"
+        }
+      },
+      "filters": {
+        "any": "Any",
+        "status": "Status",
+        "search": "Search",
+        "apply": "Apply"
+      },
+      "columns": {
+        "name": "Name",
+        "status": "Status",
+        "locale": "Locale",
+        "scheduledFor": "Scheduled for",
+        "sent": "Sent",
+        "failed": "Failed"
+      },
+      "status": {
+        "DRAFT": "Draft",
+        "SCHEDULED": "Scheduled",
+        "SENDING": "Sending",
+        "SENT": "Sent",
+        "CANCELLED": "Cancelled",
+        "FAILED": "Failed"
+      },
+      "fields": {
+        "name": "Name",
+        "locale": "Locale",
+        "scheduledFor": "Scheduled for",
+        "subject": "Subject",
+        "bodyHtml": "Body (HTML)",
+        "bodyText": "Body (plain text)"
+      },
+      "segment": {
+        "title": "Audience segment",
+        "subtitle": "Filter recipients. Empty filters target every active, verified user.",
+        "roles": "Roles",
+        "statuses": "Account statuses",
+        "locales": "Locales",
+        "onlyVerified": "Only verified emails",
+        "createdAfter": "Created after",
+        "createdBefore": "Created before",
+        "preview": "Preview audience",
+        "previewing": "Previewing…",
+        "previewCount": "{count} matching users",
+        "preview_name": "Name",
+        "preview_email": "Email",
+        "preview_role": "Role",
+        "preview_locale": "Locale"
+      },
+      "actions": {
+        "sendNow": "Send now",
+        "schedule": "Schedule",
+        "confirmSchedule": "Schedule",
+        "cancel": "Cancel campaign",
+        "delete": "Delete"
+      },
+      "confirm": {
+        "sendNow": "Send this campaign immediately to all matching recipients?",
+        "cancel": "Cancel this scheduled campaign?",
+        "delete": "Delete this campaign permanently?"
+      },
+      "stats": {
+        "status": "Status",
+        "sent": "Sent",
+        "failed": "Failed",
+        "recipients": "Recipients"
+      }
     }
   },
   "ads": {
