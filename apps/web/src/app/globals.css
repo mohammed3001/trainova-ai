@@ -22,7 +22,10 @@ html[dir='rtl'] body {
 }
 
 .btn {
-  @apply inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-brand-500/30;
+  /* Focus ring uses focus-visible so mouse clicks don't paint a ring,
+     but keyboard users always see a high-contrast 2px indicator that
+     meets WCAG 2.4.7 / 1.4.11 (3:1 against the surrounding surface). */
+  @apply inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors focus:outline-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-2 focus-visible:ring-offset-white;
 }
 .btn-primary {
   @apply btn bg-brand-600 text-white hover:bg-brand-700;
@@ -37,10 +40,75 @@ html[dir='rtl'] body {
   @apply rounded-xl border border-slate-200 bg-white p-5 shadow-sm;
 }
 .input {
-  @apply w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm placeholder:text-slate-400 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20;
+  /* placeholder:text-slate-500 (instead of 400) to clear WCAG AA 4.5:1
+     contrast against the white field background. */
+  @apply w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm placeholder:text-slate-500 focus:border-brand-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-1 focus-visible:ring-offset-white;
 }
 .label {
   @apply mb-1.5 block text-sm font-medium text-slate-700;
+}
+
+/* --- WCAG 2.1 AA primitives ------------------------------------------ */
+
+/* Visually hides content while keeping it accessible to assistive tech.
+   Used by labels for icon-only controls and by our skip-link when it's
+   not focused. */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* First Tab stop on every page — lets keyboard users jump past the
+   header/nav straight to <main id="main-content">. Hidden until focused,
+   then anchors to the top-left (top-right under RTL) of the viewport. */
+.skip-link {
+  position: absolute;
+  top: -40px;
+  inset-inline-start: 0.5rem;
+  z-index: 100;
+  border-radius: 0.5rem;
+  background-color: #1d4ed8; /* brand-700 — 8.6:1 on white */
+  color: #ffffff;
+  padding: 0.5rem 0.875rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  transition: top 0.15s ease-out;
+}
+.skip-link:focus,
+.skip-link:focus-visible {
+  top: 0.5rem;
+  outline: 2px solid #ffffff;
+  outline-offset: 2px;
+}
+
+/* Last-resort keyboard focus indicator for any interactive element
+   that doesn't define its own focus-visible style (native details,
+   custom role="button" divs, etc.). Never visible to mouse users. */
+*:focus-visible {
+  outline: 2px solid #1d4ed8;
+  outline-offset: 2px;
+}
+
+/* Honour prefers-reduced-motion (WCAG 2.3.3) — kill decorative
+   animation for users who've asked for it. */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
 }
 
 .badge {

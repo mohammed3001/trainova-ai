@@ -25,22 +25,31 @@ export async function SiteHeader() {
           ? `/${locale}/admin`
           : `/${locale}/login`;
 
+  const ta = await getTranslations('a11y');
+
   return (
     <header className="border-b border-slate-200 bg-white/80 backdrop-blur">
       <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-4 py-3 sm:px-6 lg:px-8">
         <div className="flex items-center gap-6">
-          <Link href={`/${locale}`} className="flex items-center gap-2 text-lg font-semibold text-brand-700">
-            <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-brand-600 text-white">T</span>
+          <Link
+            href={`/${locale}`}
+            className="flex items-center gap-2 rounded-md text-lg font-semibold text-brand-700"
+            aria-label={t('appName')}
+          >
+            <span aria-hidden className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-brand-600 text-white">T</span>
             <span>Trainova AI</span>
           </Link>
-          <nav className="hidden items-center gap-4 text-sm text-slate-600 md:flex">
-            <Link href={`/${locale}/requests`} className="hover:text-brand-700">{t('browseRequests')}</Link>
-            <Link href={`/${locale}/trainers`} className="hover:text-brand-700">{t('browseTrainers')}</Link>
-            <Link href={`/${locale}/skills`} className="hover:text-brand-700">{t('skills')}</Link>
-            <Link href={`/${locale}/pricing`} className="hover:text-brand-700">{t('pricing')}</Link>
+          <nav
+            aria-label={ta('primaryNav')}
+            className="hidden items-center gap-4 text-sm text-slate-700 md:flex"
+          >
+            <Link href={`/${locale}/requests`} className="rounded-md px-1 hover:text-brand-700">{t('browseRequests')}</Link>
+            <Link href={`/${locale}/trainers`} className="rounded-md px-1 hover:text-brand-700">{t('browseTrainers')}</Link>
+            <Link href={`/${locale}/skills`} className="rounded-md px-1 hover:text-brand-700">{t('skills')}</Link>
+            <Link href={`/${locale}/pricing`} className="rounded-md px-1 hover:text-brand-700">{t('pricing')}</Link>
           </nav>
         </div>
-        <div className="flex items-center gap-2">
+        <nav aria-label={ta('userNav')} className="flex items-center gap-2">
           <LocaleSwitcher />
           {token ? (
             <>
@@ -48,9 +57,15 @@ export async function SiteHeader() {
                 href={`/${locale}/chat`}
                 className="btn-ghost relative"
                 data-testid="nav-chat"
-                aria-label={tc('nav')}
+                aria-label={
+                  unread > 0
+                    ? `${tc('nav')} — ${ta('unreadBadge', { count: unread })}`
+                    : tc('nav')
+                }
               >
                 <svg
+                  aria-hidden="true"
+                  focusable="false"
                   xmlns="http://www.w3.org/2000/svg"
                   viewBox="0 0 24 24"
                   fill="none"
@@ -63,6 +78,7 @@ export async function SiteHeader() {
                 <span className="hidden md:inline">{tc('nav')}</span>
                 {unread > 0 ? (
                   <span
+                    aria-hidden="true"
                     className="absolute -end-1 -top-1 inline-flex h-4 min-w-[1rem] items-center justify-center rounded-full bg-brand-600 px-1 text-[10px] font-semibold text-white"
                     data-testid="nav-chat-unread"
                   >
@@ -79,7 +95,7 @@ export async function SiteHeader() {
               <Link href={`/${locale}/register`} className="btn-primary">{t('getStarted')}</Link>
             </>
           )}
-        </div>
+        </nav>
       </div>
     </header>
   );
