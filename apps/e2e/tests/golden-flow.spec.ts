@@ -318,6 +318,7 @@ test.describe('Golden E2E flow — 11 steps', () => {
       'disputes',
       'email-marketing',
       'health',
+      'interviews',
       'invoicing',
       'job-requests',
       'matching',
