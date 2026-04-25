@@ -605,11 +605,18 @@ export class EmailMarketingService {
    * the enrollment `completedAt` if the step was the last one.
    */
   async processDueDripSteps(now: Date = new Date()): Promise<void> {
+    // Filter disabled sequences at the query level. The previous version
+    // post-filtered with `if (!e.sequence.enabled) continue;` after the
+    // `take: CRON_DRIP_BATCH` cap, so a disabled sequence holding ≥100
+    // due enrollments would consume the whole batch every tick (always
+    // ordered first by `nextRunAt asc`) and starve every other sequence
+    // permanently. Pushing the predicate into Prisma keeps the cron fair.
     const due = await this.prisma.emailDripEnrollment.findMany({
       where: {
         nextRunAt: { lte: now },
         completedAt: null,
         cancelledAt: null,
+        sequence: { enabled: true },
       },
       orderBy: [{ nextRunAt: 'asc' }],
       take: CRON_DRIP_BATCH,
@@ -621,7 +628,6 @@ export class EmailMarketingService {
       },
     });
     for (const e of due) {
-      if (!e.sequence.enabled) continue;
       if (e.user.status !== 'ACTIVE') {
         await this.prisma.emailDripEnrollment.update({
           where: { id: e.id },
