@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { getLocale, getTranslations } from 'next-intl/server';
 import { authedFetch } from '@/lib/authed-fetch';
+import { locales as LOCALES } from '@/i18n/config';
 
 interface Row {
   id: string;
@@ -29,7 +30,6 @@ interface PageProps {
 
 const STATUSES = ['DRAFT', 'PUBLISHED'] as const;
 const KINDS = ['PAGE', 'LEGAL'] as const;
-const LOCALES = ['en', 'ar'] as const;
 
 export default async function AdminCmsPagesPage({ searchParams }: PageProps) {
   const t = await getTranslations();

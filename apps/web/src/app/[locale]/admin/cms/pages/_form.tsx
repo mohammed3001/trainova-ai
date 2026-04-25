@@ -1,4 +1,5 @@
 import { getTranslations } from 'next-intl/server';
+import { locales as LOCALES } from '@/i18n/config';
 import { savePageAction } from '@/lib/cms-actions';
 
 interface Initial {
@@ -15,7 +16,6 @@ interface Initial {
 
 const STATUSES = ['DRAFT', 'PUBLISHED'] as const;
 const KINDS = ['PAGE', 'LEGAL'] as const;
-const LOCALES = ['en', 'ar'] as const;
 
 export async function PageForm({ initial }: { initial?: Initial }) {
   const t = await getTranslations();

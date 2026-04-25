@@ -1,9 +1,9 @@
 import { BadRequestException, Controller, Get, Param, Query } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
-import { cmsLocaleSchema } from '@trainova/shared';
+import { cmsLocaleSchema, type CmsLocale } from '@trainova/shared';
 import { CmsService } from './cms.service';
 
-function parseLocale(raw: string | undefined): 'en' | 'ar' {
+function parseLocale(raw: string | undefined): CmsLocale {
   const result = cmsLocaleSchema.safeParse(raw ?? 'en');
   if (!result.success) throw new BadRequestException('Unsupported locale');
   return result.data;

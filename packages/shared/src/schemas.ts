@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { applicationFormSchema } from './application-form';
+import { Locales } from './enums';
 
 /**
  * Robust string→boolean coercion for query params + form fields.
@@ -23,7 +24,7 @@ export const registerSchema = z.object({
   password: z.string().min(8).max(128),
   name: z.string().min(1).max(120),
   role: z.enum(['COMPANY_OWNER', 'TRAINER']),
-  locale: z.enum(['en', 'ar']).optional().default('en'),
+  locale: z.enum(Locales).optional().default('en'),
 });
 export type RegisterInput = z.infer<typeof registerSchema>;
 
@@ -40,13 +41,13 @@ export type VerifyEmailInput = z.infer<typeof verifyEmailSchema>;
 
 export const resendVerificationSchema = z.object({
   email: z.string().email(),
-  locale: z.enum(['en', 'ar']).optional().default('en'),
+  locale: z.enum(Locales).optional().default('en'),
 });
 export type ResendVerificationInput = z.infer<typeof resendVerificationSchema>;
 
 export const forgotPasswordSchema = z.object({
   email: z.string().email(),
-  locale: z.enum(['en', 'ar']).optional().default('en'),
+  locale: z.enum(Locales).optional().default('en'),
 });
 export type ForgotPasswordInput = z.infer<typeof forgotPasswordSchema>;
 
@@ -508,7 +509,7 @@ export type AdminAnalyticsRange = z.infer<typeof adminAnalyticsRangeSchema>;
 // T5.C CMS — pages + articles + categories + FAQ + feature flags
 // =========================================================================
 
-export const cmsLocaleSchema = z.enum(['en', 'ar']);
+export const cmsLocaleSchema = z.enum(Locales);
 export type CmsLocale = z.infer<typeof cmsLocaleSchema>;
 
 export const pageStatusSchema = z.enum(['DRAFT', 'PUBLISHED', 'ARCHIVED']);

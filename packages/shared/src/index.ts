@@ -10,3 +10,5 @@ export * from './email-templates';
 export * from './platform-settings';
 export * from './admin-finance';
 export * from './matching';
+export * from './currency';
+export * from './preferences';

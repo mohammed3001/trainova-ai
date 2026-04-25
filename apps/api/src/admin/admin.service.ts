@@ -313,7 +313,7 @@ export class AdminService {
     // `forgotPassword` — the public variant swallows all errors to prevent
     // user enumeration, which would make this admin action silently succeed
     // even when the email provider fails and leave a misleading audit entry.
-    await this.auth.issuePasswordResetEmail(target.id, target.locale === 'ar' ? 'ar' : 'en');
+    await this.auth.issuePasswordResetEmail(target.id, target.locale);
     await this.prisma.auditLog.create({
       data: {
         actorId: ctx.actorId,

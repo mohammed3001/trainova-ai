@@ -50,7 +50,7 @@ in serial order against a freshly seeded database:
    the Arabic heading "نظرة عامة".
 10. Logout via `/api/logout` → cookies cleared → header returns to
     unauthenticated state (proves the route-handler logout from PR #2).
-11. Swagger `/docs` loads with all 12 expected tags.
+11. Swagger `/docs` loads with the expected tag set.
 
 Each run uses fresh unique emails (`Date.now()` suffix) so the spec is
 idempotent — you can run it back-to-back without resetting the DB.

@@ -93,10 +93,10 @@
     "passwordLabel": "Password",
     "nameLabel": "Full name",
     "roleLabel": "I want to…",
-    "roleCompany": "Hire AI trainers (as a company)",
-    "roleTrainer": "Offer my AI training services",
+    "roleCompany": "Entreprise",
+    "roleTrainer": "Formateur",
     "haveAccount": "Already have an account?",
-    "noAccount": "New here?",
+    "noAccount": "Pas encore de compte ?",
     "registerTitle": "Create your Trainova account",
     "loginTitle": "Welcome back",
     "registerCta": "Create account",
@@ -113,13 +113,13 @@
     "resetPasswordDone": "Password updated. You can sign in now.",
     "resetPasswordInvalid": "This reset link is invalid or has expired. Request a new one.",
     "verifyEmailTitle": "Verifying your email…",
-    "verifyEmailSuccess": "Your email is verified. You can continue using your account.",
+    "verifyEmailSuccess": "E-mail vérifié avec succès !",
     "verifyEmailInvalid": "This verification link is invalid or has expired. Request a new one from your account.",
     "verifyEmailMissing": "Missing verification token.",
     "backToLogin": "Back to sign in"
   },
   "dashboard": {
-    "welcome": "Welcome back, {name}",
+    "welcome": "Bienvenue, {name}",
     "companyOverview": "Your hiring overview",
     "trainerOverview": "Your trainer overview",
     "createRequest": "Post a new request",
@@ -131,13 +131,13 @@
   },
   "requests": {
     "listTitle": "Open AI training requests",
-    "noResults": "No open requests yet.",
+    "noResults": "Aucune offre trouvée.",
     "budget": "Budget",
     "duration": "Duration",
     "days": "days",
     "model": "Model",
     "industry": "Industry",
-    "skills": "Skills",
+    "skills": "Compétences requises",
     "apply": "Apply",
     "coverLetter": "Cover letter",
     "proposedRate": "Your proposed rate (USD)",
@@ -195,34 +195,34 @@
   "trainers": {
     "listTitle": "AI trainers",
     "rate": "Hourly rate",
-    "noResults": "No trainers match your filters."
+    "noResults": "Aucun formateur trouvé."
   },
   "trainerProfile": {
     "verified": "Verified",
     "downloadCv": "Download CV (PDF)",
     "website": "Website",
-    "about": "About",
-    "skills": "Skills",
+    "about": "À propos",
+    "skills": "Compétences",
     "portfolio": "Portfolio",
     "certifications": "Certifications",
     "rate": "Hourly rate",
     "hour": "hr",
     "availability": "Availability",
     "skillsCount": "Skills",
-    "memberSince": "Member since",
+    "memberSince": "Membre depuis",
     "responseWithin": "Responds within {hours}h",
     "untitled": "Untitled"
   },
   "applications": {
     "attachments": {
-      "title": "Supporting attachments",
-      "help": "Attach a CV, writing sample or portfolio bundle so the company can evaluate your profile alongside the cover letter.",
-      "loading": "Loading attachments…",
-      "emptyTrainer": "No attachments yet. Upload files below — up to 5 × 10MB (PDF, ZIP, DOCX, PNG, JPG).",
-      "emptyCompany": "The applicant hasn't attached any supporting files.",
-      "download": "Download",
-      "downloading": "Preparing…",
-      "delete": "Remove",
+      "title": "Pièces jointes",
+      "help": "Joignez un CV, un échantillon d'écriture ou un portfolio pour que l'entreprise puisse évaluer votre profil en plus de la lettre de motivation.",
+      "loading": "Chargement des pièces jointes…",
+      "emptyTrainer": "Aucune pièce jointe pour l'instant. Importez des fichiers ci-dessous — jusqu'à 5 × 10 Mo (PDF, ZIP, DOCX, PNG, JPG).",
+      "emptyCompany": "Le candidat n'a joint aucun fichier de support.",
+      "download": "Télécharger",
+      "downloading": "Préparation…",
+      "delete": "Supprimer",
       "scanStatus": {
         "pending": "Scanning",
         "clean": "Ready",
@@ -361,9 +361,9 @@
   "company": {
     "models": {
       "badge": "Model registry",
-      "title": "Connected models",
+      "title": "Registre des modèles",
       "subtitle": "Bind your live AI models — OpenAI-compatible, Anthropic, Bedrock, HuggingFace or any HTTPS endpoint — so trainers can evaluate them inside Trainova without ever seeing your credentials. Keys are encrypted at rest and rotated through the platform proxy.",
-      "add": "Add connection",
+      "add": "Ajouter un modèle",
       "edit": "Edit",
       "delete": "Delete",
       "test": "Test connection",
@@ -376,9 +376,9 @@
         "body": "Add your first connection to enable in-platform evaluation. We never store credentials in plaintext."
       },
       "status": {
-        "DRAFT": "Draft",
-        "ACTIVE": "Active",
-        "DISABLED": "Disabled"
+        "DRAFT": "Brouillon",
+        "ACTIVE": "Actif",
+        "DISABLED": "Désactivé"
       },
       "providers": {
         "OPENAI_COMPATIBLE": "OpenAI-compatible",
@@ -425,7 +425,7 @@
       }
     },
     "applications": {
-      "title": "Applications",
+      "title": "Candidatures reçues",
       "empty": "No applications yet.",
       "viewDetail": "View detail",
       "backToList": "Back to applications",
@@ -693,7 +693,7 @@
   "billing": {
     "companyTitle": "Billing & Subscription",
     "companySubtitle": "Manage your workspace plan, billing details, and invoices.",
-    "currentPlan": "Current plan",
+    "currentPlan": "Plan actuel",
     "unknownTier": "Active plan",
     "status": "Status",
     "cancelScheduled": "cancels at period end",
@@ -730,7 +730,7 @@
     "backToDashboard": "Back to dashboard",
     "backToList": "Back to contracts",
     "total": "Total",
-    "milestones": "Milestones",
+    "milestones": "Jalons",
     "fee": "Platform fee",
     "currencyLabel": "Currency",
     "trainerUnknown": "Trainer",
@@ -784,7 +784,7 @@
     "trainerTitle": "Earnings & payouts",
     "trainerSubtitle": "Track escrow, payouts, and upgrade your trainer visibility.",
     "earningsTitle": "Earnings",
-    "pending": "Pending release",
+    "pending": "En attente",
     "available": "Available",
     "paidOut": "Paid out",
     "totalEarned": "Total earned",
@@ -817,11 +817,11 @@
     }
   },
   "admin": {
-    "overview": "Overview",
-    "users": "Users",
-    "companies": "Companies",
+    "overview": "Vue d'ensemble",
+    "users": "Utilisateurs",
+    "companies": "Entreprises",
     "requests": {
-      "title": "Requests",
+      "title": "Offres",
       "subtitle": "All job requests across companies — feature, close, archive.",
       "searchPlaceholder": "Search title, slug, description…",
       "filter": {
@@ -871,7 +871,7 @@
     },
     "skills": "Skills",
     "settings": {
-      "title": "Platform settings",
+      "title": "Paramètres",
       "subtitle": "Brand, locales, currencies, fees, integrations, and security knobs in one place.",
       "newCustomKey": "New custom key",
       "edit": "Edit",
@@ -914,7 +914,7 @@
       "verifiedOf": "{verified} verified"
     },
     "ads": {
-      "title": "Ad campaigns",
+      "title": "Publicités",
       "subtitle": "Review, approve and moderate self-serve ad campaigns.",
       "tabs": {
         "pending": "Pending review",
@@ -932,7 +932,7 @@
       "approvedBy": "Approved by admin on {at}",
       "rejectedReason": "Rejected: {reason}"
     },
-    "generatedAt": "Generated at",
+    "generatedAt": "Généré le",
     "common": {
       "verified": "Verified",
       "unverified": "Unverified"
@@ -971,34 +971,34 @@
       "PENDING": "Pending"
     },
     "trainers": {
-      "title": "Trainers",
-      "subtitle": "Verify skills and manage trainer profiles.",
-      "searchPlaceholder": "Search by name, slug, or headline…",
-      "empty": "No trainers match the current filters.",
-      "noSkills": "No skills listed yet.",
+      "title": "Formateurs",
+      "subtitle": "Vérifiez les compétences et gérez les profils de formateurs.",
+      "searchPlaceholder": "Rechercher par nom, slug ou titre…",
+      "empty": "Aucun formateur ne correspond aux filtres actuels.",
+      "noSkills": "Aucune compétence renseignée.",
       "action": {
-        "verify": "Verify trainer",
-        "unverify": "Remove verification",
-        "viewPublic": "View public profile"
+        "verify": "Vérifier le formateur",
+        "unverify": "Retirer la vérification",
+        "viewPublic": "Voir le profil public"
       },
       "confirm": {
-        "verify": "Mark this trainer as verified?",
-        "unverify": "Remove verification from this trainer?"
+        "verify": "Marquer ce formateur comme vérifié ?",
+        "unverify": "Retirer la vérification de ce formateur ?"
       },
       "section": {
-        "profile": "Profile",
-        "user": "User account",
-        "skills": "Skills",
+        "profile": "Profil",
+        "user": "Compte utilisateur",
+        "skills": "Compétences",
         "portfolio": "Portfolio"
       },
       "field": {
-        "rate": "Hourly rate",
-        "availability": "Availability",
-        "languages": "Languages"
+        "rate": "Tarif horaire",
+        "availability": "Disponibilité",
+        "languages": "Langues"
       }
     },
     "verification": {
-      "title": "Verification queue",
+      "title": "Vérification",
       "subtitle": "Review identity and legitimacy submissions from companies and trainers.",
       "empty": "Nothing to review right now.",
       "noDocuments": "No documents were attached to this request.",
@@ -1607,7 +1607,7 @@
     }
   },
   "ads": {
-    "title": "Ad campaigns",
+    "title": "Publicités",
     "subtitle": "Promote your company and open roles across Trainova. Set a budget, pick placements, and Trainova only charges per real impression or click.",
     "badge": "Monetisation",
     "disclosure": "All sponsored placements carry a visible 'Sponsored' label and link only to https:// destinations after review.",
@@ -1716,7 +1716,7 @@
   },
   "chat": {
     "nav": "Messages",
-    "startChat": "Start chat",
+    "startChat": "Démarrer une conversation",
     "messageTrainer": "Message trainer",
     "messageCompany": "Message company",
     "starting": "Opening…",
@@ -1798,14 +1798,14 @@
     }
   },
   "preferences": {
-    "title": "Preferences",
-    "subtitle": "Choose how amounts, dates, and the interface are displayed across Trainova.",
-    "localeLabel": "Interface language",
-    "timezoneLabel": "Time zone",
-    "timezonePlaceholder": "e.g. Europe/Paris",
-    "timezoneHint": "Use an IANA identifier such as Europe/Paris, Asia/Riyadh, or America/Los_Angeles. Leave blank to follow your browser.",
-    "currencyLabel": "Display currency",
-    "currencyHint": "Authoritative payment amounts always remain in the contract currency; this only changes how they are displayed to you.",
+    "title": "Préférences",
+    "subtitle": "Choisissez comment les montants, dates et l'interface sont affichés sur Trainova.",
+    "localeLabel": "Langue de l'interface",
+    "timezoneLabel": "Fuseau horaire",
+    "timezonePlaceholder": "ex. Europe/Paris",
+    "timezoneHint": "Utilisez un identifiant IANA comme Europe/Paris, Asia/Riyadh ou America/Los_Angeles. Laissez vide pour suivre votre navigateur.",
+    "currencyLabel": "Devise d'affichage",
+    "currencyHint": "Les montants de paiement restent toujours dans la devise du contrat ; ce paramètre ne change que l'affichage.",
     "localeOptions": {
       "en": "English",
       "ar": "العربية",
@@ -1814,24 +1814,24 @@
     },
     "currencyOptionFormat": "{code} — {name}",
     "currencyNames": {
-      "USD": "US Dollar",
+      "USD": "Dollar américain",
       "EUR": "Euro",
-      "GBP": "British Pound",
-      "SAR": "Saudi Riyal",
-      "AED": "UAE Dirham",
-      "EGP": "Egyptian Pound",
-      "JPY": "Japanese Yen",
-      "CAD": "Canadian Dollar",
-      "AUD": "Australian Dollar",
-      "CHF": "Swiss Franc",
-      "INR": "Indian Rupee",
-      "TRY": "Turkish Lira"
+      "GBP": "Livre sterling",
+      "SAR": "Riyal saoudien",
+      "AED": "Dirham émirati",
+      "EGP": "Livre égyptienne",
+      "JPY": "Yen japonais",
+      "CAD": "Dollar canadien",
+      "AUD": "Dollar australien",
+      "CHF": "Franc suisse",
+      "INR": "Roupie indienne",
+      "TRY": "Livre turque"
     },
-    "systemDefault": "System default",
-    "submit": "Save preferences",
-    "saving": "Saving…",
-    "saved": "Preferences saved.",
-    "errorGeneric": "Could not save preferences. Try again.",
-    "fxStaleWarning": "Conversion rates are temporarily unavailable; amounts are shown in their original currency."
+    "systemDefault": "Par défaut du système",
+    "submit": "Enregistrer les préférences",
+    "saving": "Enregistrement…",
+    "saved": "Préférences enregistrées.",
+    "errorGeneric": "Impossible d'enregistrer les préférences. Réessayez.",
+    "fxStaleWarning": "Les taux de conversion sont temporairement indisponibles ; les montants sont affichés dans leur devise d'origine."
   }
 }

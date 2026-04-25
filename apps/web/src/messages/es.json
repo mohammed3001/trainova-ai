@@ -16,18 +16,18 @@
     "skills": "Skills",
     "about": "About",
     "pricing": "Pricing",
-    "search": "Search",
-    "save": "Save",
-    "cancel": "Cancel",
-    "submit": "Submit",
-    "loading": "Loading…",
-    "error": "Something went wrong"
+    "search": "Buscar",
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "submit": "Enviar",
+    "loading": "Cargando…",
+    "error": "Error"
   },
   "nav": {
-    "home": "Home",
+    "home": "Inicio",
     "company": "Company",
     "trainer": "Trainer",
-    "admin": "Admin"
+    "admin": "Administración"
   },
   "seo": {
     "trainersList": {
@@ -93,10 +93,10 @@
     "passwordLabel": "Password",
     "nameLabel": "Full name",
     "roleLabel": "I want to…",
-    "roleCompany": "Hire AI trainers (as a company)",
-    "roleTrainer": "Offer my AI training services",
+    "roleCompany": "Empresa",
+    "roleTrainer": "Formador",
     "haveAccount": "Already have an account?",
-    "noAccount": "New here?",
+    "noAccount": "¿No tienes cuenta?",
     "registerTitle": "Create your Trainova account",
     "loginTitle": "Welcome back",
     "registerCta": "Create account",
@@ -113,13 +113,13 @@
     "resetPasswordDone": "Password updated. You can sign in now.",
     "resetPasswordInvalid": "This reset link is invalid or has expired. Request a new one.",
     "verifyEmailTitle": "Verifying your email…",
-    "verifyEmailSuccess": "Your email is verified. You can continue using your account.",
+    "verifyEmailSuccess": "¡Correo verificado con éxito!",
     "verifyEmailInvalid": "This verification link is invalid or has expired. Request a new one from your account.",
     "verifyEmailMissing": "Missing verification token.",
     "backToLogin": "Back to sign in"
   },
   "dashboard": {
-    "welcome": "Welcome back, {name}",
+    "welcome": "Bienvenido, {name}",
     "companyOverview": "Your hiring overview",
     "trainerOverview": "Your trainer overview",
     "createRequest": "Post a new request",
@@ -131,13 +131,13 @@
   },
   "requests": {
     "listTitle": "Open AI training requests",
-    "noResults": "No open requests yet.",
-    "budget": "Budget",
+    "noResults": "No se encontraron ofertas.",
+    "budget": "Presupuesto",
     "duration": "Duration",
     "days": "days",
     "model": "Model",
     "industry": "Industry",
-    "skills": "Skills",
+    "skills": "Habilidades requeridas",
     "apply": "Apply",
     "coverLetter": "Cover letter",
     "proposedRate": "Your proposed rate (USD)",
@@ -195,34 +195,34 @@
   "trainers": {
     "listTitle": "AI trainers",
     "rate": "Hourly rate",
-    "noResults": "No trainers match your filters."
+    "noResults": "No se encontraron formadores."
   },
   "trainerProfile": {
     "verified": "Verified",
     "downloadCv": "Download CV (PDF)",
     "website": "Website",
-    "about": "About",
-    "skills": "Skills",
-    "portfolio": "Portfolio",
-    "certifications": "Certifications",
+    "about": "Acerca de",
+    "skills": "Habilidades",
+    "portfolio": "Portafolio",
+    "certifications": "Certificaciones",
     "rate": "Hourly rate",
     "hour": "hr",
     "availability": "Availability",
     "skillsCount": "Skills",
-    "memberSince": "Member since",
+    "memberSince": "Miembro desde",
     "responseWithin": "Responds within {hours}h",
     "untitled": "Untitled"
   },
   "applications": {
     "attachments": {
-      "title": "Supporting attachments",
-      "help": "Attach a CV, writing sample or portfolio bundle so the company can evaluate your profile alongside the cover letter.",
-      "loading": "Loading attachments…",
-      "emptyTrainer": "No attachments yet. Upload files below — up to 5 × 10MB (PDF, ZIP, DOCX, PNG, JPG).",
-      "emptyCompany": "The applicant hasn't attached any supporting files.",
-      "download": "Download",
-      "downloading": "Preparing…",
-      "delete": "Remove",
+      "title": "Archivos adjuntos",
+      "help": "Adjunta un CV, una muestra de escritura o un portafolio para que la empresa pueda evaluar tu perfil junto con la carta de presentación.",
+      "loading": "Cargando archivos adjuntos…",
+      "emptyTrainer": "Aún no hay archivos adjuntos. Sube archivos abajo — hasta 5 × 10MB (PDF, ZIP, DOCX, PNG, JPG).",
+      "emptyCompany": "El candidato no ha adjuntado ningún archivo de soporte.",
+      "download": "Descargar",
+      "downloading": "Preparando…",
+      "delete": "Eliminar",
       "scanStatus": {
         "pending": "Scanning",
         "clean": "Ready",
@@ -361,9 +361,9 @@
   "company": {
     "models": {
       "badge": "Model registry",
-      "title": "Connected models",
+      "title": "Registro de modelos",
       "subtitle": "Bind your live AI models — OpenAI-compatible, Anthropic, Bedrock, HuggingFace or any HTTPS endpoint — so trainers can evaluate them inside Trainova without ever seeing your credentials. Keys are encrypted at rest and rotated through the platform proxy.",
-      "add": "Add connection",
+      "add": "Añadir modelo",
       "edit": "Edit",
       "delete": "Delete",
       "test": "Test connection",
@@ -376,9 +376,9 @@
         "body": "Add your first connection to enable in-platform evaluation. We never store credentials in plaintext."
       },
       "status": {
-        "DRAFT": "Draft",
-        "ACTIVE": "Active",
-        "DISABLED": "Disabled"
+        "DRAFT": "Borrador",
+        "ACTIVE": "Activo",
+        "DISABLED": "Desactivado"
       },
       "providers": {
         "OPENAI_COMPATIBLE": "OpenAI-compatible",
@@ -425,7 +425,7 @@
       }
     },
     "applications": {
-      "title": "Applications",
+      "title": "Solicitudes recibidas",
       "empty": "No applications yet.",
       "viewDetail": "View detail",
       "backToList": "Back to applications",
@@ -693,7 +693,7 @@
   "billing": {
     "companyTitle": "Billing & Subscription",
     "companySubtitle": "Manage your workspace plan, billing details, and invoices.",
-    "currentPlan": "Current plan",
+    "currentPlan": "Plan actual",
     "unknownTier": "Active plan",
     "status": "Status",
     "cancelScheduled": "cancels at period end",
@@ -730,7 +730,7 @@
     "backToDashboard": "Back to dashboard",
     "backToList": "Back to contracts",
     "total": "Total",
-    "milestones": "Milestones",
+    "milestones": "Hitos",
     "fee": "Platform fee",
     "currencyLabel": "Currency",
     "trainerUnknown": "Trainer",
@@ -784,7 +784,7 @@
     "trainerTitle": "Earnings & payouts",
     "trainerSubtitle": "Track escrow, payouts, and upgrade your trainer visibility.",
     "earningsTitle": "Earnings",
-    "pending": "Pending release",
+    "pending": "Pendiente",
     "available": "Available",
     "paidOut": "Paid out",
     "totalEarned": "Total earned",
@@ -817,11 +817,11 @@
     }
   },
   "admin": {
-    "overview": "Overview",
-    "users": "Users",
-    "companies": "Companies",
+    "overview": "Resumen",
+    "users": "Usuarios",
+    "companies": "Empresas",
     "requests": {
-      "title": "Requests",
+      "title": "Ofertas",
       "subtitle": "All job requests across companies — feature, close, archive.",
       "searchPlaceholder": "Search title, slug, description…",
       "filter": {
@@ -871,7 +871,7 @@
     },
     "skills": "Skills",
     "settings": {
-      "title": "Platform settings",
+      "title": "Configuración",
       "subtitle": "Brand, locales, currencies, fees, integrations, and security knobs in one place.",
       "newCustomKey": "New custom key",
       "edit": "Edit",
@@ -914,7 +914,7 @@
       "verifiedOf": "{verified} verified"
     },
     "ads": {
-      "title": "Ad campaigns",
+      "title": "Publicidad",
       "subtitle": "Review, approve and moderate self-serve ad campaigns.",
       "tabs": {
         "pending": "Pending review",
@@ -932,7 +932,7 @@
       "approvedBy": "Approved by admin on {at}",
       "rejectedReason": "Rejected: {reason}"
     },
-    "generatedAt": "Generated at",
+    "generatedAt": "Generado el",
     "common": {
       "verified": "Verified",
       "unverified": "Unverified"
@@ -971,34 +971,34 @@
       "PENDING": "Pending"
     },
     "trainers": {
-      "title": "Trainers",
-      "subtitle": "Verify skills and manage trainer profiles.",
-      "searchPlaceholder": "Search by name, slug, or headline…",
-      "empty": "No trainers match the current filters.",
-      "noSkills": "No skills listed yet.",
+      "title": "Formadores",
+      "subtitle": "Verifica las habilidades y gestiona los perfiles de formadores.",
+      "searchPlaceholder": "Buscar por nombre, slug o titular…",
+      "empty": "Ningún formador coincide con los filtros actuales.",
+      "noSkills": "Sin habilidades registradas.",
       "action": {
-        "verify": "Verify trainer",
-        "unverify": "Remove verification",
-        "viewPublic": "View public profile"
+        "verify": "Verificar formador",
+        "unverify": "Quitar verificación",
+        "viewPublic": "Ver perfil público"
       },
       "confirm": {
-        "verify": "Mark this trainer as verified?",
-        "unverify": "Remove verification from this trainer?"
+        "verify": "¿Marcar este formador como verificado?",
+        "unverify": "¿Quitar la verificación de este formador?"
       },
       "section": {
-        "profile": "Profile",
-        "user": "User account",
-        "skills": "Skills",
-        "portfolio": "Portfolio"
+        "profile": "Perfil",
+        "user": "Cuenta de usuario",
+        "skills": "Habilidades",
+        "portfolio": "Portafolio"
       },
       "field": {
-        "rate": "Hourly rate",
-        "availability": "Availability",
-        "languages": "Languages"
+        "rate": "Tarifa por hora",
+        "availability": "Disponibilidad",
+        "languages": "Idiomas"
       }
     },
     "verification": {
-      "title": "Verification queue",
+      "title": "Verificación",
       "subtitle": "Review identity and legitimacy submissions from companies and trainers.",
       "empty": "Nothing to review right now.",
       "noDocuments": "No documents were attached to this request.",
@@ -1607,7 +1607,7 @@
     }
   },
   "ads": {
-    "title": "Ad campaigns",
+    "title": "Publicidad",
     "subtitle": "Promote your company and open roles across Trainova. Set a budget, pick placements, and Trainova only charges per real impression or click.",
     "badge": "Monetisation",
     "disclosure": "All sponsored placements carry a visible 'Sponsored' label and link only to https:// destinations after review.",
@@ -1716,7 +1716,7 @@
   },
   "chat": {
     "nav": "Messages",
-    "startChat": "Start chat",
+    "startChat": "Iniciar conversación",
     "messageTrainer": "Message trainer",
     "messageCompany": "Message company",
     "starting": "Opening…",
@@ -1798,14 +1798,14 @@
     }
   },
   "preferences": {
-    "title": "Preferences",
-    "subtitle": "Choose how amounts, dates, and the interface are displayed across Trainova.",
-    "localeLabel": "Interface language",
-    "timezoneLabel": "Time zone",
-    "timezonePlaceholder": "e.g. Europe/Paris",
-    "timezoneHint": "Use an IANA identifier such as Europe/Paris, Asia/Riyadh, or America/Los_Angeles. Leave blank to follow your browser.",
-    "currencyLabel": "Display currency",
-    "currencyHint": "Authoritative payment amounts always remain in the contract currency; this only changes how they are displayed to you.",
+    "title": "Preferencias",
+    "subtitle": "Elige cómo se muestran los montos, fechas y la interfaz en Trainova.",
+    "localeLabel": "Idioma de la interfaz",
+    "timezoneLabel": "Zona horaria",
+    "timezonePlaceholder": "ej. Europe/Madrid",
+    "timezoneHint": "Usa un identificador IANA como Europe/Madrid, Asia/Riyadh o America/Los_Angeles. Déjalo vacío para seguir tu navegador.",
+    "currencyLabel": "Moneda de visualización",
+    "currencyHint": "Los montos de pago siempre se mantienen en la moneda del contrato; esta configuración solo cambia la visualización.",
     "localeOptions": {
       "en": "English",
       "ar": "العربية",
@@ -1814,24 +1814,24 @@
     },
     "currencyOptionFormat": "{code} — {name}",
     "currencyNames": {
-      "USD": "US Dollar",
+      "USD": "Dólar estadounidense",
       "EUR": "Euro",
-      "GBP": "British Pound",
-      "SAR": "Saudi Riyal",
-      "AED": "UAE Dirham",
-      "EGP": "Egyptian Pound",
-      "JPY": "Japanese Yen",
-      "CAD": "Canadian Dollar",
-      "AUD": "Australian Dollar",
-      "CHF": "Swiss Franc",
-      "INR": "Indian Rupee",
-      "TRY": "Turkish Lira"
+      "GBP": "Libra esterlina",
+      "SAR": "Riyal saudí",
+      "AED": "Dirham emiratí",
+      "EGP": "Libra egipcia",
+      "JPY": "Yen japonés",
+      "CAD": "Dólar canadiense",
+      "AUD": "Dólar australiano",
+      "CHF": "Franco suizo",
+      "INR": "Rupia india",
+      "TRY": "Lira turca"
     },
-    "systemDefault": "System default",
-    "submit": "Save preferences",
-    "saving": "Saving…",
-    "saved": "Preferences saved.",
-    "errorGeneric": "Could not save preferences. Try again.",
-    "fxStaleWarning": "Conversion rates are temporarily unavailable; amounts are shown in their original currency."
+    "systemDefault": "Predeterminado del sistema",
+    "submit": "Guardar preferencias",
+    "saving": "Guardando…",
+    "saved": "Preferencias guardadas.",
+    "errorGeneric": "No se pudieron guardar las preferencias. Inténtalo de nuevo.",
+    "fxStaleWarning": "Los tipos de cambio no están disponibles temporalmente; los montos se muestran en su moneda original."
   }
 }

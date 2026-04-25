@@ -13,11 +13,24 @@ import { hashPassword, verifyPassword } from '../common/password.util';
 import { slugify, randomSuffix } from '../common/slug.util';
 import { hashToken, issueOpaqueToken } from '../common/token.util';
 import { EmailService } from '../email/email.service';
-import type { RegisterInput, LoginInput } from '@trainova/shared';
+import { Locales } from '@trainova/shared';
+import type { Locale, RegisterInput, LoginInput } from '@trainova/shared';
 
 const VERIFY_TOKEN_TTL_MS = 24 * 60 * 60 * 1000; // 24h
 const RESET_TOKEN_TTL_MS = 30 * 60 * 1000; // 30m
 const RESET_TOKEN_TTL_MIN = 30;
+
+const APP_LOCALES: ReadonlySet<string> = new Set(Locales);
+
+/**
+ * Resolve the locale used for the URL embedded in transactional emails.
+ * Email templates are only authored in en/ar today, but the URL we send
+ * users to must use their actual app locale (en/ar/fr/es) so they land
+ * on the correctly-translated landing page after clicking through.
+ */
+function pickAppLocale(raw: string | null | undefined, fallback: Locale): Locale {
+  return raw && APP_LOCALES.has(raw) ? (raw as Locale) : fallback;
+}
 
 @Injectable()
 export class AuthService {
@@ -110,7 +123,7 @@ export class AuthService {
    * emails exist. If the account exists and is unverified, a fresh token is
    * issued and the old unconsumed ones for that user are invalidated.
    */
-  async resendVerification(email: string, locale: 'en' | 'ar'): Promise<void> {
+  async resendVerification(email: string, locale: string): Promise<void> {
     const user = await this.prisma.user.findUnique({ where: { email } });
     if (!user) return; // silent
     if (user.emailVerifiedAt) return; // already verified
@@ -179,12 +192,17 @@ export class AuthService {
       data: { userId, tokenHash: hash, expiresAt },
     });
 
-    const normalizedLocale = EmailService.normalizeLocale(locale);
+    // Email template locale is narrower (en/ar only) than the user-facing
+    // app locale — fr/es users still get the English template until those are
+    // authored, but the URL we embed must use their actual locale so they land
+    // on the correct localized verify-email page.
+    const emailLocale = EmailService.normalizeLocale(locale);
+    const urlLocale = pickAppLocale(locale, emailLocale);
     const verifyUrl = this.buildAppUrl(
-      `/${normalizedLocale}/verify-email?token=${encodeURIComponent(raw)}`,
+      `/${urlLocale}/verify-email?token=${encodeURIComponent(raw)}`,
     );
     await this.email.sendVerifyEmail(email, {
-      locale: normalizedLocale,
+      locale: emailLocale,
       name,
       verifyUrl,
     });
@@ -200,7 +218,7 @@ export class AuthService {
    * observe real failures. The public `forgotPassword` wraps this in a
    * swallowing try/catch so the external endpoint stays enumeration-safe.
    */
-  async issuePasswordResetEmail(userId: string, locale: 'en' | 'ar'): Promise<void> {
+  async issuePasswordResetEmail(userId: string, locale: string): Promise<void> {
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
     if (!user) throw new NotFoundException('User not found');
 
@@ -215,12 +233,14 @@ export class AuthService {
       data: { userId: user.id, tokenHash: hash, expiresAt },
     });
 
-    const normalizedLocale = EmailService.normalizeLocale(locale || user.locale);
+    const effective = locale || user.locale;
+    const emailLocale = EmailService.normalizeLocale(effective);
+    const urlLocale = pickAppLocale(effective, emailLocale);
     const resetUrl = this.buildAppUrl(
-      `/${normalizedLocale}/reset-password?token=${encodeURIComponent(raw)}`,
+      `/${urlLocale}/reset-password?token=${encodeURIComponent(raw)}`,
     );
     await this.email.sendResetPassword(user.email, {
-      locale: normalizedLocale,
+      locale: emailLocale,
       name: user.name,
       resetUrl,
       expiresInMinutes: RESET_TOKEN_TTL_MIN,
@@ -234,7 +254,7 @@ export class AuthService {
    * token-issuance / email-provider errors are swallowed so the response
    * stays neutral (no user enumeration via 200 vs 500 differential).
    */
-  async forgotPassword(email: string, locale: 'en' | 'ar'): Promise<void> {
+  async forgotPassword(email: string, locale: string): Promise<void> {
     const user = await this.prisma.user.findUnique({ where: { email } });
     if (!user) return;
     if (user.status !== 'ACTIVE') return;
