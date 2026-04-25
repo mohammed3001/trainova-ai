@@ -369,6 +369,39 @@ export class EmailMarketingService {
           data: { order: i },
         });
       }
+      // currentStepIdx on each EmailDripEnrollment is an index into the
+      // ordered steps array. After re-packing, every enrollment whose
+      // index pointed past the deleted slot must shift down by one so it
+      // still references the same logical step. Enrollments whose index
+      // equalled the deleted slot are left as-is — currentStepIdx then
+      // naturally points at the step that slid into that position.
+      // Enrollments past the new last step are marked completed.
+      const stepCount = remaining.length;
+      await tx.emailDripEnrollment.updateMany({
+        where: {
+          sequenceId,
+          completedAt: null,
+          cancelledAt: null,
+          currentStepIdx: { gt: step.order },
+        },
+        data: { currentStepIdx: { decrement: 1 } },
+      });
+      if (stepCount === 0) {
+        await tx.emailDripEnrollment.updateMany({
+          where: { sequenceId, completedAt: null, cancelledAt: null },
+          data: { completedAt: new Date(), nextRunAt: null },
+        });
+      } else {
+        await tx.emailDripEnrollment.updateMany({
+          where: {
+            sequenceId,
+            completedAt: null,
+            cancelledAt: null,
+            currentStepIdx: { gte: stepCount },
+          },
+          data: { completedAt: new Date(), nextRunAt: null },
+        });
+      }
     });
   }
 
@@ -500,43 +533,58 @@ export class EmailMarketingService {
       return { id, sent: 0, failed: 0 };
     }
     const where = this.resolveSegmentWhere(segment);
-    const recipients = await this.prisma.user.findMany({
-      where,
-      select: { id: true, name: true, email: true },
-      take: CRON_RECIPIENTS_PER_CAMPAIGN,
-    });
     let sent = 0;
     let failed = 0;
-    for (const r of recipients) {
-      const sendRow = await this.prisma.emailCampaignSend.upsert({
-        where: { campaignId_userId: { campaignId: id, userId: r.id } },
-        create: { campaignId: id, userId: r.id, status: 'PENDING' },
-        update: {},
-      });
-      if (sendRow.status === 'SENT' || sendRow.status === 'SKIPPED') continue;
-      try {
-        await this.email.sendCampaignRaw({
-          to: r.email,
-          locale: campaign.locale as CampaignLocale,
-          subject: campaign.subject,
-          bodyHtml: campaign.bodyHtml,
-          bodyText: campaign.bodyText,
-          vars: { name: r.name },
+    let cursor: string | undefined = undefined;
+    // Cursor-paginate the entire segment in batches of CRON_RECIPIENTS_PER_CAMPAIGN.
+    // The previous implementation took only the first batch and finalised the
+    // campaign, silently dropping every recipient beyond it. Per-(campaign,user)
+    // idempotency on EmailCampaignSend means re-runs are safe if this method
+    // is interrupted mid-way.
+    // eslint-disable-next-line no-constant-condition
+    while (true) {
+      const recipients: { id: string; name: string; email: string }[] =
+        await this.prisma.user.findMany({
+          where,
+          select: { id: true, name: true, email: true },
+          orderBy: { id: 'asc' },
+          take: CRON_RECIPIENTS_PER_CAMPAIGN,
+          ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
         });
-        await this.prisma.emailCampaignSend.update({
-          where: { id: sendRow.id },
-          data: { status: 'SENT', sentAt: new Date(), error: null },
+      if (recipients.length === 0) break;
+      for (const r of recipients) {
+        const sendRow = await this.prisma.emailCampaignSend.upsert({
+          where: { campaignId_userId: { campaignId: id, userId: r.id } },
+          create: { campaignId: id, userId: r.id, status: 'PENDING' },
+          update: {},
         });
-        sent++;
-      } catch (err) {
-        const message = err instanceof Error ? err.message : String(err);
-        this.logger.error(`Campaign ${id} -> ${r.email} failed: ${message}`);
-        await this.prisma.emailCampaignSend.update({
-          where: { id: sendRow.id },
-          data: { status: 'FAILED', error: message.slice(0, 1000) },
-        });
-        failed++;
+        if (sendRow.status === 'SENT' || sendRow.status === 'SKIPPED') continue;
+        try {
+          await this.email.sendCampaignRaw({
+            to: r.email,
+            locale: campaign.locale as CampaignLocale,
+            subject: campaign.subject,
+            bodyHtml: campaign.bodyHtml,
+            bodyText: campaign.bodyText,
+            vars: { name: r.name },
+          });
+          await this.prisma.emailCampaignSend.update({
+            where: { id: sendRow.id },
+            data: { status: 'SENT', sentAt: new Date(), error: null },
+          });
+          sent++;
+        } catch (err) {
+          const message = err instanceof Error ? err.message : String(err);
+          this.logger.error(`Campaign ${id} -> ${r.email} failed: ${message}`);
+          await this.prisma.emailCampaignSend.update({
+            where: { id: sendRow.id },
+            data: { status: 'FAILED', error: message.slice(0, 1000) },
+          });
+          failed++;
+        }
       }
+      cursor = recipients[recipients.length - 1]!.id;
+      if (recipients.length < CRON_RECIPIENTS_PER_CAMPAIGN) break;
     }
     const finalStatus = sent === 0 && failed > 0 ? 'FAILED' : 'SENT';
     await this.prisma.emailCampaign.update({
