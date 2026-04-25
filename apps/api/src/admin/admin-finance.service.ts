@@ -26,6 +26,7 @@ import {
   type PayoutStatus,
   type PlanAudience,
 } from '@trainova/shared';
+import { CouponsService } from '../coupons/coupons.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { StripeService } from '../payments/stripe.service';
 
@@ -41,6 +42,7 @@ export class AdminFinanceService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly stripe: StripeService,
+    private readonly coupons: CouponsService,
   ) {}
 
   // ====================================================================
@@ -302,6 +304,11 @@ export class AdminFinanceService {
           reason: input.reason,
           idempotencyKey: `admin-refund-${milestone.id}`,
         });
+        // Reverse any coupon redemption tied to this milestone *inside*
+        // the same transaction so the cap counters and redemption row
+        // roll back together with the milestone status flip if the
+        // AuditLog insert below fails. See CouponsService.reverseForMilestone.
+        await this.coupons.reverseForMilestone(tx, milestone.id);
         await tx.milestone.update({
           where: { id: milestone.id },
           data: { status: 'REFUNDED', refundedAt: new Date() },

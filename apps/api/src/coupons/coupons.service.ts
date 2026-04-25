@@ -436,6 +436,64 @@ export class CouponsService {
   }
 
   /**
+   * Reverse a milestone coupon redemption when the milestone is refunded.
+   *
+   * Must run inside the same Prisma transaction as the milestone
+   * `status: REFUNDED` write so a partial failure (e.g. AuditLog insert
+   * blowing up) rolls the counter changes back along with the milestone.
+   *
+   * Without this, a refunded milestone leaves the redemption row in
+   * place and the cap counters incremented, which means:
+   *   - `maxRedemptions: 1` is consumed forever even though the buyer
+   *     never paid;
+   *   - a user blocked by `perUserLimit` cannot retry on a different
+   *     milestone after a refund;
+   *   - `totalDiscountMinor` analytics is inflated.
+   *
+   * No-op for milestones that were funded without a coupon.
+   */
+  async reverseForMilestone(tx: TxClient, milestoneId: string): Promise<void> {
+    const redemption = await tx.couponRedemption.findUnique({
+      where: { milestoneId },
+    });
+    if (!redemption) return;
+    // Lock the coupon row before we adjust counters so a concurrent
+    // applyToMilestone for the same coupon serializes against this
+    // reversal — same rationale as the FOR UPDATE in apply paths.
+    await tx.$executeRaw`SELECT 1 FROM "Coupon" WHERE id = ${redemption.couponId} FOR UPDATE`;
+    await tx.coupon.update({
+      where: { id: redemption.couponId },
+      data: {
+        redeemedCount: { decrement: 1 },
+        totalDiscountMinor: { decrement: redemption.discountMinor },
+      },
+    });
+    await tx.couponRedemption.delete({ where: { id: redemption.id } });
+  }
+
+  /**
+   * Reverse a subscription coupon redemption when the subscription is
+   * cancelled before it ever charged. Same semantics as
+   * {@link reverseForMilestone}; no-op for subscriptions that were
+   * created without a coupon.
+   */
+  async reverseForSubscription(tx: TxClient, subscriptionId: string): Promise<void> {
+    const redemption = await tx.couponRedemption.findUnique({
+      where: { subscriptionId },
+    });
+    if (!redemption) return;
+    await tx.$executeRaw`SELECT 1 FROM "Coupon" WHERE id = ${redemption.couponId} FOR UPDATE`;
+    await tx.coupon.update({
+      where: { id: redemption.couponId },
+      data: {
+        redeemedCount: { decrement: 1 },
+        totalDiscountMinor: { decrement: redemption.discountMinor },
+      },
+    });
+    await tx.couponRedemption.delete({ where: { id: redemption.id } });
+  }
+
+  /**
    * Apply a coupon to a Stripe subscription. SUBSCRIPTION coupons must
    * have `stripeCouponId` set — Stripe owns the recurring discount and
    * we just pass it through to `subscriptions.create`. We record a

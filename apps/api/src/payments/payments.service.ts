@@ -540,9 +540,17 @@ export class PaymentsService {
       idempotencyKey: `refund-${milestone.id}`,
     });
 
-    const updated = await this.prisma.milestone.update({
-      where: { id: milestone.id },
-      data: { status: 'REFUNDED', refundedAt: new Date() },
+    // Wrap the post-Stripe DB writes in one transaction so the
+    // milestone status flip and any coupon-redemption reversal commit
+    // atomically. Without the reversal a refunded milestone leaves
+    // `redeemedCount` / `perUserLimit` slots consumed forever — see
+    // CouponsService.reverseForMilestone for full rationale.
+    const updated = await this.prisma.$transaction(async (tx) => {
+      await this.coupons.reverseForMilestone(tx, milestone.id);
+      return tx.milestone.update({
+        where: { id: milestone.id },
+        data: { status: 'REFUNDED', refundedAt: new Date() },
+      });
     });
     await this.maybeCompleteContract(milestone.contractId);
     return this.toPublicMilestone(updated);
