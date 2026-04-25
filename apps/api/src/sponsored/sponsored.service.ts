@@ -321,9 +321,10 @@ export class SponsoredService {
       },
     });
 
-    const customerId = await this.payments.ensureStripeCustomerForUser(userId);
     let pi;
     try {
+      const customerId =
+        await this.payments.ensureStripeCustomerForUser(userId);
       pi = await this.stripe.createEscrowPaymentIntent({
         amountCents: pricedCents,
         currency: 'USD',
@@ -339,8 +340,9 @@ export class SponsoredService {
         idempotencyKey: `sponsored-${placement.id}`,
       });
     } catch (err) {
-      // Stripe rejected the PI — flip to DRAFT so the row isn't stuck
-      // waiting for a webhook that will never arrive. Owner can retry.
+      // Stripe customer ensure or PI create failed — flip to DRAFT so the
+      // row isn't stuck waiting for a webhook that will never arrive.
+      // Owner can retry without orphaning a PENDING_PAYMENT row.
       await this.prisma.sponsoredPlacement.update({
         where: { id: placement.id },
         data: { status: 'DRAFT' },
@@ -352,6 +354,16 @@ export class SponsoredService {
       data: { stripePaymentIntentId: pi.id },
     });
     if (!pi.client_secret) {
+      // The PI was created but Stripe didn't return a client_secret. Without
+      // it, the browser can't confirm the payment, so no webhook will arrive
+      // to advance the placement. Flip back to DRAFT so the owner can retry
+      // (the next attempt re-uses the same idempotency key and gets the same
+      // PI back, which by then should have a client_secret or surface a
+      // permanent failure).
+      await this.prisma.sponsoredPlacement.update({
+        where: { id: placement.id },
+        data: { status: 'DRAFT' },
+      });
       throw new ServiceUnavailableException(
         'Stripe did not return a PaymentIntent client_secret',
       );
