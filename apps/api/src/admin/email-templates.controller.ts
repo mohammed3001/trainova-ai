@@ -20,6 +20,7 @@ import {
   type CreateEmailTemplateInput,
   type PreviewEmailTemplateInput,
   type UpdateEmailTemplateInput,
+  ADMIN_ROLE_GROUPS,
 } from '@trainova/shared';
 import { CurrentUser, type AuthUser } from '../auth/current-user.decorator';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
@@ -31,7 +32,7 @@ import { EmailTemplatesService } from './email-templates.service';
 @ApiTags('admin')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Roles('SUPER_ADMIN', 'ADMIN')
+@Roles(...ADMIN_ROLE_GROUPS.CONTENT)
 @Controller('admin/email-templates')
 export class EmailTemplatesController {
   constructor(private readonly service: EmailTemplatesService) {}

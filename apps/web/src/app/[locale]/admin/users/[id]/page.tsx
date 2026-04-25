@@ -27,7 +27,18 @@ interface UserDetail {
   _count: { applications: number };
 }
 
-const ROLES = ['SUPER_ADMIN', 'ADMIN', 'COMPANY_OWNER', 'COMPANY_MEMBER', 'TRAINER'] as const;
+const ROLES = [
+  'SUPER_ADMIN',
+  'ADMIN',
+  'MODERATOR',
+  'FINANCE',
+  'SUPPORT',
+  'CONTENT_MANAGER',
+  'ADS_MANAGER',
+  'COMPANY_OWNER',
+  'COMPANY_MEMBER',
+  'TRAINER',
+] as const;
 const STATUSES = ['ACTIVE', 'SUSPENDED', 'PENDING'] as const;
 
 export default async function AdminUserDetailPage({

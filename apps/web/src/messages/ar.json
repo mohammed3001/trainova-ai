@@ -1019,6 +1019,11 @@
     "userRole": {
       "SUPER_ADMIN": "أدمن أعلى",
       "ADMIN": "أدمن",
+      "MODERATOR": "مشرف محتوى",
+      "FINANCE": "المالية",
+      "SUPPORT": "الدعم",
+      "CONTENT_MANAGER": "إدارة المحتوى",
+      "ADS_MANAGER": "إدارة الإعلانات",
       "COMPANY_OWNER": "مالك شركة",
       "COMPANY_MEMBER": "عضو شركة",
       "TRAINER": "مدرب"

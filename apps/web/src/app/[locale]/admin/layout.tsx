@@ -1,34 +1,65 @@
 import { redirect } from 'next/navigation';
 import { getLocale, getTranslations } from 'next-intl/server';
+import {
+  ADMIN_ROLE_GROUPS,
+  isAdminRole,
+  type AdminRole,
+  type UserRole,
+} from '@trainova/shared';
 import { getRole, getToken } from '@/lib/session';
 import { AdminNav } from '@/components/admin/admin-nav';
+
+/**
+ * T7.D — given an admin role, return the set of nav links it should see.
+ * Each link advertises which `AdminRoleGroup` is allowed to enter that
+ * admin surface. SUPER_ADMIN/ADMIN see everything; specialized roles
+ * only see their domain.
+ */
+type AdminLink = {
+  href: string;
+  label: string;
+  group: readonly AdminRole[];
+};
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const t = await getTranslations();
   const locale = await getLocale();
   const [token, role] = await Promise.all([getToken(), getRole()]);
   if (!token) redirect(`/${locale}/login`);
-  if (role !== 'ADMIN' && role !== 'SUPER_ADMIN') redirect(`/${locale}`);
+  const typedRole = (role ?? null) as UserRole | null;
+  if (!isAdminRole(typedRole)) redirect(`/${locale}`);
+  const adminRole: AdminRole = typedRole;
 
-  const links: Array<{ href: string; label: string }> = [
-    { href: `/${locale}/admin`, label: t('admin.nav.overview') },
-    { href: `/${locale}/admin/users`, label: t('admin.nav.users') },
-    { href: `/${locale}/admin/companies`, label: t('admin.nav.companies') },
-    { href: `/${locale}/admin/trainers`, label: t('admin.nav.trainers') },
-    { href: `/${locale}/admin/verification`, label: t('admin.nav.verification') },
-    { href: `/${locale}/admin/requests`, label: t('admin.nav.requests') },
-    { href: `/${locale}/admin/tests`, label: t('admin.nav.tests') },
-    { href: `/${locale}/admin/conversations`, label: t('admin.nav.conversations') },
-    { href: `/${locale}/admin/reports`, label: t('admin.nav.reports') },
-    { href: `/${locale}/admin/analytics`, label: t('admin.nav.analytics') },
-    { href: `/${locale}/admin/cms/pages`, label: t('admin.nav.cmsPages') },
-    { href: `/${locale}/admin/cms/articles`, label: t('admin.nav.cmsArticles') },
-    { href: `/${locale}/admin/cms/categories`, label: t('admin.nav.cmsCategories') },
-    { href: `/${locale}/admin/cms/faqs`, label: t('admin.nav.cmsFaqs') },
-    { href: `/${locale}/admin/cms/feature-flags`, label: t('admin.nav.featureFlags') },
-    { href: `/${locale}/admin/finance`, label: t('admin.nav.finance') },
-    { href: `/${locale}/admin/settings`, label: t('admin.nav.settings') },
+  const all = ADMIN_ROLE_GROUPS.ALL;
+  const moderation = ADMIN_ROLE_GROUPS.MODERATION;
+  const finance = ADMIN_ROLE_GROUPS.FINANCE;
+  const support = ADMIN_ROLE_GROUPS.SUPPORT;
+  const content = ADMIN_ROLE_GROUPS.CONTENT;
+  const verification = ADMIN_ROLE_GROUPS.VERIFICATION;
+  const superOnly = ADMIN_ROLE_GROUPS.SUPER_ONLY;
+
+  const allLinks: AdminLink[] = [
+    { href: `/${locale}/admin`, label: t('admin.nav.overview'), group: all },
+    { href: `/${locale}/admin/users`, label: t('admin.nav.users'), group: all },
+    { href: `/${locale}/admin/companies`, label: t('admin.nav.companies'), group: all },
+    { href: `/${locale}/admin/trainers`, label: t('admin.nav.trainers'), group: all },
+    { href: `/${locale}/admin/verification`, label: t('admin.nav.verification'), group: verification },
+    { href: `/${locale}/admin/requests`, label: t('admin.nav.requests'), group: moderation },
+    { href: `/${locale}/admin/tests`, label: t('admin.nav.tests'), group: all },
+    { href: `/${locale}/admin/conversations`, label: t('admin.nav.conversations'), group: moderation },
+    { href: `/${locale}/admin/reports`, label: t('admin.nav.reports'), group: support },
+    { href: `/${locale}/admin/analytics`, label: t('admin.nav.analytics'), group: all },
+    { href: `/${locale}/admin/cms/pages`, label: t('admin.nav.cmsPages'), group: content },
+    { href: `/${locale}/admin/cms/articles`, label: t('admin.nav.cmsArticles'), group: content },
+    { href: `/${locale}/admin/cms/categories`, label: t('admin.nav.cmsCategories'), group: content },
+    { href: `/${locale}/admin/cms/faqs`, label: t('admin.nav.cmsFaqs'), group: content },
+    { href: `/${locale}/admin/cms/feature-flags`, label: t('admin.nav.featureFlags'), group: superOnly },
+    { href: `/${locale}/admin/finance`, label: t('admin.nav.finance'), group: finance },
+    { href: `/${locale}/admin/settings`, label: t('admin.nav.settings'), group: superOnly },
   ];
+  const links = allLinks.filter((l) =>
+    (l.group as readonly string[]).includes(adminRole),
+  );
 
   return (
     <div className="relative">

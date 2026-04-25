@@ -31,6 +31,7 @@ import {
   type UpsertFeatureFlagInput,
   type UpsertPageInput,
   type UserRole,
+  ADMIN_ROLE_GROUPS,
 } from '@trainova/shared';
 import { CurrentUser, type AuthUser } from '../auth/current-user.decorator';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
@@ -52,7 +53,7 @@ function ctx(user: AuthUser, req: Request): AdminContext {
 @ApiTags('admin-cms')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Roles('SUPER_ADMIN', 'ADMIN')
+@Roles(...ADMIN_ROLE_GROUPS.CONTENT)
 @Controller('admin/cms')
 export class AdminCmsController {
   constructor(private readonly cms: CmsService) {}

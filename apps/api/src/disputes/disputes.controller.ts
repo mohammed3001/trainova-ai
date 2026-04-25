@@ -17,6 +17,7 @@ import {
   type AdminDisputeUpdateInput,
   type DisputeListQuery,
   type RaiseDisputeInput,
+  ADMIN_ROLE_GROUPS,
 } from '@trainova/shared';
 import { CurrentUser, type AuthUser } from '../auth/current-user.decorator';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
@@ -65,7 +66,7 @@ export class DisputesController {
   // ---- admin ----
 
   @Get('admin/disputes')
-  @Roles('SUPER_ADMIN', 'ADMIN')
+  @Roles(...ADMIN_ROLE_GROUPS.MODERATION)
   listAdmin(
     @Query(new ZodValidationPipe(disputeListQuerySchema)) query: DisputeListQuery,
   ) {
@@ -73,13 +74,13 @@ export class DisputesController {
   }
 
   @Get('admin/disputes/:id')
-  @Roles('SUPER_ADMIN', 'ADMIN')
+  @Roles(...ADMIN_ROLE_GROUPS.MODERATION)
   getAdmin(@Param('id') id: string) {
     return this.disputes.getForAdmin(id);
   }
 
   @Patch('admin/disputes/:id')
-  @Roles('SUPER_ADMIN', 'ADMIN')
+  @Roles(...ADMIN_ROLE_GROUPS.MODERATION)
   @UsePipes(new ZodValidationPipe(adminDisputeUpdateSchema))
   adminUpdate(
     @CurrentUser() user: AuthUser,

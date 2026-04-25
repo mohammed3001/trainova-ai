@@ -32,6 +32,7 @@ import {
   adminSetVerifiedSchema,
   reviewReportSchema,
   reviewVerificationSchema,
+  ADMIN_ROLE_GROUPS,
 } from '@trainova/shared';
 import type {
   AdminAnalyticsRange,
@@ -73,7 +74,7 @@ function ctx(user: AuthUser, req: Request): AdminContext {
 @ApiTags('admin')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Roles('SUPER_ADMIN', 'ADMIN')
+@Roles(...ADMIN_ROLE_GROUPS.ALL)
 @Controller('admin')
 export class AdminController {
   constructor(
@@ -196,19 +197,22 @@ export class AdminController {
     return this.admin.setTrainerVerified(ctx(user, req), id, body.verified);
   }
 
-  // Verification queue
+  // Verification queue (MODERATOR/SUPPORT may review identity & business docs).
   @Get('verification')
+  @Roles(...ADMIN_ROLE_GROUPS.VERIFICATION)
   @UsePipes(new ZodValidationPipe(adminListVerificationQuerySchema))
   verificationList(@Query() q: AdminListVerificationQuery) {
     return this.verification.listForAdmin(q);
   }
 
   @Get('verification/:id')
+  @Roles(...ADMIN_ROLE_GROUPS.VERIFICATION)
   verificationGet(@Param('id') id: string) {
     return this.verification.getForAdmin(id);
   }
 
   @Post('verification/:id/review')
+  @Roles(...ADMIN_ROLE_GROUPS.VERIFICATION)
   @UsePipes(new ZodValidationPipe(reviewVerificationSchema))
   verificationReview(
     @CurrentUser() user: AuthUser,
@@ -291,17 +295,20 @@ export class AdminController {
   // ---------------------------------------------------------------------------
 
   @Get('conversations')
+  @Roles(...ADMIN_ROLE_GROUPS.MODERATION)
   @UsePipes(new ZodValidationPipe(adminListConversationsQuerySchema))
   listConversations(@Query() q: AdminListConversationsQuery) {
     return this.ops.listConversations(q);
   }
 
   @Get('conversations/:id')
+  @Roles(...ADMIN_ROLE_GROUPS.MODERATION)
   getConversation(@Param('id') id: string) {
     return this.ops.getConversation(id);
   }
 
   @Post('conversations/:id/lock')
+  @Roles(...ADMIN_ROLE_GROUPS.MODERATION)
   @UsePipes(new ZodValidationPipe(adminLockConversationSchema))
   lockConversation(
     @CurrentUser() user: AuthUser,
@@ -313,6 +320,7 @@ export class AdminController {
   }
 
   @Post('messages/:id/redact')
+  @Roles(...ADMIN_ROLE_GROUPS.MODERATION)
   @UsePipes(new ZodValidationPipe(adminRedactMessageSchema))
   redactMessage(
     @CurrentUser() user: AuthUser,
@@ -328,17 +336,20 @@ export class AdminController {
   // ---------------------------------------------------------------------------
 
   @Get('reports')
+  @Roles(...ADMIN_ROLE_GROUPS.MODERATION)
   @UsePipes(new ZodValidationPipe(adminListReportsQuerySchema))
   listReports(@Query() q: AdminListReportsQuery) {
     return this.reports.listForAdmin(q);
   }
 
   @Get('reports/:id')
+  @Roles(...ADMIN_ROLE_GROUPS.MODERATION)
   getReport(@Param('id') id: string) {
     return this.reports.getForAdmin(id);
   }
 
   @Post('reports/:id/review')
+  @Roles(...ADMIN_ROLE_GROUPS.MODERATION)
   @UsePipes(new ZodValidationPipe(reviewReportSchema))
   reviewReport(
     @CurrentUser() user: AuthUser,

@@ -997,11 +997,16 @@
       "settings": "Settings"
     },
     "userRole": {
-      "SUPER_ADMIN": "Super admin",
-      "ADMIN": "Admin",
-      "COMPANY_OWNER": "Company owner",
-      "COMPANY_MEMBER": "Company member",
-      "TRAINER": "Trainer"
+      "SUPER_ADMIN": "Super administrador",
+      "ADMIN": "Administrador",
+      "MODERATOR": "Moderador",
+      "FINANCE": "Finanzas",
+      "SUPPORT": "Soporte",
+      "CONTENT_MANAGER": "Responsable de contenido",
+      "ADS_MANAGER": "Responsable de anuncios",
+      "COMPANY_OWNER": "Propietario de empresa",
+      "COMPANY_MEMBER": "Miembro de empresa",
+      "TRAINER": "Formador"
     },
     "userStatus": {
       "ACTIVE": "Active",

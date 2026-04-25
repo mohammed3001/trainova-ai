@@ -1019,6 +1019,11 @@
     "userRole": {
       "SUPER_ADMIN": "Super admin",
       "ADMIN": "Admin",
+      "MODERATOR": "Moderator",
+      "FINANCE": "Finance",
+      "SUPPORT": "Support",
+      "CONTENT_MANAGER": "Content manager",
+      "ADS_MANAGER": "Ads manager",
       "COMPANY_OWNER": "Company owner",
       "COMPANY_MEMBER": "Company member",
       "TRAINER": "Trainer"

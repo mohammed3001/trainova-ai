@@ -286,7 +286,18 @@ export const adminListUsersQuerySchema = z.object({
 export type AdminListUsersQuery = z.infer<typeof adminListUsersQuerySchema>;
 
 export const adminSetUserRoleSchema = z.object({
-  role: z.enum(['SUPER_ADMIN', 'ADMIN', 'COMPANY_OWNER', 'COMPANY_MEMBER', 'TRAINER']),
+  role: z.enum([
+    'SUPER_ADMIN',
+    'ADMIN',
+    'MODERATOR',
+    'FINANCE',
+    'SUPPORT',
+    'CONTENT_MANAGER',
+    'ADS_MANAGER',
+    'COMPANY_OWNER',
+    'COMPANY_MEMBER',
+    'TRAINER',
+  ]),
 });
 export type AdminSetUserRoleInput = z.infer<typeof adminSetUserRoleSchema>;
 

@@ -13,7 +13,11 @@ import {
 import { ApiTags } from '@nestjs/swagger';
 import type { Response } from 'express';
 import type { InvoiceListQuery, PublicTaxProfile } from '@trainova/shared';
-import { taxProfileInputSchema, taxRuleInputSchema } from '@trainova/shared';
+import {
+  taxProfileInputSchema,
+  taxRuleInputSchema,
+  ADMIN_ROLE_GROUPS,
+} from '@trainova/shared';
 import { z } from 'zod';
 import { CurrentUser } from '../auth/current-user.decorator';
 import type { AuthUser } from '../auth/current-user.decorator';
@@ -143,7 +147,7 @@ export class MeTaxProfileController {
 @ApiTags('invoicing')
 @Controller('admin/tax-rules')
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Roles('SUPER_ADMIN', 'ADMIN')
+@Roles(...ADMIN_ROLE_GROUPS.FINANCE)
 export class AdminTaxRulesController {
   constructor(
     private readonly tax: TaxService,
