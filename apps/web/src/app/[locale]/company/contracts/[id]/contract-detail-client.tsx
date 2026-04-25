@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import type { PublicContract, PublicMilestone } from '@trainova/shared';
 import { StripePaymentElement } from '@/components/stripe-payment-element';
+import { CouponInput, type CouponPreview } from '@/components/coupon-input';
 
 interface Props {
   locale: string;
@@ -31,14 +32,21 @@ export function ContractDetailClient({ locale, contract, viewer }: Props) {
     [locale, contract.currency],
   );
 
-  async function fundMilestone(milestoneId: string, paymentMethodId: string) {
+  async function fundMilestone(
+    milestoneId: string,
+    paymentMethodId: string,
+    couponCode: string | null,
+  ) {
     const res = await fetch(
       `/api/proxy/contracts/${encodeURIComponent(contract.id)}/milestones/${encodeURIComponent(milestoneId)}/fund`,
       {
         method: 'POST',
         credentials: 'same-origin',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ paymentMethodId }),
+        body: JSON.stringify({
+          paymentMethodId,
+          ...(couponCode ? { couponCode } : {}),
+        }),
       },
     );
     if (!res.ok) {
@@ -239,9 +247,11 @@ export function ContractDetailClient({ locale, contract, viewer }: Props) {
                 setFundFor(m.id);
               }}
               onCancelFund={() => setFundFor(null)}
-              onFundSubmit={async (pmId) => {
+              locale={locale}
+              currency={contract.currency}
+              onFundSubmit={async (pmId, couponCode) => {
                 try {
-                  await fundMilestone(m.id, pmId);
+                  await fundMilestone(m.id, pmId, couponCode);
                 } catch (err) {
                   setBanner({
                     kind: 'error',
@@ -267,9 +277,11 @@ interface MilestoneCardProps {
   viewer: 'COMPANY' | 'TRAINER';
   busy: boolean;
   isFundingActive: boolean;
+  locale: string;
+  currency: string;
   onStartFund: () => void;
   onCancelFund: () => void;
-  onFundSubmit: (paymentMethodId: string) => Promise<void>;
+  onFundSubmit: (paymentMethodId: string, couponCode: string | null) => Promise<void>;
   onRelease: () => void;
   onRefund: () => void;
 }
@@ -281,6 +293,8 @@ function MilestoneCard({
   viewer,
   busy,
   isFundingActive,
+  locale,
+  currency,
   onStartFund,
   onCancelFund,
   onFundSubmit,
@@ -289,6 +303,7 @@ function MilestoneCard({
 }: MilestoneCardProps) {
   const t = useTranslations('contracts');
   const tCommon = useTranslations('common');
+  const [coupon, setCoupon] = useState<CouponPreview | null>(null);
   const statusColor: Record<string, string> = {
     PENDING:
       'border-slate-300 bg-slate-100 text-slate-700 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300',
@@ -365,13 +380,22 @@ function MilestoneCard({
         </div>
       ) : null}
       {isFundingActive ? (
-        <div className="mt-4">
+        <div className="mt-4 space-y-3">
+          <CouponInput
+            scope="MILESTONE"
+            amountMinor={milestone.amountCents}
+            currency={currency}
+            locale={locale}
+            onApplied={setCoupon}
+            disabled={busy}
+          />
           <StripePaymentElement
             submitLabel={t('fundConfirmCta')}
             title={t('fundConfirmTitle', { amount: fmt.format(milestone.amountCents / 100) })}
             hint={t('fundConfirmHint')}
             onConfirmed={async (pmId) => {
-              await onFundSubmit(pmId);
+              await onFundSubmit(pmId, coupon ? coupon.code : null);
+              setCoupon(null);
             }}
           />
           <button

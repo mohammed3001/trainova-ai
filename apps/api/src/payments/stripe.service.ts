@@ -238,6 +238,8 @@ export class StripeService {
     paymentMethodId?: string;
     metadata: Record<string, string>;
     idempotencyKey: string;
+    /** Stripe coupon id (T7.E) — recurring discount mirrored to Stripe. */
+    couponId?: string;
   }): Promise<Stripe.Subscription> {
     if (params.paymentMethodId) {
       await this.client.paymentMethods.attach(params.paymentMethodId, {
@@ -247,19 +249,22 @@ export class StripeService {
         invoice_settings: { default_payment_method: params.paymentMethodId },
       });
     }
-    return this.client.subscriptions.create(
-      {
-        customer: params.customerId,
-        items: [{ price: params.priceId }],
-        payment_behavior: 'default_incomplete',
-        payment_settings: {
-          save_default_payment_method: 'on_subscription',
-        },
-        expand: ['latest_invoice.payment_intent'],
-        metadata: params.metadata,
+    const createParams: Stripe.SubscriptionCreateParams = {
+      customer: params.customerId,
+      items: [{ price: params.priceId }],
+      payment_behavior: 'default_incomplete',
+      payment_settings: {
+        save_default_payment_method: 'on_subscription',
       },
-      { idempotencyKey: params.idempotencyKey },
-    );
+      expand: ['latest_invoice.payment_intent'],
+      metadata: params.metadata,
+    };
+    if (params.couponId) {
+      createParams.discounts = [{ coupon: params.couponId }];
+    }
+    return this.client.subscriptions.create(createParams, {
+      idempotencyKey: params.idempotencyKey,
+    });
   }
 
   async cancelSubscription(

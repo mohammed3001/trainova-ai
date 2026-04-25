@@ -4,6 +4,7 @@ import { useMemo, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { StripePaymentElement } from '@/components/stripe-payment-element';
+import { CouponInput, type CouponPreview } from '@/components/coupon-input';
 
 export interface BillingPlan {
   id: string;
@@ -38,6 +39,7 @@ export function BillingClient({ audience, locale, plans, subscription }: Props) 
   const tCommon = useTranslations('common');
   const router = useRouter();
   const [selected, setSelected] = useState<string | null>(null);
+  const [coupon, setCoupon] = useState<CouponPreview | null>(null);
   const [banner, setBanner] = useState<
     | { kind: 'success'; message: string }
     | { kind: 'error'; message: string }
@@ -56,7 +58,11 @@ export function BillingClient({ audience, locale, plans, subscription }: Props) 
       method: 'POST',
       credentials: 'same-origin',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ planId, paymentMethodId }),
+      body: JSON.stringify({
+        planId,
+        paymentMethodId,
+        ...(coupon ? { couponCode: coupon.code } : {}),
+      }),
     });
     if (!res.ok) {
       const text = await res.text().catch(() => '');
@@ -71,6 +77,7 @@ export function BillingClient({ audience, locale, plans, subscription }: Props) 
     }
     setBanner({ kind: 'success', message: t('subscribedOk') });
     setSelected(null);
+    setCoupon(null);
     startTransition(() => router.refresh());
   }
 
@@ -218,7 +225,18 @@ export function BillingClient({ audience, locale, plans, subscription }: Props) 
                       </button>
                     ) : null}
                     {selected === plan.id ? (
-                      <div className="mt-4">
+                      <div className="mt-4 space-y-3">
+                        {plan.priceMonthly > 0 ? (
+                          <CouponInput
+                            scope="SUBSCRIPTION"
+                            amountMinor={plan.priceMonthly}
+                            currency="USD"
+                            planId={plan.id}
+                            locale={locale}
+                            onApplied={setCoupon}
+                            disabled={isPending}
+                          />
+                        ) : null}
                         <StripePaymentElement
                           submitLabel={t('confirmCta')}
                           title={t('confirmTitle', { tier: plan.tier })}

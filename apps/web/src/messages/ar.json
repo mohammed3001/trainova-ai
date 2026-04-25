@@ -761,6 +761,17 @@
     "cancelledOk": "تم جدولة الإلغاء — الوصول مستمر حتى نهاية الدورة.",
     "noActiveCompany": "أنت على الخطة المجانية لمساحة العمل.",
     "noActiveTrainer": "أنت على الخطة المجانية للمدرب.",
+    "coupon": {
+      "toggle": "لديك كوبون؟",
+      "label": "رمز الكوبون",
+      "placeholder": "مثل: LAUNCH20",
+      "apply": "تطبيق",
+      "applying": "جارٍ التحقق…",
+      "remove": "إزالة",
+      "applied": "تم تطبيق الكوبون",
+      "discountSummary": "توفير {discount} — سيتم تحصيل {final}.",
+      "invalid": "هذا الكوبون غير صالح لهذه العملية."
+    },
     "errors": {
       "subscribeFailed": "تعذّر بدء الاشتراك. حاول مجدداً.",
       "cancelFailed": "تعذّر إلغاء الاشتراك. حاول مجدداً.",
@@ -1014,6 +1025,7 @@
       "cmsFaqs": "الأسئلة الشائعة",
       "featureFlags": "رايات الميزات",
       "emailTemplates": "قوالب البريد",
+      "coupons": "الكوبونات",
       "disputes": "النزاعات",
       "ads": "الإعلانات",
       "finance": "المالية",
@@ -1669,6 +1681,95 @@
         "creating": "جارٍ الإنشاء…",
         "delete": "حذف القالب",
         "deleting": "جارٍ الحذف…"
+      }
+    },
+    "coupons": {
+      "title": "الكوبونات والعروض",
+      "subtitle": "أنشئ أكواد خصم لتمويل المعالم أو الاشتراكات المتكررة. كوبونات الاشتراك تُعكس إلى Stripe، وكوبونات المعالم يتحملها مالك المنصة.",
+      "new": "كوبون جديد",
+      "newTitle": "كوبون جديد",
+      "newSubtitle": "الكود والنوع والجمهور وفترة الصلاحية. لا يمكن تعديل الكود/النوع/المبلغ بعد الإنشاء.",
+      "detailEyebrow": "كوبون",
+      "backToList": "عودة إلى الكوبونات",
+      "empty": "لا توجد كوبونات بعد. أنشئ واحدًا لتشغيل العروض.",
+      "create": "إنشاء كوبون",
+      "save": "حفظ التغييرات",
+      "saving": "جارٍ الحفظ…",
+      "disable": "تعطيل",
+      "disabling": "جارٍ التعطيل…",
+      "disableConfirm": "تعطيل هذا الكوبون؟ يُحتفظ بكل عمليات الاسترداد السابقة، ولن تُقبل أيّ عمليات جديدة.",
+      "filter": {
+        "search": "بحث",
+        "searchPlaceholder": "كود أو وصف…",
+        "status": "الحالة",
+        "appliesTo": "ينطبق على",
+        "all": "الكل",
+        "apply": "تطبيق"
+      },
+      "col": {
+        "code": "الكود",
+        "kind": "النوع",
+        "amount": "الخصم",
+        "appliesTo": "ينطبق على",
+        "audience": "الجمهور",
+        "redemptions": "الاستخدامات",
+        "totalDiscount": "إجمالي الخصم",
+        "status": "الحالة",
+        "edit": "تعديل"
+      },
+      "metric": {
+        "redemptions": "الاستخدامات",
+        "totalDiscount": "إجمالي الخصم",
+        "status": "الحالة"
+      },
+      "kind": {
+        "PERCENT": "نسبة مئوية",
+        "FIXED": "مبلغ ثابت"
+      },
+      "status": {
+        "ACTIVE": "نشط",
+        "DISABLED": "معطّل",
+        "EXPIRED": "منتهي"
+      },
+      "audience": {
+        "ANY": "الجميع",
+        "COMPANY": "الشركات",
+        "TRAINER": "المدربون"
+      },
+      "appliesTo": {
+        "ANY": "كل شيء",
+        "SUBSCRIPTION": "الاشتراكات",
+        "MILESTONE": "المعالم"
+      },
+      "field": {
+        "code": "الكود",
+        "codeHint": "3–40 محرفًا: A–Z، 0–9، شرطة، شرطة سفلية. غير حسّاس لحالة الأحرف عند التطبيق.",
+        "description": "الوصف",
+        "descriptionPlaceholder": "ملاحظة داخلية تظهر في لوحة الأدمن فقط.",
+        "kind": "النوع",
+        "amountOffBps": "الخصم (نقاط أساس)",
+        "amountOffBpsHint": "10000 = 100%، 2000 = 20%، 500 = 5%.",
+        "amountOffMinor": "الخصم (وحدات صغرى)",
+        "amountOffMinorHint": "هللات/سنتات صحيحة. مثلًا 1000 = 10.00 دولار / 10 ريال.",
+        "currency": "العملة",
+        "currencyOptional": "اختياري",
+        "audience": "الجمهور",
+        "appliesTo": "ينطبق على",
+        "perUserLimit": "حد الاستخدام لكل مستخدم",
+        "planIds": "الخطط المؤهَّلة",
+        "planIdsHint": "إذا حُدِّد، يُطبَّق الكوبون على اشتراكات هذه الخطط فقط. اتركه فارغًا للتطبيق على الجميع.",
+        "planIdsEmpty": "لا توجد خطط مُهيَّأة بعد.",
+        "minAmountMinor": "الحد الأدنى للطلب (وحدات صغرى)",
+        "minAmountMinorPlaceholder": "اختياري",
+        "maxDiscountMinor": "الحد الأقصى للخصم (وحدات صغرى)",
+        "maxDiscountMinorPlaceholder": "يحدّ خصومات النسبة (اختياري)",
+        "validFrom": "صالح من",
+        "validUntil": "صالح حتى",
+        "maxRedemptions": "إجمالي حد الاستخدام",
+        "maxRedemptionsPlaceholder": "اختياري",
+        "stripeCouponId": "معرف كوبون Stripe",
+        "stripeCouponIdHint": "مطلوب لكوبونات الاشتراك. أنشئ الكوبون المماثل في Stripe أولًا.",
+        "status": "الحالة"
       }
     }
   },

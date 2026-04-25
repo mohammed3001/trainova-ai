@@ -747,6 +747,17 @@
     "cancelledOk": "Cancellation scheduled — access stays until the end of this period.",
     "noActiveCompany": "You are on the free workspace tier.",
     "noActiveTrainer": "You are on the free trainer tier.",
+    "coupon": {
+      "toggle": "Vous avez un coupon ?",
+      "label": "Code coupon",
+      "placeholder": "ex. LAUNCH20",
+      "apply": "Appliquer",
+      "applying": "Vérification…",
+      "remove": "Retirer",
+      "applied": "Coupon appliqué",
+      "discountSummary": "Économisez {discount} — vous serez facturé {final}.",
+      "invalid": "Ce coupon n'est pas valide pour cet achat."
+    },
     "errors": {
       "subscribeFailed": "We couldn't start the subscription. Please try again.",
       "cancelFailed": "We couldn't cancel the subscription. Please try again.",
@@ -994,6 +1005,7 @@
       "cmsFaqs": "FAQ",
       "featureFlags": "Feature flags",
       "emailTemplates": "Modèles d'e-mails",
+      "coupons": "Coupons",
       "disputes": "Litiges",
       "ads": "Publicités",
       "finance": "Finance",
@@ -1649,6 +1661,95 @@
         "creating": "Creating…",
         "delete": "Delete template",
         "deleting": "Deleting…"
+      }
+    },
+    "coupons": {
+      "title": "Coupons et promotions",
+      "subtitle": "Créez des codes de réduction pour le financement des jalons ou les abonnements récurrents. Les coupons d'abonnement sont reflétés dans Stripe ; les coupons de jalon sont absorbés par la plateforme.",
+      "new": "Nouveau coupon",
+      "newTitle": "Nouveau coupon",
+      "newSubtitle": "Code, type, audience et validité. Une fois créés, le code/type/montant sont immuables.",
+      "detailEyebrow": "Coupon",
+      "backToList": "Retour aux coupons",
+      "empty": "Aucun coupon pour l'instant. Créez-en un pour lancer une promotion.",
+      "create": "Créer le coupon",
+      "save": "Enregistrer",
+      "saving": "Enregistrement…",
+      "disable": "Désactiver",
+      "disabling": "Désactivation…",
+      "disableConfirm": "Désactiver ce coupon ? Les utilisations existantes sont conservées ; aucune nouvelle ne sera acceptée.",
+      "filter": {
+        "search": "Rechercher",
+        "searchPlaceholder": "Code ou description…",
+        "status": "Statut",
+        "appliesTo": "S'applique à",
+        "all": "Tout",
+        "apply": "Appliquer"
+      },
+      "col": {
+        "code": "Code",
+        "kind": "Type",
+        "amount": "Réduction",
+        "appliesTo": "S'applique à",
+        "audience": "Audience",
+        "redemptions": "Utilisations",
+        "totalDiscount": "Réduction totale",
+        "status": "Statut",
+        "edit": "Modifier"
+      },
+      "metric": {
+        "redemptions": "Utilisations",
+        "totalDiscount": "Réduction totale",
+        "status": "Statut"
+      },
+      "kind": {
+        "PERCENT": "Pourcentage",
+        "FIXED": "Montant fixe"
+      },
+      "status": {
+        "ACTIVE": "Actif",
+        "DISABLED": "Désactivé",
+        "EXPIRED": "Expiré"
+      },
+      "audience": {
+        "ANY": "Tout le monde",
+        "COMPANY": "Entreprises",
+        "TRAINER": "Formateurs"
+      },
+      "appliesTo": {
+        "ANY": "Tout",
+        "SUBSCRIPTION": "Abonnements",
+        "MILESTONE": "Jalons"
+      },
+      "field": {
+        "code": "Code",
+        "codeHint": "3 à 40 caractères : A–Z, 0–9, tiret, soulignement. Insensible à la casse.",
+        "description": "Description",
+        "descriptionPlaceholder": "Note interne visible uniquement dans l'admin.",
+        "kind": "Type",
+        "amountOffBps": "Réduction (points de base)",
+        "amountOffBpsHint": "10000 = 100 %, 2000 = 20 %, 500 = 5 %.",
+        "amountOffMinor": "Réduction (unités mineures)",
+        "amountOffMinorHint": "Centimes entiers. Ex. 1000 = 10,00 €.",
+        "currency": "Devise",
+        "currencyOptional": "Optionnel",
+        "audience": "Audience",
+        "appliesTo": "S'applique à",
+        "perUserLimit": "Limite par utilisateur",
+        "planIds": "Plans éligibles",
+        "planIdsHint": "Si défini, le coupon ne s'applique qu'aux abonnements de ces plans. Laissez vide pour appliquer à tous.",
+        "planIdsEmpty": "Aucun plan configuré.",
+        "minAmountMinor": "Commande minimale (unités mineures)",
+        "minAmountMinorPlaceholder": "Optionnel",
+        "maxDiscountMinor": "Plafond de réduction (unités mineures)",
+        "maxDiscountMinorPlaceholder": "Plafonne les % (optionnel)",
+        "validFrom": "Valide à partir du",
+        "validUntil": "Valide jusqu'au",
+        "maxRedemptions": "Plafond total d'utilisations",
+        "maxRedemptionsPlaceholder": "Optionnel",
+        "stripeCouponId": "ID coupon Stripe",
+        "stripeCouponIdHint": "Requis pour les coupons d'abonnement. Créez le coupon correspondant dans Stripe d'abord.",
+        "status": "Statut"
       }
     }
   },

@@ -23,10 +23,12 @@ import {
   type TrainerEarningsSummary,
 } from '@trainova/shared';
 import type { Stripe } from 'stripe/cjs/stripe.core.js';
+import { CouponsService } from '../coupons/coupons.service';
 import { InvoiceService } from '../invoicing/invoice.service';
 import { TaxService } from '../invoicing/tax.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { StripeService } from './stripe.service';
+import { computeCouponDiscount } from '@trainova/shared';
 
 type ContractWithRelations = Prisma.ContractGetPayload<{
   include: {
@@ -76,6 +78,7 @@ export class PaymentsService {
     private readonly stripe: StripeService,
     private readonly tax: TaxService,
     private readonly invoices: InvoiceService,
+    private readonly coupons: CouponsService,
   ) {}
 
   // ===================================================================
@@ -286,8 +289,77 @@ export class PaymentsService {
       });
     }
 
+    // T7.E — coupon flow is a strict three-phase pipeline:
+    //   1. preview()      — read-only validation: audience/scope/expiry,
+    //                       per-user + global redemption caps, currency
+    //                       match, Stripe-min-charge gate, discount math.
+    //                       Throws *before* anything irreversible runs.
+    //   2. Stripe call    — idempotent via
+    //                       `fund-${milestone.id}-${couponCode ?? 'none'}`.
+    //                       The coupon code is part of the key because
+    //                       changing it changes the charge amount;
+    //                       Stripe rejects (HTTP 400) any reuse of an
+    //                       idempotency key with different parameters.
+    //                       If this throws, no DB row has been written yet,
+    //                       so the coupon is preserved. If it returns a
+    //                       PI in `requires_payment_method` (e.g. card
+    //                       decline), that's a normal flow — the caller
+    //                       retries with the client_secret and the
+    //                       coupon stays applied.
+    //   3. One Prisma tx  — upsert PaymentIntent + applyToMilestone
+    //                       *atomically*. If applyToMilestone throws
+    //                       inside the tx (true race on perUserLimit /
+    //                       maxRedemptions), the PaymentIntent upsert
+    //                       rolls back too. The Stripe PI is then
+    //                       orphaned, but the user's coupon slot is
+    //                       preserved; on retry the idempotency key
+    //                       returns the same PI and the tx re-runs.
+    // This matches the contract documented on
+    // {@link CouponsService.applyToMilestone}.
+    const ownerRole = await this.getUserRole(userId);
+    let chargeAmountCents = milestone.amountCents;
+    let plannedCoupon: {
+      code: string;
+      couponId: string;
+      discountMinor: number;
+      finalMinor: number;
+    } | null = null;
+    if (input.couponCode) {
+      // preview() validates eligibility AND computes the authoritative
+      // discount; we pass the *same* discount values into
+      // applyToMilestone so the CouponRedemption row, the
+      // `redeemedCount` / `totalDiscountMinor` counters and the Stripe
+      // PI all agree even if an admin edits the coupon's amountOff /
+      // maxDiscountMinor between preview and apply (the eligibility
+      // re-check inside applyToMilestone catches a coupon that was
+      // *disabled* in that window).
+      const preview = await this.coupons.preview(userId, ownerRole, {
+        code: input.couponCode,
+        scope: 'MILESTONE',
+        amountMinor: milestone.amountCents,
+        currency: milestone.contract.currency,
+      });
+      const couponRow = await this.prisma.coupon.findUnique({
+        where: { code: input.couponCode.trim().toUpperCase() },
+        select: { id: true },
+      });
+      if (!couponRow) {
+        // Should never happen — preview() just resolved the same code —
+        // but surfacing this explicitly keeps the type narrow and avoids
+        // a non-null assertion below.
+        throw new NotFoundException('Coupon not found');
+      }
+      chargeAmountCents = preview.finalMinor;
+      plannedCoupon = {
+        code: input.couponCode,
+        couponId: couponRow.id,
+        discountMinor: preview.discountMinor,
+        finalMinor: preview.finalMinor,
+      };
+    }
+
     const pi = await this.stripe.createEscrowPaymentIntent({
-      amountCents: milestone.amountCents,
+      amountCents: chargeAmountCents,
       currency: milestone.contract.currency,
       customerId: customer.id,
       paymentMethodId: input.paymentMethodId,
@@ -298,28 +370,46 @@ export class PaymentsService {
         trainovaMilestoneId: milestone.id,
         trainovaCompanyId: milestone.contract.companyId,
         trainovaTrainerId: milestone.contract.trainerId,
+        ...(plannedCoupon ? { trainovaCouponId: plannedCoupon.couponId } : {}),
       },
-      idempotencyKey: `fund-${milestone.id}`,
+      idempotencyKey: `fund-${milestone.id}-${
+        input.couponCode ? input.couponCode.trim().toUpperCase() : 'none'
+      }`,
     });
 
     const mapped = this.mapStripePiStatus(pi.status);
-    await this.prisma.paymentIntent.upsert({
-      where: { stripePaymentIntentId: pi.id },
-      create: {
-        milestoneId: milestone.id,
-        stripePaymentIntentId: pi.id,
-        clientSecret: pi.client_secret,
-        amountCents: milestone.amountCents,
-        currency: milestone.contract.currency,
-        status: mapped,
-        receiptUrl: pi.latest_charge
-          ? await this.tryGetChargeReceipt(pi.latest_charge as string)
-          : null,
-      },
-      update: {
-        status: mapped,
-        clientSecret: pi.client_secret ?? null,
-      },
+    const receiptUrl = pi.latest_charge
+      ? await this.tryGetChargeReceipt(pi.latest_charge as string)
+      : null;
+    await this.prisma.$transaction(async (tx) => {
+      await tx.paymentIntent.upsert({
+        where: { stripePaymentIntentId: pi.id },
+        create: {
+          milestoneId: milestone.id,
+          stripePaymentIntentId: pi.id,
+          clientSecret: pi.client_secret,
+          amountCents: chargeAmountCents,
+          currency: milestone.contract.currency,
+          status: mapped,
+          receiptUrl,
+        },
+        update: {
+          status: mapped,
+          clientSecret: pi.client_secret ?? null,
+        },
+      });
+      if (plannedCoupon) {
+        await this.coupons.applyToMilestone(tx, {
+          code: plannedCoupon.code,
+          userId,
+          userRole: ownerRole,
+          milestoneId: milestone.id,
+          originalMinor: milestone.amountCents,
+          discountMinor: plannedCoupon.discountMinor,
+          finalMinor: plannedCoupon.finalMinor,
+          currency: milestone.contract.currency,
+        });
+      }
     });
 
     if (mapped === 'SUCCEEDED') {
@@ -450,9 +540,17 @@ export class PaymentsService {
       idempotencyKey: `refund-${milestone.id}`,
     });
 
-    const updated = await this.prisma.milestone.update({
-      where: { id: milestone.id },
-      data: { status: 'REFUNDED', refundedAt: new Date() },
+    // Wrap the post-Stripe DB writes in one transaction so the
+    // milestone status flip and any coupon-redemption reversal commit
+    // atomically. Without the reversal a refunded milestone leaves
+    // `redeemedCount` / `perUserLimit` slots consumed forever — see
+    // CouponsService.reverseForMilestone for full rationale.
+    const updated = await this.prisma.$transaction(async (tx) => {
+      await this.coupons.reverseForMilestone(tx, milestone.id);
+      return tx.milestone.update({
+        where: { id: milestone.id },
+        data: { status: 'REFUNDED', refundedAt: new Date() },
+      });
     });
     await this.maybeCompleteContract(milestone.contractId);
     return this.toPublicMilestone(updated);
@@ -694,37 +792,135 @@ export class PaymentsService {
       });
     }
 
+    // T7.E — resolve coupon up front so we know which Stripe coupon id
+    // to attach to the subscription (Stripe owns the recurring discount;
+    // we just mirror it). The CouponRedemption row is written *after*
+    // Stripe accepts the subscription in the same DB transaction as
+    // our local Subscription row — keeping per-user limits and
+    // analytics counters truthful.
+    const userRole = await this.getUserRole(userId);
+    let stripeCouponId: string | undefined;
+    let resolvedCoupon: {
+      code: string;
+      originalMinor: number;
+      discountMinor: number;
+      finalMinor: number;
+      currency: string;
+    } | null = null;
+    if (input.couponCode) {
+      const resolved = await this.coupons.resolveForSubscription(input.couponCode, {
+        userId,
+        userRole,
+        planId: plan.id,
+      });
+      stripeCouponId = resolved.stripeCouponId;
+      // Subscription plans are denominated in USD on this platform
+      // (Plan has no per-row currency column; the web layer formats
+      // plan prices with `Intl.NumberFormat('USD')`). Pass that as the
+      // *order* currency so `computeCouponDiscount` can reject FIXED
+      // coupons whose own currency doesn't match — otherwise the
+      // mismatch check is a no-op (coupon.currency vs coupon.currency).
+      const planCurrency = 'USD';
+      const compute = computeCouponDiscount(
+        resolved.coupon,
+        plan.priceMonthly,
+        planCurrency,
+      );
+      if (!compute.applicable) {
+        throw new BadRequestException(
+          compute.reason ?? 'Coupon cannot be applied to this plan',
+        );
+      }
+      resolvedCoupon = {
+        code: resolved.coupon.code,
+        originalMinor: plan.priceMonthly,
+        discountMinor: compute.discountMinor,
+        finalMinor: compute.finalMinor,
+        currency: planCurrency,
+      };
+    }
+
     const subscription = await this.stripe.createSubscription({
       customerId: customer.id,
       priceId: plan.stripePriceId,
       paymentMethodId: input.paymentMethodId,
-      metadata: { userId: user.id, planId: plan.id },
-      idempotencyKey: `subscribe-${user.id}-${plan.id}`,
+      metadata: {
+        userId: user.id,
+        planId: plan.id,
+        ...(resolvedCoupon ? { trainovaCouponCode: resolvedCoupon.code } : {}),
+      },
+      // Coupon code is part of the idempotency key — changing the
+      // coupon between attempts changes the discount Stripe applies,
+      // and reusing a key with different params is a 400 from Stripe.
+      idempotencyKey: `subscribe-${user.id}-${plan.id}-${
+        input.couponCode ? input.couponCode.trim().toUpperCase() : 'none'
+      }`,
+      couponId: stripeCouponId,
     });
 
-    await this.prisma.subscription.create({
-      data: {
-        userId,
-        planId: plan.id,
-        status: subscription.status.toUpperCase(),
-        stripeSubscriptionId: subscription.id,
-        stripeCustomerId: customer.id,
-        currentPeriodStart: (subscription as unknown as { current_period_start?: number })
-          .current_period_start
-          ? new Date(
-              ((subscription as unknown as { current_period_start: number })
-                .current_period_start) * 1000,
-            )
-          : null,
-        currentPeriodEnd: (subscription as unknown as { current_period_end?: number })
-          .current_period_end
-          ? new Date(
-              ((subscription as unknown as { current_period_end: number })
-                .current_period_end) * 1000,
-            )
-          : null,
-      },
-    });
+    // The Stripe subscription is now live and billing the customer. If
+    // the local DB transaction below throws — e.g. `applyToSubscription`
+    // detects the coupon's `maxRedemptions` was exhausted, `perUserLimit`
+    // was hit, or the coupon was disabled/expired between
+    // `resolveForSubscription` and here — we MUST cancel the Stripe
+    // subscription so the customer isn't charged for something we have
+    // no local record of. Without this compensation the row never
+    // appears in the admin panel, billing portal, or cancellation flow,
+    // because the webhook handler's `subscription.updateMany` matches
+    // zero rows.
+    try {
+      await this.prisma.$transaction(async (tx) => {
+        const created = await tx.subscription.create({
+          data: {
+            userId,
+            planId: plan.id,
+            status: subscription.status.toUpperCase(),
+            stripeSubscriptionId: subscription.id,
+            stripeCustomerId: customer.id,
+            currentPeriodStart: (subscription as unknown as { current_period_start?: number })
+              .current_period_start
+              ? new Date(
+                  ((subscription as unknown as { current_period_start: number })
+                    .current_period_start) * 1000,
+                )
+              : null,
+            currentPeriodEnd: (subscription as unknown as { current_period_end?: number })
+              .current_period_end
+              ? new Date(
+                  ((subscription as unknown as { current_period_end: number })
+                    .current_period_end) * 1000,
+                )
+              : null,
+          },
+        });
+        if (resolvedCoupon) {
+          await this.coupons.applyToSubscription(tx, {
+            code: resolvedCoupon.code,
+            userId,
+            userRole,
+            planId: plan.id,
+            subscriptionId: created.id,
+            originalMinor: resolvedCoupon.originalMinor,
+            discountMinor: resolvedCoupon.discountMinor,
+            finalMinor: resolvedCoupon.finalMinor,
+            currency: resolvedCoupon.currency,
+          });
+        }
+      });
+    } catch (err) {
+      try {
+        await this.stripe.cancelSubscription(subscription.id, { immediate: true });
+      } catch (cancelErr) {
+        // Surface both the original cause and the compensation failure
+        // — the customer may need a manual refund if Stripe cancel
+        // also failed (network blip, etc.).
+        this.logger.error(
+          `Failed to cancel orphaned Stripe subscription ${subscription.id} after local persistence error`,
+          cancelErr instanceof Error ? cancelErr.stack : String(cancelErr),
+        );
+      }
+      throw err;
+    }
 
     const invoice = subscription.latest_invoice as Stripe.Invoice | null | undefined;
     const pi = invoice && typeof invoice !== 'string'
@@ -887,6 +1083,15 @@ export class PaymentsService {
         data: { status: 'COMPLETED', completedAt: new Date() },
       });
     }
+  }
+
+  private async getUserRole(userId: string): Promise<string> {
+    const u = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { role: true },
+    });
+    if (!u) throw new NotFoundException('User not found');
+    return u.role;
   }
 
   private async tryGetChargeReceipt(chargeId: string): Promise<string | null> {
