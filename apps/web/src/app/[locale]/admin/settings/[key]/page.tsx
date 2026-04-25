@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation';
-import { getTranslations } from 'next-intl/server';
+import { getLocale, getTranslations } from 'next-intl/server';
 import { apiFetch } from '@/lib/api';
+import { requireAdminGroup } from '@/lib/admin-guard';
 import { getToken } from '@/lib/session';
 import { isKnownSetting, SETTING_REGISTRY, type AdminSetting } from '@trainova/shared';
 import { SettingForm } from '../_form';
@@ -24,8 +25,13 @@ export default async function EditSettingPage({
   params: Promise<{ key: string }>;
 }) {
   const t = await getTranslations();
+  const locale = await getLocale();
   const { key: rawKey } = await params;
   const key = decodeURIComponent(rawKey);
+  await requireAdminGroup(
+    'SUPER_ONLY',
+    `/${locale}/admin/settings/${encodeURIComponent(key)}`,
+  );
   const existing = await fetchOne(key);
   const known = isKnownSetting(key);
 

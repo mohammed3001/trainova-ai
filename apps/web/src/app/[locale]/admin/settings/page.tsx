@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { getLocale, getTranslations } from 'next-intl/server';
 import { apiFetch } from '@/lib/api';
+import { requireAdminGroup } from '@/lib/admin-guard';
 import { getToken } from '@/lib/session';
 import { SETTING_GROUPS, SETTING_REGISTRY, type AdminSetting } from '@trainova/shared';
 
@@ -17,7 +18,9 @@ async function fetchSettings(): Promise<AdminSetting[]> {
 }
 
 export default async function AdminSettingsPage() {
-  const [t, locale, settings] = await Promise.all([getTranslations(), getLocale(), fetchSettings()]);
+  const [t, locale] = await Promise.all([getTranslations(), getLocale()]);
+  await requireAdminGroup('SUPER_ONLY', `/${locale}/admin/settings`);
+  const settings = await fetchSettings();
 
   const byKey = new Map(settings.map((s) => [s.key, s]));
   const knownKeys = Object.keys(SETTING_REGISTRY);
