@@ -31,7 +31,13 @@ export default async function DisputeDetailPage({
   const tRole = await getTranslations({ locale, namespace: 'disputes.role' });
   const dateFmt = new Intl.DateTimeFormat(locale, { dateStyle: 'medium', timeStyle: 'short' });
 
-  const isActive = dispute.status === 'OPEN' || dispute.status === 'UNDER_REVIEW';
+  // Withdraw is only allowed from OPEN — once an admin moves a dispute to
+  // UNDER_REVIEW the raiser can no longer pull it back unilaterally
+  // (matches DISPUTE_TRANSITIONS in @trainova/shared/reviews). The API
+  // double-checks raiser identity, so a non-raiser who somehow lands on
+  // this page will receive a 403 from the proxy and we surface that error
+  // inline; we don't need to know the actor's userId here.
+  const canWithdraw = dispute.status === 'OPEN';
 
   return (
     <div className="space-y-6">
@@ -115,7 +121,7 @@ export default async function DisputeDetailPage({
         )}
       </section>
 
-      {isActive ? (
+      {canWithdraw ? (
         <div className="flex justify-end">
           <DisputeWithdrawButton disputeId={dispute.id} />
         </div>
