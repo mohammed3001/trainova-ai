@@ -159,6 +159,30 @@ export class EmailService implements OnModuleInit {
   }
 
   /**
+   * Marketing path: send an admin-authored campaign email with raw subject /
+   * html / text. Layout is wrapped server-side so brand chrome stays
+   * consistent. Variables are interpolated server-side too — the html body
+   * is HTML-escaped per variable, the text body is not. Layout direction is
+   * derived from a 4-locale code by mapping `ar` to RTL and everything else
+   * to LTR.
+   */
+  async sendCampaignRaw(input: {
+    to: string;
+    locale: 'en' | 'ar' | 'fr' | 'es';
+    subject: string;
+    bodyHtml: string;
+    bodyText: string;
+    vars: Record<string, string>;
+  }): Promise<SendEmailResult> {
+    const layoutLocale: Locale = input.locale === 'ar' ? 'ar' : 'en';
+    const subject = interpolateEmailTemplate(input.subject, input.vars, { escapeHtml: false });
+    const innerHtml = interpolateEmailTemplate(input.bodyHtml, input.vars, { escapeHtml: true });
+    const text = interpolateEmailTemplate(input.bodyText, input.vars, { escapeHtml: false });
+    const html = renderLayout(layoutLocale, innerHtml);
+    return this.provider.send({ to: input.to, subject, html, text });
+  }
+
+  /**
    * Try to render from a DB override; fall back to the in-code template if
    * the row is missing, disabled, or is missing a required variable.
    */

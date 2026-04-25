@@ -89,6 +89,10 @@ model User {
   sponsoredPlacementsOwned      SponsoredPlacement[]      @relation("SponsoredPlacementOwner")
   sponsoredPlacementsCreated    SponsoredPlacement[]      @relation("SponsoredPlacementCreator")
   messageTemplates              MessageTemplate[]
+  emailCampaignsCreated         EmailCampaign[]           @relation("EmailCampaignCreator")
+  emailCampaignSends            EmailCampaignSend[]       @relation("EmailCampaignSendRecipient")
+  emailDripSequencesCreated     EmailDripSequence[]       @relation("EmailDripCreator")
+  emailDripEnrollments          EmailDripEnrollment[]     @relation("EmailDripEnrollee")
 
   @@index([role, status])
 }
@@ -2012,4 +2016,135 @@ model ContractSignature {
 
   @@unique([documentId, role])
   @@index([signerId])
+}
+
+// =========================
+// Email Marketing (T7.I) — Campaigns + Drip sequences
+// =========================
+//
+// Campaigns are admin-authored marketing emails (one-shot broadcasts).
+// Drip sequences are ordered, delay-based steps a user is enrolled in.
+// Both reuse the existing EmailService transport (Resend / console). Sends
+// are tracked per-recipient for idempotency: each (campaign,user) pair has
+// a unique row that flips PENDING -> SENT/FAILED, so a retry on the cron
+// pass never double-sends.
+
+enum EmailCampaignKind {
+  BROADCAST
+}
+
+enum EmailCampaignStatus {
+  DRAFT
+  SCHEDULED
+  SENDING
+  SENT
+  CANCELLED
+  FAILED
+}
+
+enum EmailCampaignSendStatus {
+  PENDING
+  SENT
+  FAILED
+  SKIPPED
+}
+
+enum EmailDripTrigger {
+  USER_REGISTERED
+  TRAINER_PROFILE_INCOMPLETE
+  COMPANY_FIRST_REQUEST_PENDING
+  MANUAL
+}
+
+model EmailCampaign {
+  id           String              @id @default(cuid())
+  name         String
+  kind         EmailCampaignKind   @default(BROADCAST)
+  status       EmailCampaignStatus @default(DRAFT)
+  /// 'en' | 'ar' | 'fr' | 'es'
+  locale       String              @default("en")
+  subject      String
+  bodyHtml     String              @db.Text
+  bodyText     String              @db.Text
+  /// Structured segment filter; resolved server-side to a User[] at send time.
+  segmentJson  Json
+  scheduledFor DateTime?
+  startedAt    DateTime?
+  finishedAt   DateTime?
+  sentCount    Int                 @default(0)
+  failedCount  Int                 @default(0)
+  createdById  String
+  createdBy    User                @relation("EmailCampaignCreator", fields: [createdById], references: [id], onDelete: Restrict)
+  createdAt    DateTime            @default(now())
+  updatedAt    DateTime            @updatedAt
+
+  sends EmailCampaignSend[]
+
+  @@index([status, scheduledFor])
+}
+
+model EmailCampaignSend {
+  id         String                  @id @default(cuid())
+  campaignId String
+  campaign   EmailCampaign           @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  userId     String
+  user       User                    @relation("EmailCampaignSendRecipient", fields: [userId], references: [id], onDelete: Cascade)
+  status     EmailCampaignSendStatus @default(PENDING)
+  sentAt     DateTime?
+  error      String?
+
+  @@unique([campaignId, userId])
+  @@index([status, campaignId])
+}
+
+model EmailDripSequence {
+  id          String           @id @default(cuid())
+  name        String
+  /// Stable string used by hooks to enroll users into this sequence.
+  slug        String           @unique
+  trigger     EmailDripTrigger @default(MANUAL)
+  enabled     Boolean          @default(true)
+  createdById String
+  createdBy   User             @relation("EmailDripCreator", fields: [createdById], references: [id], onDelete: Restrict)
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  steps       EmailDripStep[]
+  enrollments EmailDripEnrollment[]
+
+  @@index([trigger, enabled])
+}
+
+model EmailDripStep {
+  id           String            @id @default(cuid())
+  sequenceId   String
+  sequence     EmailDripSequence @relation(fields: [sequenceId], references: [id], onDelete: Cascade)
+  /// 0-based, contiguous within a sequence.
+  order        Int
+  /// Cumulative delay since enrollment time, in minutes.
+  delayMinutes Int
+  /// 'en' | 'ar' | 'fr' | 'es'
+  locale       String            @default("en")
+  subject      String
+  bodyHtml     String            @db.Text
+  bodyText     String            @db.Text
+
+  @@unique([sequenceId, order])
+}
+
+model EmailDripEnrollment {
+  id             String            @id @default(cuid())
+  sequenceId     String
+  sequence       EmailDripSequence @relation(fields: [sequenceId], references: [id], onDelete: Cascade)
+  userId         String
+  user           User              @relation("EmailDripEnrollee", fields: [userId], references: [id], onDelete: Cascade)
+  currentStepIdx Int               @default(0)
+  nextRunAt      DateTime?
+  completedAt    DateTime?
+  cancelledAt    DateTime?
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+
+  @@unique([sequenceId, userId])
+  @@index([nextRunAt, completedAt, cancelledAt])
 }
