@@ -292,7 +292,19 @@ export class CouponsService {
    * same Prisma transaction that ultimately funds the milestone (so the
    * redemption row + counter bump roll back if the Stripe call fails).
    *
-   * Returns the discount math the caller should charge with.
+   * Discount math (`discountMinor` / `finalMinor`) is supplied by the
+   * caller — it must be the *same* result that the corresponding
+   * Stripe PaymentIntent was created with (i.e. from `preview()` run
+   * just before the Stripe call). Recomputing here from the freshly
+   * loaded coupon row would let an admin's mid-flight edit of
+   * `amountOff` / `maxDiscountMinor` / `minAmountMinor` desync the
+   * `CouponRedemption` row from the actual Stripe charge.
+   * `applyToSubscription` follows the same convention.
+   *
+   * Eligibility (audience/scope/expiry/status), per-user limit, global
+   * `maxRedemptions` cap and Stripe-min-charge floor are still
+   * re-validated here against the live coupon row so a coupon that was
+   * disabled or hit its cap between preview and apply is rejected.
    */
   async applyToMilestone(
     tx: TxClient,
@@ -302,6 +314,8 @@ export class CouponsService {
       userRole: string;
       milestoneId: string;
       originalMinor: number;
+      discountMinor: number;
+      finalMinor: number;
       currency: string;
     },
   ): Promise<{ couponId: string; discountMinor: number; finalMinor: number }> {
@@ -335,19 +349,11 @@ export class CouponsService {
       scope: 'MILESTONE',
       userRole: args.userRole,
     });
-    const compute = computeCouponDiscount(
-      coupon,
-      args.originalMinor,
-      args.currency,
-    );
-    if (!compute.applicable) {
-      throw new BadRequestException(compute.reason ?? 'Coupon cannot be applied');
-    }
     // Stripe minimum charge gate (see preview() for rationale).
     // Inside the redemption transaction so a sub-floor amount never
     // commits a redemption row that the Stripe call would later reject.
     const minCharge = getStripeMinChargeMinor(args.currency);
-    if (compute.finalMinor < minCharge) {
+    if (args.finalMinor < minCharge) {
       throw new BadRequestException(
         'Coupon discount reduces the charge below the minimum payment amount',
       );
@@ -374,8 +380,8 @@ export class CouponsService {
           scope: 'MILESTONE',
           milestoneId: args.milestoneId,
           originalAmountMinor: args.originalMinor,
-          discountMinor: compute.discountMinor,
-          finalAmountMinor: compute.finalMinor,
+          discountMinor: args.discountMinor,
+          finalAmountMinor: args.finalMinor,
           currency: args.currency.toUpperCase(),
         },
       });
@@ -408,13 +414,13 @@ export class CouponsService {
       where: { id: coupon.id },
       data: {
         redeemedCount: { increment: 1 },
-        totalDiscountMinor: { increment: compute.discountMinor },
+        totalDiscountMinor: { increment: args.discountMinor },
       },
     });
     return {
       couponId: coupon.id,
-      discountMinor: compute.discountMinor,
-      finalMinor: compute.finalMinor,
+      discountMinor: args.discountMinor,
+      finalMinor: args.finalMinor,
     };
   }
 

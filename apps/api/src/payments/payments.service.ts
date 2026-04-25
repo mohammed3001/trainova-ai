@@ -318,8 +318,21 @@ export class PaymentsService {
     // {@link CouponsService.applyToMilestone}.
     const ownerRole = await this.getUserRole(userId);
     let chargeAmountCents = milestone.amountCents;
-    let plannedCoupon: { code: string; couponId: string } | null = null;
+    let plannedCoupon: {
+      code: string;
+      couponId: string;
+      discountMinor: number;
+      finalMinor: number;
+    } | null = null;
     if (input.couponCode) {
+      // preview() validates eligibility AND computes the authoritative
+      // discount; we pass the *same* discount values into
+      // applyToMilestone so the CouponRedemption row, the
+      // `redeemedCount` / `totalDiscountMinor` counters and the Stripe
+      // PI all agree even if an admin edits the coupon's amountOff /
+      // maxDiscountMinor between preview and apply (the eligibility
+      // re-check inside applyToMilestone catches a coupon that was
+      // *disabled* in that window).
       const preview = await this.coupons.preview(userId, ownerRole, {
         code: input.couponCode,
         scope: 'MILESTONE',
@@ -337,7 +350,12 @@ export class PaymentsService {
         throw new NotFoundException('Coupon not found');
       }
       chargeAmountCents = preview.finalMinor;
-      plannedCoupon = { code: input.couponCode, couponId: couponRow.id };
+      plannedCoupon = {
+        code: input.couponCode,
+        couponId: couponRow.id,
+        discountMinor: preview.discountMinor,
+        finalMinor: preview.finalMinor,
+      };
     }
 
     const pi = await this.stripe.createEscrowPaymentIntent({
@@ -387,6 +405,8 @@ export class PaymentsService {
           userRole: ownerRole,
           milestoneId: milestone.id,
           originalMinor: milestone.amountCents,
+          discountMinor: plannedCoupon.discountMinor,
+          finalMinor: plannedCoupon.finalMinor,
           currency: milestone.contract.currency,
         });
       }
