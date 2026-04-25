@@ -21,13 +21,24 @@ export function AdminNav({ links, label }: { links: AdminNavLink[]; label?: stri
   const ta = useTranslations('a11y');
   const navLabel = label ?? ta('adminNav');
 
+  // The base admin overview lives at `/{locale}/admin` and every other
+  // sidebar item is a strict descendant. Using a `startsWith` match for
+  // it would light up Overview alongside the actual sub-page on every
+  // nested route. The longest matching prefix wins instead.
+  const activeHref = (() => {
+    let best: string | null = null;
+    for (const l of links) {
+      if (pathname === l.href || pathname.startsWith(`${l.href}/`)) {
+        if (!best || l.href.length > best.length) best = l.href;
+      }
+    }
+    return best;
+  })();
+
   return (
     <nav aria-label={navLabel} className="flex flex-col gap-1">
       {links.map((l) => {
-        // Strict equality would miss nested routes (e.g. /admin/cms/pages/new
-        // shouldn't light up a parent /admin), so we match on exact path OR
-        // prefix + '/' to avoid accidental /admin/users matching /admin/user-x.
-        const active = pathname === l.href || pathname.startsWith(`${l.href}/`);
+        const active = l.href === activeHref;
         return (
           <Link
             key={l.href}
