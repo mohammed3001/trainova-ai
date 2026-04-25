@@ -3,7 +3,11 @@ import { redirect } from 'next/navigation';
 import { getLocale, getTranslations } from 'next-intl/server';
 import { authedFetch } from '@/lib/authed-fetch';
 import { getRole, getToken } from '@/lib/session';
-import type { EmailCampaignStatus, EmailSegment } from '@trainova/shared';
+import {
+  ADMIN_ROLE_GROUPS,
+  type EmailCampaignStatus,
+  type EmailSegment,
+} from '@trainova/shared';
 import { CampaignForm } from '../campaign-form';
 import { CampaignActions } from '../campaign-actions';
 
@@ -36,7 +40,9 @@ export default async function AdminEmailCampaignDetailPage({ params }: PageProps
   const locale = await getLocale();
   const [token, role] = await Promise.all([getToken(), getRole()]);
   if (!token) redirect(`/${locale}/login`);
-  if (role !== 'ADMIN' && role !== 'SUPER_ADMIN') redirect(`/${locale}`);
+  if (!(ADMIN_ROLE_GROUPS.CONTENT as readonly string[]).includes(role ?? '')) {
+    redirect(`/${locale}`);
+  }
 
   const campaign = await authedFetch<Campaign>(`/admin/email/campaigns/${id}`);
 
