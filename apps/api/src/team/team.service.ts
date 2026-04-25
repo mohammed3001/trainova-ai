@@ -331,6 +331,32 @@ export class TeamService {
         throw new ConflictException('You are already a member of this company');
       }
 
+      // Enforce one-company-per-user. The data model has no
+      // "current company" pointer on `User`, so allowing multi-company
+      // membership would make `requireMembership(callerId)` (called
+      // without a `companyId`, e.g. by `getTeamForCompany` /
+      // `createInvitation`) non-deterministic — the caller could load
+      // the wrong company's team page or create an invitation against
+      // the wrong company. We therefore refuse the second-company
+      // accept here; the user can leave their current company first
+      // (an admin removing them, or the owner deleting the company)
+      // and then redeem the invite.
+      const [otherMembership, otherOwnership] = await Promise.all([
+        tx.companyMember.findFirst({
+          where: { userId: caller.id, NOT: { companyId: company.id } },
+          select: { companyId: true },
+        }),
+        tx.company.findFirst({
+          where: { ownerId: caller.id, NOT: { id: company.id } },
+          select: { id: true },
+        }),
+      ]);
+      if (otherMembership || otherOwnership) {
+        throw new ConflictException(
+          'You already belong to another company; leave it before accepting a new invitation',
+        );
+      }
+
       await tx.companyMember.create({
         data: { companyId: company.id, userId: caller.id, role: invitation.role },
       });
@@ -459,9 +485,18 @@ export class TeamService {
         select: companySelect,
       });
       if (!company) {
+        // `acceptInvitation` enforces one-company-per-user, but legacy
+        // rows from before that guard (or future product changes) may
+        // leave a user with multiple memberships. Pin the resolution to
+        // the **earliest-joined** company so the caller's identity is
+        // stable across requests — without an explicit `orderBy`,
+        // PostgreSQL makes no guarantee about which row `findFirst`
+        // returns and the team UI / `createInvitation` would silently
+        // operate on a different company between page loads.
         const membership = await this.prisma.companyMember.findFirst({
           where: { userId: callerId },
           select: { companyId: true },
+          orderBy: { createdAt: 'asc' },
         });
         if (membership) {
           company = await this.prisma.company.findUnique({
