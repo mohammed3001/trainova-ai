@@ -842,11 +842,6 @@
       "leaveReview": "Leave a review",
       "raiseDispute": "Raise a dispute",
       "viewDisputes": "View my disputes"
-    },
-    "documents": {
-      "title": "Contract documents",
-      "subtitle": "NDAs, MSAs, SOWs and custom agreements with audit-trailed signatures.",
-      "open": "Open documents"
     }
   },
   "payments": {
@@ -1029,7 +1024,8 @@
       "disputes": "Disputes",
       "ads": "Ads",
       "finance": "Finance",
-      "settings": "Settings"
+      "settings": "Settings",
+      "sponsored": "Sponsored placements"
     },
     "userRole": {
       "SUPER_ADMIN": "Super admin",
@@ -1770,6 +1766,75 @@
         "stripeCouponId": "Stripe coupon ID",
         "stripeCouponIdHint": "Required for SUBSCRIPTION coupons. Create the matching coupon in Stripe first.",
         "status": "Status"
+      }
+    },
+    "sponsored": {
+      "title": "Sponsored placements",
+      "subtitle": "Grant boosts to trainers and job requests, monitor self-paid placements, and adjust ranking weights.",
+      "empty": "No placements match the current filters.",
+      "confirmDelete": "Delete this placement? This cannot be undone.",
+      "cols": {
+        "subject": "Subject",
+        "kind": "Kind",
+        "owner": "Owner",
+        "weight": "Weight",
+        "window": "Window",
+        "status": "Status",
+        "source": "Source",
+        "actions": "Actions"
+      },
+      "kind": {
+        "TRAINER": "Trainer",
+        "JOB_REQUEST": "Job request"
+      },
+      "status": {
+        "DRAFT": "Draft",
+        "PENDING_PAYMENT": "Pending payment",
+        "ACTIVE": "Active",
+        "PAUSED": "Paused",
+        "EXPIRED": "Expired",
+        "REJECTED": "Rejected"
+      },
+      "source": {
+        "ADMIN": "Admin grant",
+        "SELF_PAID": "Self-paid"
+      },
+      "filters": {
+        "kind": "Kind",
+        "status": "Status",
+        "search": "Search",
+        "searchPlaceholder": "Owner, slug, or job title…",
+        "apply": "Apply",
+        "all": "All"
+      },
+      "actions": {
+        "grant": "Grant placement",
+        "edit": "Edit",
+        "delete": "Delete",
+        "cancel": "Cancel",
+        "save": "Save"
+      },
+      "create": {
+        "title": "Grant sponsored placement"
+      },
+      "edit": {
+        "title": "Edit placement — {subject}"
+      },
+      "fields": {
+        "kind": "Kind",
+        "trainerProfileId": "Trainer profile id",
+        "jobRequestId": "Job request id",
+        "idHint": "Internal id (visible in the URL of the trainer/job-request admin page).",
+        "weight": "Weight",
+        "weightHint": "Boost weight ({min}–{max}). Higher values float the row higher.",
+        "status": "Status",
+        "endsAt": "Ends at",
+        "notes": "Internal notes"
+      },
+      "pagination": {
+        "summary": "Page {page} of {pages} · {total} placements",
+        "prev": "Previous",
+        "next": "Next"
       }
     }
   },
@@ -2564,120 +2629,19 @@
     "privacy": "Privacy",
     "terms": "Terms"
   },
-  "contractDocs": {
-    "list": {
-      "title": "Contract documents",
-      "subtitle": "Generate, sign and audit NDAs, MSAs, SOWs, and custom agreements bound to this contract.",
-      "empty": "No documents yet on this contract.",
-      "generate": "Generate document",
-      "back": "Back to contract",
-      "created": "Created",
-      "expires": "Expires"
-    },
-    "generate": {
-      "title": "Generate contract document",
-      "subtitle": "Pick a published template or paste a custom Markdown body. Both parties will be invited to sign.",
-      "modeTemplate": "From template",
-      "modeCustom": "Custom Markdown",
-      "field": {
-        "title": "Document title",
-        "template": "Template",
-        "kind": "Document kind",
-        "body": "Body (Markdown)",
-        "expiresAt": "Expires at (optional)"
-      },
-      "variables": "Template variables",
-      "previewBody": "Preview template body",
-      "submit": "Generate & invite signers"
-    },
-    "detail": {
-      "body": "Document body",
-      "signers": "Signers",
-      "created": "Generated",
-      "expires": "Expires",
-      "signedAt": "Signed at",
-      "signedBy": "Signed name",
-      "declined": "Declined",
-      "audit": "Audit",
-      "tamperTitle": "Tamper detected",
-      "tamperBody": "The stored body hash does not match the current document body. Signing is disabled until an admin investigates.",
-      "signAs": "Sign as {role}",
-      "signSubtitle": "Type your full legal name, declare your intent, and confirm to bind the signature.",
-      "signedName": "Full legal name",
-      "signedNameHint": "This is recorded as your typed signature alongside an audit trail (IP and user agent).",
-      "intent": "Statement of intent",
-      "intentHint": "e.g. \"I, the undersigned, agree to be bound by the terms above.\"",
-      "agree": "I confirm that I am authorised to sign and that my signature is legally binding.",
-      "signSubmit": "Sign document",
-      "declineLink": "Decline this document",
-      "declineTitle": "Decline document",
-      "declineReason": "Reason (optional, shared with the other party)",
-      "declineSubmit": "Decline",
-      "confirmDecline": "Decline this document? Both parties will be notified and the contract will not progress until a new document is generated.",
-      "cancel": "Cancel"
-    },
-    "status": {
-      "DRAFT": "Draft",
-      "AWAITING_SIGNATURES": "Awaiting signatures",
-      "PARTIALLY_SIGNED": "Partially signed",
-      "FULLY_SIGNED": "Fully signed",
-      "CANCELLED": "Cancelled",
-      "EXPIRED": "Expired"
-    },
-    "signature": {
-      "PENDING": "Pending",
-      "SIGNED": "Signed",
-      "DECLINED": "Declined"
-    },
-    "role": {
-      "COMPANY": "Company",
-      "TRAINER": "Trainer"
-    },
-    "errors": {
-      "generic": "Something went wrong. Please try again."
-    },
-    "admin": {
-      "title": "Contract templates",
-      "subtitle": "Curate reusable NDA, MSA and SOW Markdown templates with named variables.",
-      "newTemplate": "New template",
-      "backToList": "Back to templates",
-      "filterKind": "Kind",
-      "filterStatus": "Status",
-      "applyFilters": "Apply",
-      "all": "All",
-      "kindCustom": "Custom",
-      "statusDraft": "Draft",
-      "statusPublished": "Published",
-      "statusArchived": "Archived",
-      "col": {
-        "name": "Name",
-        "kind": "Kind",
-        "locale": "Locale",
-        "status": "Status",
-        "updated": "Updated"
-      },
-      "empty": "No templates yet. Create your first NDA / MSA / SOW.",
-      "field": {
-        "name": "Display name",
-        "slug": "Slug (lowercase, dashes)",
-        "kind": "Kind",
-        "locale": "Locale code",
-        "description": "Description (optional)",
-        "status": "Status",
-        "body": "Body (Markdown, supports {{variableName}})"
-      },
-      "bodyHint": "Use {{key}} placeholders. Required variables must be supplied at generation time.",
-      "variables": "Variables",
-      "variablesEmpty": "No variables declared. Documents will use the body verbatim.",
-      "varKey": "key (e.g. companyName)",
-      "varLabel": "Label shown to authors",
-      "varRequired": "required",
-      "varRemove": "Remove",
-      "addVariable": "Add variable",
-      "create": "Create template",
-      "save": "Save changes",
-      "archive": "Archive template",
-      "confirmArchive": "Archive this template? Existing documents are unaffected; new ones can no longer reference it."
+  "sponsored": {
+    "badge": "Sponsored",
+    "boost": {
+      "cta": "Boost visibility",
+      "subtitle": "Float to the top of search and matching results.",
+      "days": "Days",
+      "pricePerDay": "Price per day",
+      "total": "Total",
+      "submit": "Pay & activate",
+      "success": "Your placement is active.",
+      "cancel": "Cancel",
+      "paymentError": "Payment failed. No charge was made.",
+      "requirePaymentMethod": "Add a payment method on file before boosting."
     }
   }
 }

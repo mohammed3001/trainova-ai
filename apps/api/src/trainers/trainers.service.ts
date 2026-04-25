@@ -21,13 +21,28 @@ export class TrainersService {
           user: { select: { id: true, name: true } },
           skills: { include: { skill: true }, take: 8 },
         },
-        orderBy: [{ verified: 'desc' }, { createdAt: 'desc' }],
+        // T7.G — sponsoredUntil first so paid placements float to the top.
+        // `nulls: 'last'` keeps unsponsored rows below current sponsors.
+        orderBy: [
+          { sponsoredUntil: { sort: 'desc', nulls: 'last' } },
+          { verified: 'desc' },
+          { createdAt: 'desc' },
+        ],
         take: Math.min(params.limit ?? 24, 60),
         skip: params.offset ?? 0,
       }),
       this.prisma.trainerProfile.count({ where }),
     ]);
-    return { items, total };
+    const now = new Date();
+    const decorated = items.map((row) => ({
+      ...row,
+      // Boolean flag the public list UI uses to render the green
+      // "Sponsored" badge. The mirror column can drift after expiry; we
+      // re-check `> now()` here so a stale value never causes a false
+      // badge in the response.
+      sponsored: row.sponsoredUntil != null && row.sponsoredUntil > now,
+    }));
+    return { items: decorated, total };
   }
 
   async findBySlug(slug: string) {

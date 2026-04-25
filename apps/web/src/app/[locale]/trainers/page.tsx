@@ -36,6 +36,9 @@ interface TrainerItem {
   hourlyRateMin: number | null;
   hourlyRateMax: number | null;
   verified: boolean;
+  /** T7.G — set by the API when an active sponsored placement covers
+   *  this row. Drives the "Sponsored" badge in the public list. */
+  sponsored?: boolean;
   user: { id: string; name: string };
   skills: { skill: { nameEn: string; nameAr: string; slug: string } }[];
 }
@@ -72,7 +75,12 @@ export default async function TrainersPage() {
                 <Link href={`/${locale}/trainers/${tr.slug}`} className="text-lg font-semibold text-slate-900 hover:text-brand-700">
                   {tr.user.name}
                 </Link>
-                {tr.verified ? <span className="badge-accent">Verified</span> : null}
+                <div className="flex flex-wrap items-center gap-1">
+                  {tr.sponsored ? (
+                    <span className="badge-sponsored">{t('sponsored.badge')}</span>
+                  ) : null}
+                  {tr.verified ? <span className="badge-accent">Verified</span> : null}
+                </div>
               </div>
               <div className="text-xs text-slate-500">
                 {tr.headline}

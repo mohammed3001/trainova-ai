@@ -822,11 +822,6 @@
       "fundFailed": "We couldn't fund this milestone.",
       "releaseFailed": "We couldn't release this milestone.",
       "refundFailed": "We couldn't refund this milestone."
-    },
-    "documents": {
-      "title": "Documentos contractuales",
-      "subtitle": "NDA, MSA, SOW y acuerdos personalizados con firmas y rastro de auditoría.",
-      "open": "Abrir documentos"
     }
   },
   "payments": {
@@ -1009,7 +1004,8 @@
       "disputes": "Disputas",
       "ads": "Anuncios",
       "finance": "Finance",
-      "settings": "Settings"
+      "settings": "Settings",
+      "sponsored": "Colocaciones patrocinadas"
     },
     "userRole": {
       "SUPER_ADMIN": "Super administrador",
@@ -1751,6 +1747,75 @@
         "stripeCouponIdHint": "Obligatorio para cupones de suscripción. Crea el cupón en Stripe primero.",
         "status": "Estado"
       }
+    },
+    "sponsored": {
+      "title": "Colocaciones patrocinadas",
+      "subtitle": "Otorga impulsos a entrenadores y solicitudes, supervisa colocaciones pagas y ajusta los pesos.",
+      "empty": "Ninguna colocación coincide con los filtros actuales.",
+      "confirmDelete": "¿Eliminar esta colocación? No se puede deshacer.",
+      "cols": {
+        "subject": "Sujeto",
+        "kind": "Tipo",
+        "owner": "Propietario",
+        "weight": "Peso",
+        "window": "Ventana",
+        "status": "Estado",
+        "source": "Origen",
+        "actions": "Acciones"
+      },
+      "kind": {
+        "TRAINER": "Entrenador",
+        "JOB_REQUEST": "Solicitud"
+      },
+      "status": {
+        "DRAFT": "Borrador",
+        "PENDING_PAYMENT": "Pago pendiente",
+        "ACTIVE": "Activa",
+        "PAUSED": "En pausa",
+        "EXPIRED": "Vencida",
+        "REJECTED": "Rechazada"
+      },
+      "source": {
+        "ADMIN": "Otorgada por admin",
+        "SELF_PAID": "Autofinanciada"
+      },
+      "filters": {
+        "kind": "Tipo",
+        "status": "Estado",
+        "search": "Buscar",
+        "searchPlaceholder": "Propietario, slug o título…",
+        "apply": "Aplicar",
+        "all": "Todos"
+      },
+      "actions": {
+        "grant": "Otorgar colocación",
+        "edit": "Editar",
+        "delete": "Eliminar",
+        "cancel": "Cancelar",
+        "save": "Guardar"
+      },
+      "create": {
+        "title": "Otorgar colocación patrocinada"
+      },
+      "edit": {
+        "title": "Editar colocación — {subject}"
+      },
+      "fields": {
+        "kind": "Tipo",
+        "trainerProfileId": "ID del perfil del entrenador",
+        "jobRequestId": "ID de la solicitud",
+        "idHint": "ID interno (visible en la URL de la página admin).",
+        "weight": "Peso",
+        "weightHint": "Peso del impulso ({min}–{max}). Mayor = mejor posición.",
+        "status": "Estado",
+        "endsAt": "Termina el",
+        "notes": "Notas internas"
+      },
+      "pagination": {
+        "summary": "Página {page} de {pages} · {total} colocaciones",
+        "prev": "Anterior",
+        "next": "Siguiente"
+      }
     }
   },
   "ads": {
@@ -2430,120 +2495,19 @@
     "privacy": "Privacidad",
     "terms": "Términos"
   },
-  "contractDocs": {
-    "list": {
-      "title": "Documentos contractuales",
-      "subtitle": "Genere, firme y audite NDA, MSA, SOW y acuerdos personalizados asociados a este contrato.",
-      "empty": "Aún no hay documentos en este contrato.",
-      "generate": "Generar documento",
-      "back": "Volver al contrato",
-      "created": "Creado",
-      "expires": "Caduca"
-    },
-    "generate": {
-      "title": "Generar documento contractual",
-      "subtitle": "Elija una plantilla publicada o pegue un cuerpo Markdown personalizado. Ambas partes serán invitadas a firmar.",
-      "modeTemplate": "Desde plantilla",
-      "modeCustom": "Markdown personalizado",
-      "field": {
-        "title": "Título del documento",
-        "template": "Plantilla",
-        "kind": "Tipo de documento",
-        "body": "Cuerpo (Markdown)",
-        "expiresAt": "Caduca el (opcional)"
-      },
-      "variables": "Variables de la plantilla",
-      "previewBody": "Vista previa del cuerpo de la plantilla",
-      "submit": "Generar e invitar firmantes"
-    },
-    "detail": {
-      "body": "Cuerpo del documento",
-      "signers": "Firmantes",
-      "created": "Generado",
-      "expires": "Caduca",
-      "signedAt": "Firmado el",
-      "signedBy": "Nombre firmado",
-      "declined": "Rechazado",
-      "audit": "Auditoría",
-      "tamperTitle": "Manipulación detectada",
-      "tamperBody": "El hash almacenado no coincide con el cuerpo actual. La firma está deshabilitada hasta que un administrador lo investigue.",
-      "signAs": "Firmar como {role}",
-      "signSubtitle": "Escriba su nombre legal completo, declare su intención y confirme para vincular la firma.",
-      "signedName": "Nombre legal completo",
-      "signedNameHint": "Se registra como su firma escrita junto con un rastro de auditoría (IP y User-Agent).",
-      "intent": "Declaración de intención",
-      "intentHint": "Ej.: «Yo, abajo firmante, acepto estar vinculado por los términos anteriores.»",
-      "agree": "Confirmo que estoy autorizado a firmar y que mi firma es jurídicamente vinculante.",
-      "signSubmit": "Firmar documento",
-      "declineLink": "Rechazar este documento",
-      "declineTitle": "Rechazar documento",
-      "declineReason": "Motivo (opcional, compartido con la otra parte)",
-      "declineSubmit": "Rechazar",
-      "confirmDecline": "¿Rechazar este documento? Ambas partes serán notificadas y el contrato no avanzará hasta generar un documento nuevo.",
-      "cancel": "Cancelar"
-    },
-    "status": {
-      "DRAFT": "Borrador",
-      "AWAITING_SIGNATURES": "Esperando firmas",
-      "PARTIALLY_SIGNED": "Parcialmente firmado",
-      "FULLY_SIGNED": "Totalmente firmado",
-      "CANCELLED": "Cancelado",
-      "EXPIRED": "Caducado"
-    },
-    "signature": {
-      "PENDING": "Pendiente",
-      "SIGNED": "Firmado",
-      "DECLINED": "Rechazado"
-    },
-    "role": {
-      "COMPANY": "Empresa",
-      "TRAINER": "Entrenador"
-    },
-    "errors": {
-      "generic": "Algo salió mal. Inténtelo de nuevo."
-    },
-    "admin": {
-      "title": "Plantillas de contrato",
-      "subtitle": "Gestione plantillas Markdown reutilizables para NDA, MSA y SOW con variables nombradas.",
-      "newTemplate": "Nueva plantilla",
-      "backToList": "Volver a plantillas",
-      "filterKind": "Tipo",
-      "filterStatus": "Estado",
-      "applyFilters": "Aplicar",
-      "all": "Todos",
-      "kindCustom": "Personalizado",
-      "statusDraft": "Borrador",
-      "statusPublished": "Publicado",
-      "statusArchived": "Archivado",
-      "col": {
-        "name": "Nombre",
-        "kind": "Tipo",
-        "locale": "Idioma",
-        "status": "Estado",
-        "updated": "Actualizado"
-      },
-      "empty": "Aún no hay plantillas. Cree su primer NDA / MSA / SOW.",
-      "field": {
-        "name": "Nombre visible",
-        "slug": "Slug (minúsculas, guiones)",
-        "kind": "Tipo",
-        "locale": "Código de idioma",
-        "description": "Descripción (opcional)",
-        "status": "Estado",
-        "body": "Cuerpo (Markdown, soporta {{variableName}})"
-      },
-      "bodyHint": "Use marcadores {{key}}. Las variables requeridas deben proporcionarse al generar.",
-      "variables": "Variables",
-      "variablesEmpty": "Sin variables declaradas. Los documentos usarán el cuerpo tal cual.",
-      "varKey": "clave (ej. companyName)",
-      "varLabel": "Etiqueta mostrada a los autores",
-      "varRequired": "requerido",
-      "varRemove": "Eliminar",
-      "addVariable": "Añadir variable",
-      "create": "Crear plantilla",
-      "save": "Guardar cambios",
-      "archive": "Archivar plantilla",
-      "confirmArchive": "¿Archivar esta plantilla? Los documentos existentes no se ven afectados, pero no podrán crearse nuevos a partir de ella."
+  "sponsored": {
+    "badge": "Patrocinado",
+    "boost": {
+      "cta": "Impulsar visibilidad",
+      "subtitle": "Aparece en la parte superior de la búsqueda y los resultados de matching.",
+      "days": "Días",
+      "pricePerDay": "Precio por día",
+      "total": "Total",
+      "submit": "Pagar y activar",
+      "success": "Tu colocación está activa.",
+      "cancel": "Cancelar",
+      "paymentError": "El pago falló. No se realizó ningún cargo.",
+      "requirePaymentMethod": "Agrega un método de pago antes de impulsar."
     }
   }
 }

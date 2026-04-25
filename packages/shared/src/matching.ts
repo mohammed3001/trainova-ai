@@ -35,6 +35,16 @@ export const matchingScoreBreakdownSchema = z.object({
     pastApplications: z.number().int().nonnegative(),
     acceptedApplications: z.number().int().nonnegative(),
   }),
+  /**
+   * Sponsored-placement signal (Tier 7.G). `boost` is the additive
+   * weight applied to the final score, capped server-side. `active`
+   * is true iff at least one ACTIVE `SponsoredPlacement` is in window.
+   */
+  sponsor: z.object({
+    score: z.number().min(0).max(100),
+    boost: z.number().int().min(0),
+    active: z.boolean(),
+  }),
 });
 export type MatchingScoreBreakdown = z.infer<typeof matchingScoreBreakdownSchema>;
 
@@ -50,6 +60,8 @@ export const trainerMatchSchema = z.object({
   hourlyRateMax: z.number().int().nullable(),
   currency: z.string().default('USD'),
   score: z.number().min(0).max(100),
+  /** True iff this row was raised by an active sponsored placement. */
+  sponsored: z.boolean().default(false),
   breakdown: matchingScoreBreakdownSchema,
 });
 export type TrainerMatch = z.infer<typeof trainerMatchSchema>;
@@ -66,6 +78,8 @@ export const jobMatchSchema = z.object({
   currency: z.string().default('USD'),
   publishedAt: z.string().nullable(),
   score: z.number().min(0).max(100),
+  /** True iff this row was raised by an active sponsored placement. */
+  sponsored: z.boolean().default(false),
   breakdown: matchingScoreBreakdownSchema,
 });
 export type JobMatch = z.infer<typeof jobMatchSchema>;

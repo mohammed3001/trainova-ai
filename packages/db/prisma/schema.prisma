@@ -85,6 +85,8 @@ model User {
   contractSignatures            ContractSignature[]       @relation("ContractSignatureSigner")
   couponsCreated                Coupon[]                  @relation("CouponCreator")
   couponRedemptions             CouponRedemption[]
+  sponsoredPlacementsOwned      SponsoredPlacement[]      @relation("SponsoredPlacementOwner")
+  sponsoredPlacementsCreated    SponsoredPlacement[]      @relation("SponsoredPlacementCreator")
 
   @@index([role, status])
 }
@@ -299,13 +301,21 @@ model TrainerProfile {
   linkedinUrl       String?
   githubUrl         String?
   websiteUrl        String?
+  /// Truthy iff this trainer currently has at least one ACTIVE
+  /// `SponsoredPlacement` whose window includes `now()`. Maintained by
+  /// `SponsoredService` on activate/expire so listing queries can sort
+  /// without fan-out joins. Read-time correctness is enforced by an
+  /// additional `endsAt >= now()` filter when boost weights are applied.
+  sponsoredUntil    DateTime?
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 
-  skills TrainerSkill[]
-  assets TrainerAsset[]
+  skills              TrainerSkill[]
+  assets              TrainerAsset[]
+  sponsoredPlacements SponsoredPlacement[]
 
   @@index([slug])
+  @@index([sponsoredUntil])
 }
 
 model TrainerAsset {
@@ -397,24 +407,29 @@ model JobRequest {
   confidentialityLevel ConfidentialityLevel @default(LOW)
   status               JobRequestStatus     @default(DRAFT)
   featured             Boolean              @default(false)
+  /// Mirrors the latest ACTIVE `SponsoredPlacement.endsAt` so list
+  /// queries can sort without joining. Maintained by `SponsoredService`.
+  sponsoredUntil       DateTime?
   publishedAt          DateTime?
   closedAt             DateTime?
   applicationSchema    Json?
   createdAt            DateTime             @default(now())
   updatedAt            DateTime             @updatedAt
 
-  company         Company              @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  modelConnection ModelConnection?     @relation(fields: [modelConnectionId], references: [id], onDelete: SetNull)
-  skills          JobRequestSkill[]
-  questions       JobRequestQuestion[]
-  applications    Application[]
-  tests           Test[]
-  conversations   Conversation[]
-  modelCalls      ModelCall[]
+  company             Company              @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  modelConnection     ModelConnection?     @relation(fields: [modelConnectionId], references: [id], onDelete: SetNull)
+  skills              JobRequestSkill[]
+  questions           JobRequestQuestion[]
+  applications        Application[]
+  tests               Test[]
+  conversations       Conversation[]
+  modelCalls          ModelCall[]
+  sponsoredPlacements SponsoredPlacement[]
 
   @@index([status, publishedAt])
   @@index([companyId])
   @@index([modelConnectionId])
+  @@index([sponsoredUntil])
 }
 
 model JobRequestSkill {
@@ -1733,6 +1748,82 @@ enum ContactSubmissionTopic {
   PRESS
   PARTNERSHIP
   ADVERTISING
+}
+
+// =========================
+// Sponsored search placements (Tier 7.G)
+// =========================
+
+enum SponsoredPlacementKind {
+  TRAINER
+  JOB_REQUEST
+}
+
+enum SponsoredPlacementStatus {
+  /// Editable, not visible publicly. Self-paid placements move out of
+  /// `DRAFT` once the company/trainer kicks off Stripe checkout.
+  DRAFT
+  /// Self-paid placement that has a PaymentIntent created but not yet
+  /// captured. Becomes `ACTIVE` on `payment_intent.succeeded` webhook.
+  PENDING_PAYMENT
+  /// Currently boosting search results for `trainerProfileId` /
+  /// `jobRequestId`. Read-time queries also enforce `endsAt >= now()`.
+  ACTIVE
+  /// Owner-initiated pause. Does not refund.
+  PAUSED
+  /// Past `endsAt`. Set lazily by `SponsoredService.expireDue()`.
+  EXPIRED
+  /// Admin rejected (e.g. policy / payment dispute). Refund handled
+  /// out-of-band.
+  REJECTED
+}
+
+enum SponsoredPlacementSource {
+  /// Granted by an admin. No charge.
+  ADMIN
+  /// Purchased by the owner via Stripe.
+  SELF_PAID
+}
+
+model SponsoredPlacement {
+  id                    String                   @id @default(cuid())
+  kind                  SponsoredPlacementKind
+  /// Set when `kind = TRAINER`.
+  trainerProfileId      String?
+  /// Set when `kind = JOB_REQUEST`.
+  jobRequestId          String?
+  /// User who benefits from / pays for the placement (the trainer for
+  /// `kind=TRAINER`, the company owner / admin issuer for `JOB_REQUEST`).
+  ownerId               String
+  /// Acting principal: admin id for `ADMIN` source, owner id for
+  /// `SELF_PAID`. Captured for the audit trail so admin grants are
+  /// attributable.
+  createdById           String
+  source                SponsoredPlacementSource @default(SELF_PAID)
+  status                SponsoredPlacementStatus @default(DRAFT)
+  /// Additive boost (in matching-score points) applied to organic
+  /// scores. Hard-capped to `[1, 50]` by the service so sponsorship can
+  /// never push a low-quality match past a high-quality unsponsored one
+  /// by more than half the scale.
+  weight                Int                      @default(20)
+  startsAt              DateTime                 @default(now())
+  endsAt                DateTime
+  pricedCents           Int                      @default(0)
+  currency              String                   @default("USD")
+  stripePaymentIntentId String?                  @unique
+  notes                 String?
+  createdAt             DateTime                 @default(now())
+  updatedAt             DateTime                 @updatedAt
+
+  owner          User            @relation("SponsoredPlacementOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  createdBy      User            @relation("SponsoredPlacementCreator", fields: [createdById], references: [id], onDelete: Cascade)
+  trainerProfile TrainerProfile? @relation(fields: [trainerProfileId], references: [id], onDelete: Cascade)
+  jobRequest     JobRequest?     @relation(fields: [jobRequestId], references: [id], onDelete: Cascade)
+
+  @@index([kind, status, endsAt])
+  @@index([ownerId])
+  @@index([trainerProfileId, status])
+  @@index([jobRequestId, status])
 }
 
 model ContactSubmission {
