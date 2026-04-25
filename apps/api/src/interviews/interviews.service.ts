@@ -111,8 +111,12 @@ export class InterviewsService {
 
   async list(userId: string, query: ListInterviewsQuery) {
     if (query.conversationId) {
-      // Touch the conversation to enforce participation before listing.
-      await this.loadConversationContext(userId, query.conversationId);
+      // Read-only endpoint — match the chat service convention
+      // (see `chat.service.ts`: locked conversations stay readable, only
+      // writes are blocked) so a closed engagement still surfaces its
+      // past interviews to both sides. We only need participation here;
+      // the full `loadConversationContext` would 403 on a locked thread.
+      await this.assertConversationParticipant(userId, query.conversationId);
     }
 
     const now = new Date();
@@ -336,6 +340,30 @@ export class InterviewsService {
   // ===================================================================
   // Helpers
   // ===================================================================
+
+  /**
+   * Lightweight participation check used by read-only endpoints. Does
+   * NOT enforce `Conversation.lockedAt` — that gate belongs to mutating
+   * paths (schedule / reschedule / etc) and would otherwise hide past
+   * interviews from a locked thread.
+   */
+  private async assertConversationParticipant(userId: string, conversationId: string) {
+    const participant = await this.prisma.conversationParticipant.findUnique({
+      where: { conversationId_userId: { conversationId, userId } },
+      select: { id: true },
+    });
+    if (!participant) {
+      // Mask the difference between "no such conversation" and "not a
+      // participant" — same response shape as `loadConversationContext`
+      // when the user isn't on the participant list.
+      const exists = await this.prisma.conversation.findUnique({
+        where: { id: conversationId },
+        select: { id: true },
+      });
+      if (!exists) throw new NotFoundException('Conversation not found');
+      throw new ForbiddenException('Not a participant');
+    }
+  }
 
   private async loadConversationContext(userId: string, conversationId: string) {
     const conversation = await this.prisma.conversation.findUnique({
