@@ -30,6 +30,7 @@ import { CurrencyModule } from './currency/currency.module';
 import { ReviewsModule } from './reviews/reviews.module';
 import { DisputesModule } from './disputes/disputes.module';
 import { InvoicingModule } from './invoicing/invoicing.module';
+import { AiAssistModule } from './ai-assist/ai-assist.module';
 import { HealthController } from './health.controller';
 
 @Module({
@@ -66,6 +67,7 @@ import { HealthController } from './health.controller';
     ReviewsModule,
     DisputesModule,
     InvoicingModule,
+    AiAssistModule,
   ],
   controllers: [HealthController],
   providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
