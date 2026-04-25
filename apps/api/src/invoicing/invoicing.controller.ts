@@ -10,6 +10,7 @@ import {
   Res,
   UseGuards,
 } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
 import type { Response } from 'express';
 import type { InvoiceListQuery, PublicTaxProfile } from '@trainova/shared';
 import { taxProfileInputSchema, taxRuleInputSchema } from '@trainova/shared';
@@ -34,6 +35,7 @@ const listQuerySchema = z.object({
 // ===========================================================================
 // Company — purchase invoices
 // ===========================================================================
+@ApiTags('invoicing')
 @Controller('billing/invoices')
 @UseGuards(JwtAuthGuard)
 export class CompanyInvoicesController {
@@ -72,6 +74,7 @@ export class CompanyInvoicesController {
 // ===========================================================================
 // Trainer — payout statements (+ purchase invoices they are the issuer of)
 // ===========================================================================
+@ApiTags('invoicing')
 @Controller('trainer-payments/statements')
 @UseGuards(JwtAuthGuard)
 export class TrainerStatementsController {
@@ -110,6 +113,7 @@ export class TrainerStatementsController {
 // ===========================================================================
 // Me — tax profile self-service
 // ===========================================================================
+@ApiTags('invoicing')
 @Controller('me/tax-profile')
 @UseGuards(JwtAuthGuard)
 export class MeTaxProfileController {
@@ -136,6 +140,7 @@ export class MeTaxProfileController {
 // ===========================================================================
 // Admin — tax rule catalog + tax-id verification
 // ===========================================================================
+@ApiTags('invoicing')
 @Controller('admin/tax-rules')
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles('SUPER_ADMIN', 'ADMIN')
