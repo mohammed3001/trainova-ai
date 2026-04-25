@@ -64,3 +64,31 @@ export const startConversationServer = (input: {
     method: 'POST',
     body: JSON.stringify(input),
   });
+
+// T7.H — search + saved templates.
+export interface MessageSearchHit {
+  id: string;
+  conversationId: string;
+  senderId: string;
+  body: string;
+  createdAt: string;
+  sender?: { id: string; name: string | null };
+}
+
+export interface MessageTemplate {
+  id: string;
+  name: string;
+  body: string;
+  updatedAt: string;
+}
+
+export const searchMessages = (q: string, conversationId?: string) => {
+  const params = new URLSearchParams({ q });
+  if (conversationId) params.set('conversationId', conversationId);
+  return authedFetch<{ items: MessageSearchHit[] }>(
+    `/chat/messages/search?${params.toString()}`,
+  );
+};
+
+export const listTemplates = () =>
+  authedFetch<MessageTemplate[]>('/chat/templates');

@@ -1,6 +1,20 @@
-import { ForbiddenException, Injectable, NotFoundException, forwardRef, Inject } from '@nestjs/common';
+import {
+  ConflictException,
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+  forwardRef,
+  Inject,
+} from '@nestjs/common';
+import { Prisma } from '@trainova/db';
 import { PrismaService } from '../prisma/prisma.service';
-import type { SendMessageInput, StartConversationInput } from '@trainova/shared';
+import type {
+  MessageSearchQuery,
+  MessageTemplateCreateInput,
+  MessageTemplateUpdateInput,
+  SendMessageInput,
+  StartConversationInput,
+} from '@trainova/shared';
 import { ChatGateway } from './chat.gateway';
 import { NotificationsService } from '../notifications/notifications.service';
 
@@ -298,5 +312,134 @@ export class ChatService {
     });
     this.gateway.emitReadUpdate(conversationId, userId, now.toISOString());
     return { ok: true, lastReadAt: now };
+  }
+
+  // =====================================================================
+  // T7.H — Search across the caller's conversations.
+  //
+  // We deliberately resolve the user's conversation ids first and then
+  // filter messages by `conversationId IN (…)`. Doing the access check at
+  // the conversation level (rather than via a relation filter on Message)
+  // keeps the query cheap (one indexed lookup + one indexed scan) and
+  // means a user can never accidentally surface a message from a
+  // conversation they're not a participant of even if a future migration
+  // changes the Message <-> Conversation cardinality.
+  //
+  // Redacted messages are excluded outright — they're already rendered as
+  // "[redacted]" in the live transcript and surfacing the original body
+  // through search would defeat moderation.
+  // =====================================================================
+  async searchMessages(userId: string, q: MessageSearchQuery) {
+    const participants = await this.prisma.conversationParticipant.findMany({
+      where: { userId },
+      select: { conversationId: true },
+    });
+    const conversationIds = participants.map((p) => p.conversationId);
+    if (conversationIds.length === 0) return { items: [] };
+    if (q.conversationId && !conversationIds.includes(q.conversationId)) {
+      throw new ForbiddenException('Not a participant');
+    }
+    const items = await this.prisma.message.findMany({
+      where: {
+        conversationId: q.conversationId
+          ? q.conversationId
+          : { in: conversationIds },
+        redactedAt: null,
+        body: { contains: q.q, mode: Prisma.QueryMode.insensitive },
+      },
+      orderBy: { createdAt: 'desc' },
+      take: q.limit,
+      select: {
+        id: true,
+        conversationId: true,
+        senderId: true,
+        body: true,
+        createdAt: true,
+        sender: { select: { id: true, name: true } },
+      },
+    });
+    return { items };
+  }
+
+  // =====================================================================
+  // T7.H — Saved chat templates (per-user).
+  //
+  // Templates are pure client-side ergonomics: the server stores them,
+  // returns them on demand, and never references them when a message is
+  // sent. The composer expands a template into the textarea and posts a
+  // normal Message — there's no server-side "send template" path. That
+  // keeps the audit trail honest (every Message row was authored, not
+  // auto-injected) and means templates can never be used to forge a
+  // signature or bypass moderation.
+  //
+  // The `(userId, name)` unique index is enforced at the DB layer; we
+  // translate the Prisma error to a 409 so the UI can keep the user's
+  // draft and prompt for a different name instead of dumping a 500.
+  // =====================================================================
+  async listTemplates(userId: string) {
+    return this.prisma.messageTemplate.findMany({
+      where: { userId },
+      orderBy: { updatedAt: 'desc' },
+      select: { id: true, name: true, body: true, updatedAt: true },
+    });
+  }
+
+  async createTemplate(userId: string, input: MessageTemplateCreateInput) {
+    try {
+      return await this.prisma.messageTemplate.create({
+        data: { userId, name: input.name, body: input.body },
+        select: { id: true, name: true, body: true, updatedAt: true },
+      });
+    } catch (err) {
+      if (
+        err instanceof Prisma.PrismaClientKnownRequestError &&
+        err.code === 'P2002'
+      ) {
+        throw new ConflictException('A template with that name already exists');
+      }
+      throw err;
+    }
+  }
+
+  async updateTemplate(
+    userId: string,
+    id: string,
+    input: MessageTemplateUpdateInput,
+  ) {
+    const owned = await this.prisma.messageTemplate.findUnique({
+      where: { id },
+      select: { userId: true },
+    });
+    if (!owned) throw new NotFoundException('Template not found');
+    if (owned.userId !== userId) throw new ForbiddenException('Not owner');
+    try {
+      return await this.prisma.messageTemplate.update({
+        where: { id },
+        data: {
+          ...(input.name !== undefined ? { name: input.name } : {}),
+          ...(input.body !== undefined ? { body: input.body } : {}),
+        },
+        select: { id: true, name: true, body: true, updatedAt: true },
+      });
+    } catch (err) {
+      if (
+        err instanceof Prisma.PrismaClientKnownRequestError &&
+        err.code === 'P2002'
+      ) {
+        throw new ConflictException('A template with that name already exists');
+      }
+      throw err;
+    }
+  }
+
+  async deleteTemplate(userId: string, id: string) {
+    const owned = await this.prisma.messageTemplate.findUnique({
+      where: { id },
+      select: { userId: true },
+    });
+    if (!owned) throw new NotFoundException('Template not found');
+    if (owned.userId !== userId) throw new ForbiddenException('Not owner');
+    await this.prisma.messageTemplate.delete({ where: { id } });
+    return { ok: true };
   }
 }

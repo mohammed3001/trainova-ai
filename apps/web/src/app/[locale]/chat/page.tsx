@@ -5,6 +5,7 @@ import { getToken } from '@/lib/session';
 import { authedFetch } from '@/lib/authed-fetch';
 import type { ConversationSummary } from '@/lib/chat-api';
 import { ConversationRow } from './conversation-row';
+import { ChatSearchBar } from './search-bar';
 
 export const dynamic = 'force-dynamic';
 
@@ -26,6 +27,8 @@ export default async function ChatHubPage() {
         </h1>
         <p className="text-sm text-slate-500">{t('hub.subtitle')}</p>
       </header>
+
+      <ChatSearchBar locale={locale} />
 
       {conversations.length === 0 ? (
         <div

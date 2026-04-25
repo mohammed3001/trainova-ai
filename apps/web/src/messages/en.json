@@ -1961,7 +1961,10 @@
       "browseCta": "Browse open requests",
       "unknownUser": "Unknown user",
       "attachment": "📎 Attachment",
-      "noMessagesYet": "No messages yet"
+      "noMessagesYet": "No messages yet",
+      "searchPlaceholder": "Search across your conversations…",
+      "searching": "Searching…",
+      "noResults": "No matching messages."
     },
     "room": {
       "back": "Back to messages",
@@ -1973,7 +1976,23 @@
       "offline": "Offline",
       "typing": "{name} is typing",
       "emptyHint": "This is the beginning of your conversation. Messages are private to participants.",
-      "notFound": "Conversation unavailable."
+      "notFound": "Conversation unavailable.",
+      "delivered": "Delivered",
+      "seen": "Seen"
+    },
+    "templates": {
+      "toggle": "Templates",
+      "create": "Save current draft",
+      "namePlaceholder": "Template name (e.g. \"Schedule call\")",
+      "bodyPlaceholder": "Template body…",
+      "save": "Save",
+      "cancel": "Cancel",
+      "delete": "Delete template",
+      "empty": "No saved templates yet.",
+      "loading": "Loading…",
+      "loadError": "Couldn't load templates.",
+      "saveError": "Couldn't save template.",
+      "deleteError": "Couldn't delete template."
     },
     "role": {
       "COMPANY_OWNER": "Company",
