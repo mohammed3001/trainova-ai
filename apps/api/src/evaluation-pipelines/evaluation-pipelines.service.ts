@@ -149,6 +149,18 @@ export class EvaluationPipelinesService {
     }
     const incomingIds = new Set(input.stages.map((s) => s.id).filter((v): v is string => Boolean(v)));
     const existing = pipeline.stages;
+    const removedStageIds = existing.filter((s) => !incomingIds.has(s.id)).map((s) => s.id);
+
+    // Removing stages while applications are in-progress would orphan
+    // their `currentStageId` (no FK on that column — see schema.prisma)
+    // and leave callers with a confusing 'Current stage not found' on
+    // the next advance/reject/skip. Block the operation in that case to
+    // match the convention used by `remove()` above.
+    if (removedStageIds.length > 0 && pipeline.progresses.length > 0) {
+      throw new ConflictException(
+        'Cannot remove stages while applicants are still in progress; archive the pipeline or finish their progress first',
+      );
+    }
 
     await this.prisma.$transaction(async (tx) => {
       // Delete stages no longer in the payload first — cascades the
@@ -520,7 +532,11 @@ export class EvaluationPipelinesService {
     const found = new Set(tests.map((t) => t.id));
     const missing = testIds.find((id) => !found.has(id));
     if (missing) throw new NotFoundException(`Test ${missing} not found`);
-    const foreign = tests.find((t) => t.request && t.request.companyId !== companyId);
+    // Reject orphan tests too — `Test.requestId` is `SetNull` when the
+    // parent `JobRequest` is deleted (schema.prisma), so a missing
+    // `request` would otherwise pass the original `t.request &&` check
+    // and let any company attach those tests to its pipeline.
+    const foreign = tests.find((t) => !t.request || t.request.companyId !== companyId);
     if (foreign) {
       throw new ForbiddenException(`Test ${foreign.id} belongs to another company`);
     }
