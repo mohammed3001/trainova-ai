@@ -232,17 +232,20 @@ export class AdminController {
   // ---------------------------------------------------------------------------
 
   @Get('requests')
+  @Roles(...ADMIN_ROLE_GROUPS.MODERATION)
   @UsePipes(new ZodValidationPipe(adminListRequestsQuerySchema))
   listRequests(@Query() q: AdminListRequestsQuery) {
     return this.ops.listRequests(q);
   }
 
   @Get('requests/:id')
+  @Roles(...ADMIN_ROLE_GROUPS.MODERATION)
   getRequest(@Param('id') id: string) {
     return this.ops.getRequest(id);
   }
 
   @Patch('requests/:id/status')
+  @Roles(...ADMIN_ROLE_GROUPS.MODERATION)
   @UsePipes(new ZodValidationPipe(adminSetRequestStatusSchema))
   setRequestStatus(
     @CurrentUser() user: AuthUser,
@@ -254,6 +257,7 @@ export class AdminController {
   }
 
   @Patch('requests/:id/featured')
+  @Roles(...ADMIN_ROLE_GROUPS.MODERATION)
   @UsePipes(new ZodValidationPipe(adminSetRequestFeaturedSchema))
   setRequestFeatured(
     @CurrentUser() user: AuthUser,

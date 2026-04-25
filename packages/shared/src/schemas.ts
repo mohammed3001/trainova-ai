@@ -278,7 +278,20 @@ export type StartConversationInput = z.infer<typeof startConversationSchema>;
 
 export const adminListUsersQuerySchema = z.object({
   q: z.string().max(200).optional(),
-  role: z.enum(['SUPER_ADMIN', 'ADMIN', 'COMPANY_OWNER', 'COMPANY_MEMBER', 'TRAINER']).optional(),
+  role: z
+    .enum([
+      'SUPER_ADMIN',
+      'ADMIN',
+      'MODERATOR',
+      'FINANCE',
+      'SUPPORT',
+      'CONTENT_MANAGER',
+      'ADS_MANAGER',
+      'COMPANY_OWNER',
+      'COMPANY_MEMBER',
+      'TRAINER',
+    ])
+    .optional(),
   status: z.enum(['ACTIVE', 'SUSPENDED', 'PENDING']).optional(),
   limit: z.coerce.number().int().min(1).max(100).optional(),
   cursor: z.string().max(64).optional(),

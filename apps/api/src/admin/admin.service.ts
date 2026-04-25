@@ -218,20 +218,28 @@ export class AdminService {
     if (target.role === 'SUPER_ADMIN' && ctx.actorRole !== 'SUPER_ADMIN') {
       throw new ForbiddenException('Only SUPER_ADMIN may modify a SUPER_ADMIN');
     }
+    // T7.D — symmetric to setUserRole: an ADMIN must not be able to suspend
+    // another ADMIN, otherwise two ADMINs could mutually suspend each other
+    // and lock the platform's senior tier out. Only SUPER_ADMIN can change
+    // an ADMIN's status.
+    if (target.role === 'ADMIN' && ctx.actorRole !== 'SUPER_ADMIN') {
+      throw new ForbiddenException('Only SUPER_ADMIN may modify an ADMIN');
+    }
     if (target.status === status) return { id: target.id, status };
 
-    // Same TOCTOU pattern as setUserRole: the "not a SUPER_ADMIN" check
-    // above ran outside the transaction, so we re-assert it atomically in
-    // the write itself. A non-SUPER_ADMIN actor cannot lock a SUPER_ADMIN
-    // out by racing a promotion past the earlier findUnique.
+    // Same TOCTOU pattern as setUserRole: the role check above ran outside
+    // the transaction, so we re-assert it atomically. A non-SUPER_ADMIN
+    // actor must not be able to mutate a row whose current role is
+    // SUPER_ADMIN or ADMIN — even if a concurrent promotion happened
+    // between the findUnique and the write.
     return this.prisma.$transaction(async (tx) => {
       const where: Prisma.UserWhereInput = { id: userId };
       if (ctx.actorRole !== 'SUPER_ADMIN') {
-        where.role = { not: 'SUPER_ADMIN' };
+        where.role = { notIn: ['SUPER_ADMIN', 'ADMIN'] };
       }
       const result = await tx.user.updateMany({ where, data: { status } });
       if (result.count === 0) {
-        throw new ForbiddenException('Only SUPER_ADMIN may modify a SUPER_ADMIN');
+        throw new ForbiddenException('Only SUPER_ADMIN may modify SUPER_ADMIN/ADMIN users');
       }
       const u = await tx.user.findUniqueOrThrow({
         where: { id: userId },
