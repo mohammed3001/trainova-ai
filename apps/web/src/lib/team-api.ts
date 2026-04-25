@@ -7,6 +7,7 @@
 // pattern), which attaches the session cookie server-side.
 
 import type {
+  AcceptInvitationResultDto,
   AssignableMemberRole,
   CompanyInvitationDto,
   CompanyMemberDto,
@@ -17,6 +18,7 @@ import type {
 } from '@trainova/shared';
 
 export type {
+  AcceptInvitationResultDto,
   AssignableMemberRole,
   CompanyInvitationDto,
   CompanyMemberDto,
@@ -62,7 +64,7 @@ export const previewInvitation = (token: string) =>
   request<InvitationPreviewDto>('GET', `/team/invitations/preview/${encodeURIComponent(token)}`);
 
 export const acceptInvitation = (token: string) =>
-  request<{ companyId: string; role: string }>('POST', '/team/invitations/accept', { token });
+  request<AcceptInvitationResultDto>('POST', '/team/invitations/accept', { token });
 
 export const updateMemberRole = (id: string, body: UpdateMemberRoleInput) =>
   request<CompanyMemberDto>('PATCH', `/team/members/${id}`, body);

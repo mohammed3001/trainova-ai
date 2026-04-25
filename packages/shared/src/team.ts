@@ -100,3 +100,22 @@ export interface InvitationPreviewDto {
   expiresAt: string;
   emailMatchesViewer: boolean;
 }
+
+/**
+ * Returned from `POST /team/invitations/accept`. Accepting an invitation
+ * may transition the caller's `User.role` (e.g. `TRAINER` →
+ * `COMPANY_MEMBER`), which invalidates their existing JWT — the
+ * jwt strategy enforces `user.role === payload.role`. We therefore
+ * re-issue an access token here so the client can replace the stale
+ * cookie before navigating into the company workspace. The full user
+ * payload mirrors `/auth/login` so callers can update their session
+ * cookie pair (token + role) atomically.
+ */
+export interface AcceptInvitationResultDto {
+  companyId: string;
+  /** The role granted on this company (mirrors `CompanyMember.role`). */
+  role: CompanyMemberRole;
+  /** Fresh access token reflecting any `User.role` transition. */
+  accessToken: string;
+  user: { id: string; email: string; role: string };
+}

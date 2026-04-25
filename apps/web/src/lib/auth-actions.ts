@@ -12,6 +12,16 @@ interface AuthResponse {
   user: { id: string; email: string; role: string };
 }
 
+/**
+ * Exported so the invitation-accept client can rotate the session
+ * cookie pair atomically after `POST /team/invitations/accept` returns
+ * a fresh JWT (the API may have transitioned `User.role`, which would
+ * otherwise invalidate the existing token via `JwtStrategy.validate`).
+ */
+export async function rotateAuthCookies(token: string, role: string) {
+  await setAuthCookies(token, role);
+}
+
 async function setAuthCookies(token: string, role: string) {
   const c = await cookies();
   // `secure` is enabled only in production so the cookie still works over

@@ -8,19 +8,37 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { Prisma } from '@trainova/db';
 import {
+  type AcceptInvitationResultDto,
   type CompanyInvitationDto,
   type CompanyMemberDto,
   type CompanyMemberRole,
   type CompanyTeamDto,
   type CreateInvitationInput,
   type InvitationPreviewDto,
+  type Locale,
   type UpdateMemberRoleInput,
   INVITATION_TTL_DAYS,
+  Locales,
   MAX_PENDING_INVITATIONS_PER_COMPANY,
 } from '@trainova/shared';
 import { createHash, randomBytes } from 'node:crypto';
+import { AuthService } from '../auth/auth.service';
 import { EmailService } from '../email/email.service';
 import { PrismaService } from '../prisma/prisma.service';
+
+type AppLocale = Locale;
+
+const APP_LOCALES: ReadonlySet<string> = new Set(Locales);
+
+/**
+ * Resolve a stored `User.locale` (or any candidate string) to a
+ * supported app locale, falling back to `'en'` if the value is null /
+ * unrecognized. Mirrors the helper in {@link AuthService} so transactional
+ * URLs always land on a route segment that next-intl recognises.
+ */
+function pickAppLocale(raw: string | null | undefined): AppLocale {
+  return raw && APP_LOCALES.has(raw) ? (raw as AppLocale) : 'en';
+}
 
 const memberInclude = {
   user: { select: { id: true, email: true, name: true, avatarUrl: true } },
@@ -58,6 +76,7 @@ export class TeamService {
     private readonly prisma: PrismaService,
     private readonly email: EmailService,
     private readonly config: ConfigService,
+    private readonly auth: AuthService,
   ) {}
 
   // ---------------------------------------------------------------------------
@@ -156,7 +175,24 @@ export class TeamService {
       include: invitationInclude,
     });
 
-    void this.sendInvitationEmail(invitation, token, company.name);
+    // Pick the locale for the invitation URL: prefer the invitee's
+    // existing account (so a returning user lands on their preferred
+    // locale), then fall back to the inviter's locale, then 'en'. The
+    // template body itself is English-only today; only the path's
+    // locale segment varies.
+    const [existingInvitee, inviter] = await Promise.all([
+      this.prisma.user.findUnique({
+        where: { email: body.email },
+        select: { locale: true },
+      }),
+      this.prisma.user.findUnique({
+        where: { id: callerId },
+        select: { locale: true },
+      }),
+    ]);
+    const locale = pickAppLocale(existingInvitee?.locale ?? inviter?.locale);
+
+    void this.sendInvitationEmail(invitation, token, company.name, locale);
     return this.toInvitationDto(invitation);
   }
 
@@ -225,16 +261,34 @@ export class TeamService {
    * `CompanyMember` row. We require the authenticated caller's email to
    * match the invitation address (case-insensitive) so a stolen link
    * can't be redeemed by someone other than the intended invitee.
+   *
+   * If the caller's `User.role` was `TRAINER` we transition them to
+   * `COMPANY_MEMBER` inside the same transaction — otherwise the team
+   * page guards (which read the role cookie) and the `@Roles(...)`
+   * decorators on company-side controllers would refuse them. After the
+   * transition we re-issue the access token through {@link AuthService.issueTokens}
+   * so the JWT mirrors the new role; the existing token is invalidated
+   * by `JwtStrategy.validate` (`user.role !== payload.role`) on the
+   * next request, and clients are expected to swap their session cookie
+   * with the freshly-returned `accessToken` before navigating.
+   *
+   * Other roles (`SUPER_ADMIN`, `ADMIN`, finance/support/etc., or an
+   * existing `COMPANY_OWNER` / `COMPANY_MEMBER`) keep their `User.role`
+   * intact — we still re-issue the token so the response shape is
+   * uniform and the client can refresh its cookie unconditionally.
    */
-  async acceptInvitation(callerId: string, token: string): Promise<{ companyId: string; role: CompanyMemberRole }> {
+  async acceptInvitation(
+    callerId: string,
+    token: string,
+  ): Promise<AcceptInvitationResultDto> {
     const tokenHash = sha256(token);
     const caller = await this.prisma.user.findUnique({
       where: { id: callerId },
-      select: { id: true, email: true },
+      select: { id: true, email: true, role: true },
     });
     if (!caller) throw new NotFoundException('User not found');
 
-    return this.prisma.$transaction(async (tx) => {
+    const result = await this.prisma.$transaction(async (tx) => {
       const invitation = await tx.companyInvitation.findUnique({ where: { tokenHash } });
       if (!invitation) throw new NotFoundException('Invitation not found');
       if (invitation.status !== 'PENDING') {
@@ -264,7 +318,11 @@ export class TeamService {
           where: { id: invitation.id },
           data: { status: 'ACCEPTED', acceptedAt: new Date(), acceptedById: caller.id },
         });
-        return { companyId: company.id, role: 'OWNER' as const };
+        return {
+          companyId: company.id,
+          role: 'OWNER' as const,
+          newUserRole: caller.role,
+        };
       }
       const existing = await tx.companyMember.findUnique({
         where: { companyId_userId: { companyId: company.id, userId: caller.id } },
@@ -280,8 +338,35 @@ export class TeamService {
         where: { id: invitation.id },
         data: { status: 'ACCEPTED', acceptedAt: new Date(), acceptedById: caller.id },
       });
-      return { companyId: company.id, role: invitation.role };
+
+      // Trainers (and any other non-COMPANY caller) need their User.role
+      // transitioned so the role cookie / JWT lines up with the company
+      // surfaces. We deliberately don't downgrade admin roles — they
+      // retain their elevated access and continue navigating via
+      // /admin; team membership is additive on the data model
+      // (`CompanyMember` row), independent of `User.role`.
+      let newUserRole = caller.role;
+      if (caller.role === 'TRAINER') {
+        const updated = await tx.user.update({
+          where: { id: caller.id },
+          data: { role: 'COMPANY_MEMBER' },
+          select: { role: true },
+        });
+        newUserRole = updated.role;
+      }
+      return { companyId: company.id, role: invitation.role, newUserRole };
     });
+
+    // Re-issue the access token outside the transaction so the JWT
+    // signature reflects the post-commit `User.role`. Clients swap the
+    // cookie with this value before navigating into /company/team.
+    const issued = await this.auth.issueTokens(caller.id, caller.email, result.newUserRole);
+    return {
+      companyId: result.companyId,
+      role: result.role,
+      accessToken: issued.accessToken,
+      user: issued.user,
+    };
   }
 
   // ---------------------------------------------------------------------------
@@ -423,9 +508,10 @@ export class TeamService {
     invitation: InvitationWithCreator,
     plaintextToken: string,
     companyName: string,
+    locale: AppLocale,
   ): Promise<void> {
     try {
-      const url = this.buildAppUrl(`/en/invitations/${encodeURIComponent(plaintextToken)}`);
+      const url = this.buildAppUrl(`/${locale}/invitations/${encodeURIComponent(plaintextToken)}`);
       const inviter = invitation.createdBy.name ?? 'A teammate';
       const subject = `You're invited to join ${companyName} on Trainova AI`;
       const html = `

@@ -4,6 +4,7 @@ import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { useLocale, useTranslations } from 'next-intl';
 import type { InvitationPreviewDto } from '@trainova/shared';
+import { rotateAuthCookies } from '@/lib/auth-actions';
 import { acceptInvitation } from '@/lib/team-api';
 
 interface Props {
@@ -22,7 +23,15 @@ export function AcceptInvitationClient({ preview, token }: Props) {
     setError(null);
     startTransition(async () => {
       try {
-        await acceptInvitation(token);
+        const result = await acceptInvitation(token);
+        // Rotate the session cookie pair before navigating: accepting
+        // the invitation may have transitioned `User.role` (TRAINER →
+        // COMPANY_MEMBER) on the server, which invalidates the existing
+        // JWT. Without this swap the next request would 401 (jwt
+        // strategy compares `user.role` to the payload role) and the
+        // /company/team page guard would still see the stale role
+        // cookie and bounce us off.
+        await rotateAuthCookies(result.accessToken, result.user.role);
         router.replace(`/${locale}/company/team`);
         router.refresh();
       } catch (e) {
