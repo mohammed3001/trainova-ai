@@ -1,7 +1,8 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { getLocale, getTranslations } from 'next-intl/server';
-import { isAdminRole, type UserRole } from '@trainova/shared';
+import { ADMIN_ROLE_GROUPS, isAdminRole, type UserRole } from '@trainova/shared';
+import { adminLandingHref } from '@/lib/admin-landing';
 import { getRole, getToken } from '@/lib/session';
 import { authedFetch } from '@/lib/authed-fetch';
 
@@ -24,7 +25,14 @@ export default async function AdminDashboard() {
   const locale = await getLocale();
   const [token, role] = await Promise.all([getToken(), getRole()]);
   if (!token) redirect(`/${locale}/login`);
-  if (!isAdminRole((role ?? null) as UserRole | null)) redirect(`/${locale}`);
+  const typedRole = (role ?? null) as UserRole | null;
+  if (!isAdminRole(typedRole)) redirect(`/${locale}`);
+  // T7.D — /admin/overview is class-level ALL = SUPER_ADMIN+ADMIN only,
+  // so specialized admin roles would get a 403 → 500 if rendered here.
+  // Send them to the first surface they can actually load.
+  if (!(ADMIN_ROLE_GROUPS.ALL as readonly string[]).includes(typedRole)) {
+    redirect(adminLandingHref(locale, typedRole));
+  }
 
   const o = await authedFetch<Overview>('/admin/overview');
 

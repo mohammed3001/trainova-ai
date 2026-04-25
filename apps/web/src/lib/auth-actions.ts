@@ -2,7 +2,8 @@
 
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
-import { isAdminRole, type UserRole } from '@trainova/shared';
+import { type UserRole } from '@trainova/shared';
+import { adminLandingHref } from './admin-landing';
 import { apiFetch } from './api';
 import { AUTH_COOKIE, ROLE_COOKIE } from './session';
 
@@ -41,10 +42,10 @@ async function setAuthCookies(token: string, role: string) {
 function redirectForRole(locale: string, role: string): string {
   if (role === 'COMPANY_OWNER' || role === 'COMPANY_MEMBER') return `/${locale}/company/dashboard`;
   if (role === 'TRAINER') return `/${locale}/trainer/dashboard`;
-  // T7.D — every admin role (SUPER_ADMIN/ADMIN + 5 specialized) lands on
-  // /admin; AdminLayout filters the nav for what they can actually see.
-  if (isAdminRole(role as UserRole)) return `/${locale}/admin`;
-  return `/${locale}`;
+  // T7.D — SUPER_ADMIN/ADMIN land on /admin (overview); specialized
+  // admin roles land on the first surface they can actually load, since
+  // /admin/overview is class-level ALL and would 403 for them.
+  return adminLandingHref(locale, role as UserRole);
 }
 
 export async function loginAction(_prev: unknown, formData: FormData) {
