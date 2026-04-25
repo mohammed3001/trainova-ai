@@ -14,6 +14,7 @@ import {
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import type { Request } from 'express';
 import {
+  ADMIN_ROLE_GROUPS,
   SETTING_GROUPS,
   bulkSettingUpsertInput,
   settingUpsertInput,
@@ -40,7 +41,10 @@ function actor(user: AuthUser, req: Request): SettingsActor {
 @ApiTags('admin-settings')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Roles('SUPER_ADMIN', 'ADMIN')
+// T7.D — settings expose secrets, integrations and global toggles; only
+// SUPER_ADMIN may read/write them. Frontend nav already hides this surface
+// for every other role.
+@Roles(...ADMIN_ROLE_GROUPS.SUPER_ONLY)
 @Controller('admin/settings')
 export class AdminSettingsController {
   constructor(private readonly settings: SettingsService) {}
