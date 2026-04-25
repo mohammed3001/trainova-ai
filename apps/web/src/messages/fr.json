@@ -214,7 +214,30 @@
     "untitled": "Untitled"
   },
   "applications": {
-    "attachments": "Pièces jointes"
+    "attachments": {
+      "title": "Pièces jointes",
+      "help": "Joignez un CV, un échantillon d'écriture ou un portfolio pour que l'entreprise puisse évaluer votre profil en plus de la lettre de motivation.",
+      "loading": "Chargement des pièces jointes…",
+      "emptyTrainer": "Aucune pièce jointe pour l'instant. Importez des fichiers ci-dessous — jusqu'à 5 × 10 Mo (PDF, ZIP, DOCX, PNG, JPG).",
+      "emptyCompany": "Le candidat n'a joint aucun fichier de support.",
+      "download": "Télécharger",
+      "downloading": "Préparation…",
+      "delete": "Supprimer",
+      "scanStatus": {
+        "pending": "Scanning",
+        "clean": "Ready",
+        "infected": "Quarantined"
+      },
+      "dropzone": {
+        "label": "Drop files to attach",
+        "help": "CV (PDF), writing samples, portfolio ZIP or screenshots."
+      },
+      "errors": {
+        "list": "Couldn't load attachments.",
+        "delete": "Couldn't remove this attachment.",
+        "download": "Couldn't open this attachment."
+      }
+    }
   },
   "profile": {
     "trainer": {
@@ -352,7 +375,11 @@
         "title": "No models connected yet",
         "body": "Add your first connection to enable in-platform evaluation. We never store credentials in plaintext."
       },
-      "status": "Statut",
+      "status": {
+        "DRAFT": "Brouillon",
+        "ACTIVE": "Actif",
+        "DISABLED": "Désactivé"
+      },
       "providers": {
         "OPENAI_COMPATIBLE": "OpenAI-compatible",
         "ANTHROPIC": "Anthropic",
@@ -943,7 +970,33 @@
       "SUSPENDED": "Suspended",
       "PENDING": "Pending"
     },
-    "trainers": "Formateurs",
+    "trainers": {
+      "title": "Formateurs",
+      "subtitle": "Vérifiez les compétences et gérez les profils de formateurs.",
+      "searchPlaceholder": "Rechercher par nom, slug ou titre…",
+      "empty": "Aucun formateur ne correspond aux filtres actuels.",
+      "noSkills": "Aucune compétence renseignée.",
+      "action": {
+        "verify": "Vérifier le formateur",
+        "unverify": "Retirer la vérification",
+        "viewPublic": "Voir le profil public"
+      },
+      "confirm": {
+        "verify": "Marquer ce formateur comme vérifié ?",
+        "unverify": "Retirer la vérification de ce formateur ?"
+      },
+      "section": {
+        "profile": "Profil",
+        "user": "Compte utilisateur",
+        "skills": "Compétences",
+        "portfolio": "Portfolio"
+      },
+      "field": {
+        "rate": "Tarif horaire",
+        "availability": "Disponibilité",
+        "languages": "Langues"
+      }
+    },
     "verification": {
       "title": "Vérification",
       "subtitle": "Review identity and legitimacy submissions from companies and trainers.",

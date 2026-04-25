@@ -214,7 +214,30 @@
     "untitled": "Untitled"
   },
   "applications": {
-    "attachments": "Archivos adjuntos"
+    "attachments": {
+      "title": "Archivos adjuntos",
+      "help": "Adjunta un CV, una muestra de escritura o un portafolio para que la empresa pueda evaluar tu perfil junto con la carta de presentación.",
+      "loading": "Cargando archivos adjuntos…",
+      "emptyTrainer": "Aún no hay archivos adjuntos. Sube archivos abajo — hasta 5 × 10MB (PDF, ZIP, DOCX, PNG, JPG).",
+      "emptyCompany": "El candidato no ha adjuntado ningún archivo de soporte.",
+      "download": "Descargar",
+      "downloading": "Preparando…",
+      "delete": "Eliminar",
+      "scanStatus": {
+        "pending": "Scanning",
+        "clean": "Ready",
+        "infected": "Quarantined"
+      },
+      "dropzone": {
+        "label": "Drop files to attach",
+        "help": "CV (PDF), writing samples, portfolio ZIP or screenshots."
+      },
+      "errors": {
+        "list": "Couldn't load attachments.",
+        "delete": "Couldn't remove this attachment.",
+        "download": "Couldn't open this attachment."
+      }
+    }
   },
   "profile": {
     "trainer": {
@@ -352,7 +375,11 @@
         "title": "No models connected yet",
         "body": "Add your first connection to enable in-platform evaluation. We never store credentials in plaintext."
       },
-      "status": "Estado",
+      "status": {
+        "DRAFT": "Borrador",
+        "ACTIVE": "Activo",
+        "DISABLED": "Desactivado"
+      },
       "providers": {
         "OPENAI_COMPATIBLE": "OpenAI-compatible",
         "ANTHROPIC": "Anthropic",
@@ -943,7 +970,33 @@
       "SUSPENDED": "Suspended",
       "PENDING": "Pending"
     },
-    "trainers": "Formadores",
+    "trainers": {
+      "title": "Formadores",
+      "subtitle": "Verifica las habilidades y gestiona los perfiles de formadores.",
+      "searchPlaceholder": "Buscar por nombre, slug o titular…",
+      "empty": "Ningún formador coincide con los filtros actuales.",
+      "noSkills": "Sin habilidades registradas.",
+      "action": {
+        "verify": "Verificar formador",
+        "unverify": "Quitar verificación",
+        "viewPublic": "Ver perfil público"
+      },
+      "confirm": {
+        "verify": "¿Marcar este formador como verificado?",
+        "unverify": "¿Quitar la verificación de este formador?"
+      },
+      "section": {
+        "profile": "Perfil",
+        "user": "Cuenta de usuario",
+        "skills": "Habilidades",
+        "portfolio": "Portafolio"
+      },
+      "field": {
+        "rate": "Tarifa por hora",
+        "availability": "Disponibilidad",
+        "languages": "Idiomas"
+      }
+    },
     "verification": {
       "title": "Verificación",
       "subtitle": "Review identity and legitimacy submissions from companies and trainers.",
