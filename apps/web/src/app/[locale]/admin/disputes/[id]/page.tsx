@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
 import { getLocale, getTranslations } from 'next-intl/server';
 import type { DisputeListItem } from '@trainova/shared';
+import { ADMIN_ROLE_GROUPS } from '@trainova/shared';
 import { authedFetch } from '@/lib/authed-fetch';
 import { getRole, getToken } from '@/lib/session';
 import { DisputeStatusBadgeServer } from '@/components/disputes/dispute-status-badge';
@@ -18,7 +19,7 @@ export default async function AdminDisputeDetailPage({
   const { id } = await params;
   const [token, role] = await Promise.all([getToken(), getRole()]);
   if (!token) redirect(`/${locale}/login?redirect=/${locale}/admin/disputes/${id}`);
-  if (role !== 'SUPER_ADMIN' && role !== 'ADMIN') {
+  if (!(ADMIN_ROLE_GROUPS.MODERATION as readonly string[]).includes(role ?? '')) {
     redirect(`/${locale}/dashboard`);
   }
   const dispute = await authedFetch<DisputeListItem>(

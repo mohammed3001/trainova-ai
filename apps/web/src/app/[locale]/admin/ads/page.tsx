@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation';
 import { getLocale, getTranslations } from 'next-intl/server';
+import { ADMIN_ROLE_GROUPS } from '@trainova/shared';
 import { getRole, getToken } from '@/lib/session';
 import { authedFetch } from '@/lib/authed-fetch';
 import type { CampaignSummary } from '../../company/ads/ads-client';
@@ -15,7 +16,9 @@ export default async function AdminAdsPage() {
   const locale = await getLocale();
   const [token, role] = await Promise.all([getToken(), getRole()]);
   if (!token) redirect(`/${locale}/login`);
-  if (role !== 'ADMIN' && role !== 'SUPER_ADMIN') redirect(`/${locale}`);
+  if (!(ADMIN_ROLE_GROUPS.ADS as readonly string[]).includes(role ?? '')) {
+    redirect(`/${locale}`);
+  }
 
   const pending = await authedFetch<AdminCampaign[]>('/admin/ads/pending').catch(
     () => [] as AdminCampaign[],

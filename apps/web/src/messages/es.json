@@ -993,6 +993,9 @@
       "cmsCategories": "Categories",
       "cmsFaqs": "FAQ",
       "featureFlags": "Feature flags",
+      "emailTemplates": "Plantillas de correo",
+      "disputes": "Disputas",
+      "ads": "Anuncios",
       "finance": "Finance",
       "settings": "Settings"
     },

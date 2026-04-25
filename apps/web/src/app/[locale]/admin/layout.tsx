@@ -34,6 +34,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   const moderation = ADMIN_ROLE_GROUPS.MODERATION;
   const finance = ADMIN_ROLE_GROUPS.FINANCE;
   const content = ADMIN_ROLE_GROUPS.CONTENT;
+  const ads = ADMIN_ROLE_GROUPS.ADS;
   const verification = ADMIN_ROLE_GROUPS.VERIFICATION;
   const superOnly = ADMIN_ROLE_GROUPS.SUPER_ONLY;
 
@@ -53,6 +54,9 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     { href: `/${locale}/admin/cms/categories`, label: t('admin.nav.cmsCategories'), group: content },
     { href: `/${locale}/admin/cms/faqs`, label: t('admin.nav.cmsFaqs'), group: content },
     { href: `/${locale}/admin/cms/feature-flags`, label: t('admin.nav.featureFlags'), group: superOnly },
+    { href: `/${locale}/admin/email-templates`, label: t('admin.nav.emailTemplates'), group: content },
+    { href: `/${locale}/admin/disputes`, label: t('admin.nav.disputes'), group: moderation },
+    { href: `/${locale}/admin/ads`, label: t('admin.nav.ads'), group: ads },
     { href: `/${locale}/admin/finance`, label: t('admin.nav.finance'), group: finance },
     { href: `/${locale}/admin/settings`, label: t('admin.nav.settings'), group: superOnly },
   ];

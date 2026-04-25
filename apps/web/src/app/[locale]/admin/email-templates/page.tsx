@@ -3,7 +3,7 @@ import { redirect } from 'next/navigation';
 import { getLocale, getTranslations } from 'next-intl/server';
 import { getRole, getToken } from '@/lib/session';
 import { authedFetch } from '@/lib/authed-fetch';
-import type { EmailTemplateKey, EmailTemplateSpec } from '@trainova/shared';
+import { ADMIN_ROLE_GROUPS, type EmailTemplateKey, type EmailTemplateSpec } from '@trainova/shared';
 
 interface Row {
   id: string;
@@ -35,7 +35,9 @@ export default async function AdminEmailTemplatesPage({ searchParams }: PageProp
   const locale = await getLocale();
   const [token, role] = await Promise.all([getToken(), getRole()]);
   if (!token) redirect(`/${locale}/login`);
-  if (role !== 'ADMIN' && role !== 'SUPER_ADMIN') redirect(`/${locale}`);
+  if (!(ADMIN_ROLE_GROUPS.CONTENT as readonly string[]).includes(role ?? '')) {
+    redirect(`/${locale}`);
+  }
 
   const qs = new URLSearchParams();
   if (sp.key) qs.set('key', sp.key);

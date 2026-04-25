@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { getLocale, getTranslations } from 'next-intl/server';
+import { isAdminRole, type UserRole } from '@trainova/shared';
 import { getRole, getToken } from '@/lib/session';
 import { authedFetch } from '@/lib/authed-fetch';
 
@@ -23,7 +24,7 @@ export default async function AdminDashboard() {
   const locale = await getLocale();
   const [token, role] = await Promise.all([getToken(), getRole()]);
   if (!token) redirect(`/${locale}/login`);
-  if (role !== 'ADMIN' && role !== 'SUPER_ADMIN') redirect(`/${locale}`);
+  if (!isAdminRole((role ?? null) as UserRole | null)) redirect(`/${locale}`);
 
   const o = await authedFetch<Overview>('/admin/overview');
 
