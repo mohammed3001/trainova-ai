@@ -21,7 +21,12 @@
     "cancel": "Cancelar",
     "submit": "Enviar",
     "loading": "Cargando…",
-    "error": "Error"
+    "error": "Error",
+    "howItWorks": "Cómo funciona",
+    "blog": "Blog",
+    "faq": "FAQ",
+    "contact": "Contacto",
+    "advertise": "Anunciar"
   },
   "nav": {
     "home": "Inicio",
@@ -67,6 +72,34 @@
     "skill": {
       "titleTemplate": "{name} — AI Trainers, Experts and Open Requests",
       "descriptionTemplate": "Find {name} specialists on Trainova AI. Browse verified trainers, review open requests and test candidates on your live model."
+    },
+    "howItWorks": {
+      "title": "Cómo funciona Trainova AI",
+      "description": "De publicar una solicitud a evaluar, contratar y pagar: descubre el flujo completo de Trainova AI para empresas y formadores."
+    },
+    "forCompanies": {
+      "title": "Trainova AI para empresas",
+      "description": "Contrata, evalúa y firma contratos con formadores IA verificados sobre tu modelo. Builder de solicitudes, motor de evaluación, pagos en escrow y analítica."
+    },
+    "forTrainers": {
+      "title": "Trainova AI para formadores",
+      "description": "Consigue contratos IA globales, demuestra tu habilidad sobre modelos reales y cobra mediante escrow seguro."
+    },
+    "blog": {
+      "title": "Blog de Trainova AI",
+      "description": "Artículos, tutoriales e informes de campo sobre fine-tuning, RLHF, prompt engineering, evaluación y alineación de seguridad."
+    },
+    "faq": {
+      "title": "Preguntas frecuentes",
+      "description": "Respuestas sobre Trainova AI: precios, evaluación, pagos, verificación, disputas y cómo funciona la plataforma."
+    },
+    "contact": {
+      "title": "Contacta con Trainova AI",
+      "description": "Habla con nuestros equipos de soporte, ventas, prensa o alianzas. Respondemos en un día hábil."
+    },
+    "advertise": {
+      "title": "Anuncia en Trainova AI",
+      "description": "Llega a equipos de IA, responsables de MLOps y especialistas verificados con destacados, resultados patrocinados y patrocinio de categoría."
     }
   },
   "landing": {
@@ -1942,5 +1975,343 @@
         }
       }
     }
+  },
+  "marketing": {
+    "howItWorks": {
+      "hero": {
+        "eyebrow": "Cómo funciona",
+        "title": "Del brief al contrato pagado — en una sola plataforma",
+        "body": "Trainova AI une marketplace, motor de evaluación y espacio de colaboración para proyectos de formación IA."
+      },
+      "threeProducts": {
+        "title": "Tres productos en una plataforma",
+        "marketplace": {
+          "eyebrow": "Marketplace",
+          "title": "Encuentra especialistas verificados",
+          "body": "Filtra por habilidad, idioma, país, experiencia con modelos y valoración."
+        },
+        "evaluation": {
+          "eyebrow": "Evaluación",
+          "title": "Pruébalos en tu modelo",
+          "body": "Conecta tu API, sandbox o entorno y puntúa a los candidatos sobre el problema real."
+        },
+        "workspace": {
+          "eyebrow": "Espacio de trabajo",
+          "title": "Negocia, contrata, paga",
+          "body": "Chat, archivos, tareas, firma, escrow y reseñas — todo auditable."
+        }
+      },
+      "steps": {
+        "title": "El flujo completo, paso a paso",
+        "1": {
+          "title": "Publica una solicitud",
+          "body": "El builder asistido por IA define habilidades, condiciones, entorno de evaluación y presupuesto."
+        },
+        "2": {
+          "title": "Recibe candidaturas",
+          "body": "Los formadores verificados postulan. El motor de matching los ordena por encaje."
+        },
+        "3": {
+          "title": "Lanza la evaluación",
+          "body": "Prueba de cribado, tarea sobre tu modelo o flujo multi-etapa — puntuación auto + manual."
+        },
+        "4": {
+          "title": "Elige un finalista",
+          "body": "Compara intentos, conversa con finalistas y muévelos a aceptación con un clic."
+        },
+        "5": {
+          "title": "Firma y paga vía escrow",
+          "body": "Genera el contrato (NDA / MSA / SOW), firma digital y financia el escrow."
+        },
+        "6": {
+          "title": "Evalúa y repite",
+          "body": "Libera escrow por hito, intercambia reseñas verificadas y vuelve a contratar a tus mejores formadores."
+        }
+      },
+      "cta": {
+        "bottomTitle": "¿Listo para mejores proyectos de IA?",
+        "bottomBody": "Empresa o formador — registro gratuito.",
+        "forCompanies": "Para empresas",
+        "forTrainers": "Para formadores",
+        "pricing": "Ver precios",
+        "companyPrimary": "Publicar solicitud",
+        "trainerSecondary": "Postular como formador"
+      }
+    },
+    "forCompanies": {
+      "hero": {
+        "eyebrow": "Para empresas",
+        "title": "Contrata y evalúa formadores IA de élite",
+        "body": "Olvídate de los CVs: evalúa en tu modelo real — fine-tuning, RLHF, evaluación, seguridad, prompt engineering.",
+        "ctaPrimary": "Empieza gratis",
+        "ctaSecondary": "Hablar con ventas"
+      },
+      "features": {
+        "requestBuilder": {
+          "title": "Builder de solicitudes IA",
+          "body": "Genera solicitudes estructuradas desde un brief con habilidades y criterios."
+        },
+        "evaluation": {
+          "title": "Evaluación en modelo live",
+          "body": "Conecta API, sandbox o dataset y puntúa sobre el problema real."
+        },
+        "matching": {
+          "title": "Shortlist inteligente",
+          "body": "El matching IA ordena a los mejores por encaje, tiempo de respuesta y reseñas."
+        },
+        "chat": {
+          "title": "Espacio de negociación",
+          "body": "Chat cifrado, archivos, escaneo de adjuntos y resúmenes IA."
+        },
+        "contracts": {
+          "title": "Escrow + firma digital",
+          "body": "Plantillas NDA / MSA / SOW, firma digital, escrow por hito y facturas con IVA."
+        },
+        "analytics": {
+          "title": "Gasto y ROI",
+          "body": "Sigue postulaciones, tiempo y coste por contratación, rendimiento."
+        }
+      },
+      "tiers": {
+        "title": "Elige el nivel adecuado",
+        "free": {
+          "eyebrow": "Para empezar",
+          "title": "Free",
+          "price": "0 $",
+          "bullet1": "1 solicitud activa",
+          "bullet2": "Hasta 10 intentos / mes",
+          "bullet3": "Chat y escrow estándar",
+          "bullet4": "Soporte email",
+          "cta": "Empezar gratis"
+        },
+        "pro": {
+          "eyebrow": "El más elegido",
+          "title": "Pro",
+          "price": "199 $ / mes",
+          "bullet1": "Solicitudes ilimitadas",
+          "bullet2": "Matching IA + asistente IA",
+          "bullet3": "Herramientas avanzadas",
+          "bullet4": "Soporte prioritario",
+          "cta": "Pasar a Pro"
+        },
+        "enterprise": {
+          "eyebrow": "Equipos grandes",
+          "title": "Enterprise",
+          "price": "A medida",
+          "bullet1": "SSO, SCIM y audit log",
+          "bullet2": "CSM dedicado + onboarding",
+          "bullet3": "Plantillas de contrato a medida",
+          "bullet4": "Escrow por volumen",
+          "cta": "Contactar ventas"
+        }
+      },
+      "cta": {
+        "bottomTitle": "¿Listo para encontrar al formador IA adecuado?",
+        "bottomBody": "Publicar solicitud es gratis.",
+        "startFree": "Publicar solicitud",
+        "howItWorks": "Cómo funciona"
+      }
+    },
+    "forTrainers": {
+      "hero": {
+        "eyebrow": "Para formadores",
+        "title": "Construye tu carrera en formación IA",
+        "body": "Encadena contratos globales, demuestra tu skill sobre modelos reales y cobra vía escrow.",
+        "ctaPrimary": "Crear mi perfil",
+        "ctaSecondary": "Ver solicitudes abiertas"
+      },
+      "benefits": {
+        "discoverability": {
+          "title": "Que te encuentren los buenos",
+          "body": "Perfiles verificados, páginas de habilidad y matching IA."
+        },
+        "fairTests": {
+          "title": "Pruebas justas sobre modelo",
+          "body": "Te evalúan en el problema real — tus resultados hablan."
+        },
+        "escrow": {
+          "title": "Pago vía escrow",
+          "body": "Escrow financiado por hito: nadie te deja colgado."
+        },
+        "workbench": {
+          "title": "Workbench integrado",
+          "body": "Lanza prompts, evalúa outputs y adjunta evidencia."
+        },
+        "badges": {
+          "title": "Badges verificados",
+          "body": "Aprueba certificaciones y destaca con badges de confianza."
+        },
+        "global": {
+          "title": "Alcance global",
+          "body": "Trabaja desde cualquier lugar: precios, impuestos y contratos localizados."
+        }
+      },
+      "path": {
+        "title": "Tu camino en Trainova AI",
+        "1": {
+          "title": "Crea tu perfil",
+          "body": "Habilidades, idiomas, certificaciones, muestras, portfolio."
+        },
+        "2": {
+          "title": "Aprueba certificaciones",
+          "body": "Consigue badges en tus especialidades."
+        },
+        "3": {
+          "title": "Postula y pasa las pruebas",
+          "body": "Postula y demuéstrate en el modelo live."
+        },
+        "4": {
+          "title": "Cobra y recibe reseñas",
+          "body": "Entrega hitos, libera escrow y consigue reseñas verificadas."
+        }
+      },
+      "earnings": {
+        "title": "Ingresos reales, protecciones reales",
+        "body": "Nuestro escrow retiene el dinero de la empresa antes de que empieces.",
+        "bullet1": "Hasta 90 % de cuota",
+        "bullet2": "Facturas con IVA automáticas",
+        "bullet3": "Pagos instantáneos vía Stripe Connect"
+      },
+      "verification": {
+        "eyebrow": "Verificación",
+        "body": "Verifícate una vez y desbloquea destacados, páginas de categoría e invitaciones directas.",
+        "cta": "Verificar mi cuenta"
+      },
+      "cta": {
+        "bottomTitle": "¿Listo para crecer en formación IA?",
+        "bottomBody": "Registro gratuito.",
+        "signUp": "Crear mi perfil",
+        "howItWorks": "Ver cómo funciona"
+      }
+    },
+    "blog": {
+      "hero": {
+        "eyebrow": "Blog",
+        "title": "Insights de la frontera de la IA",
+        "body": "Reportes de campo, deep-dives y novedades del ecosistema."
+      },
+      "empty": "Aún no hay artículos. Vuelve pronto.",
+      "loadMore": "Cargar más",
+      "related": "Artículos relacionados",
+      "breadcrumb": "Migas de pan",
+      "nav": {
+        "home": "Inicio",
+        "blog": "Blog"
+      }
+    },
+    "faq": {
+      "hero": {
+        "eyebrow": "FAQ",
+        "title": "Preguntas frecuentes",
+        "body": "Respuestas rápidas a las dudas más habituales sobre Trainova AI."
+      },
+      "empty": "Pronto añadiremos preguntas. Contáctanos por el formulario."
+    },
+    "contact": {
+      "hero": {
+        "eyebrow": "Contacto",
+        "title": "Habla con el equipo de Trainova AI",
+        "body": "Ventas, soporte o alianzas — respondemos en un día hábil."
+      },
+      "form": {
+        "name": "Tu nombre",
+        "email": "Correo",
+        "topic": "¿Sobre qué?",
+        "company": "Empresa (opcional)",
+        "message": "Tu mensaje",
+        "messageHelp": "Cuéntanos en 1–2 párrafos para enrutarlo bien.",
+        "submit": "Enviar mensaje",
+        "submitting": "Enviando…"
+      },
+      "topics": {
+        "GENERAL": "Consulta general",
+        "SALES": "Ventas / precios",
+        "SUPPORT": "Soporte al cliente",
+        "PRESS": "Prensa / medios",
+        "PARTNERSHIP": "Alianza",
+        "ADVERTISING": "Publicidad"
+      },
+      "success": {
+        "title": "Mensaje recibido.",
+        "body": "Gracias — te responderemos en un día hábil."
+      },
+      "contactInfo": {
+        "title": "Correos directos",
+        "support": "Soporte",
+        "sales": "Ventas",
+        "press": "Prensa"
+      },
+      "faqLink": {
+        "title": "¿Buscas una respuesta rápida?",
+        "body": "Casi todo está en la FAQ.",
+        "cta": "Leer la FAQ"
+      }
+    },
+    "advertise": {
+      "hero": {
+        "eyebrow": "Anunciar",
+        "title": "Llega al ecosistema de IA",
+        "body": "Destacados, resultados patrocinados, sponsoring de categoría y newsletters."
+      },
+      "packagesSection": {
+        "title": "Paquetes de patrocinio"
+      },
+      "packages": {
+        "FEATURED_COMPANY": {
+          "eyebrow": "Reconocimiento de marca",
+          "title": "Empresa destacada",
+          "body": "Fija tu empresa en la portada y los resultados de búsqueda.",
+          "price": "Desde 1.200 $ / mes"
+        },
+        "SPONSORED_TRAINER": {
+          "eyebrow": "Crecimiento del formador",
+          "title": "Formador patrocinado",
+          "body": "Impulsa la visibilidad de un formador en sus categorías y páginas de habilidades.",
+          "price": "Desde 200 $ / mes"
+        },
+        "CATEGORY_SPONSOR": {
+          "eyebrow": "Bloqueo de categoría",
+          "title": "Patrocinio de categoría",
+          "body": "Sé dueño de una página de especialidad IA (RLHF, Prompt Engineering…) por el trimestre.",
+          "price": "Desde 4.000 $ / trimestre"
+        },
+        "NEWSLETTER": {
+          "eyebrow": "Alcance directo",
+          "title": "Bloque en newsletter",
+          "body": "Coloca un bloque patrocinado en nuestra newsletter semanal.",
+          "price": "Desde 1.800 $ / envío"
+        },
+        "CUSTOM": {
+          "eyebrow": "Hablemos",
+          "title": "Campaña personalizada",
+          "body": "Patrocinio multi-canal, retargeting y colaboraciones de contenido.",
+          "price": "Cotizado por campaña"
+        }
+      },
+      "enquiry": {
+        "title": "Cuéntanos tu plan",
+        "body": "Audiencia, objetivo, presupuesto y timing — volvemos con una propuesta a medida."
+      },
+      "form": {
+        "name": "Tu nombre",
+        "email": "Email",
+        "company": "Empresa",
+        "package": "Paquete",
+        "budget": "Presupuesto USD (opcional)",
+        "message": "Objetivos y notas",
+        "submit": "Solicitar propuesta",
+        "submitting": "Enviando…"
+      },
+      "success": {
+        "title": "Solicitud recibida.",
+        "body": "Gracias — el equipo de alianzas responde en un día hábil."
+      }
+    }
+  },
+  "footer": {
+    "product": "Producto",
+    "resources": "Recursos",
+    "company": "Empresa",
+    "legal": "Legal"
   }
 }
