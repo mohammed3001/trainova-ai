@@ -820,9 +820,89 @@
     "overview": "Overview",
     "users": "Users",
     "companies": "Companies",
-    "requests": "Requests",
+    "requests": {
+      "title": "Requests",
+      "subtitle": "All job requests across companies — feature, close, archive.",
+      "searchPlaceholder": "Search title, slug, description…",
+      "filter": {
+        "allStatuses": "All statuses",
+        "allFeatured": "All",
+        "featuredYes": "Featured only",
+        "featuredNo": "Non-featured",
+        "apply": "Apply"
+      },
+      "col": {
+        "title": "Title",
+        "company": "Company",
+        "status": "Status",
+        "featured": "Featured",
+        "applications": "Apps",
+        "tests": "Tests",
+        "createdAt": "Created",
+        "actions": "Actions"
+      },
+      "status": {
+        "DRAFT": "Draft",
+        "OPEN": "Open",
+        "IN_REVIEW": "In review",
+        "CLOSED": "Closed",
+        "ARCHIVED": "Archived"
+      },
+      "empty": "No requests match the current filters.",
+      "section": {
+        "meta": "Metadata",
+        "skills": "Skills",
+        "counts": "Counts",
+        "actions": "Actions"
+      },
+      "action": {
+        "setStatus": "Set status",
+        "changeStatus": "Change status",
+        "feature": "Feature",
+        "unfeature": "Un-feature",
+        "reasonLabel": "Reason (optional)",
+        "reasonPlaceholder": "Admin note — stored in audit log"
+      },
+      "confirm": {
+        "status": "Change request status?",
+        "featured": "Toggle featured flag?"
+      },
+      "loadMore": "Load more"
+    },
     "skills": "Skills",
-    "settings": "Settings",
+    "settings": {
+      "title": "Platform settings",
+      "subtitle": "Brand, locales, currencies, fees, integrations, and security knobs in one place.",
+      "newCustomKey": "New custom key",
+      "edit": "Edit",
+      "save": "Save",
+      "notSet": "not set",
+      "public": "Public",
+      "private": "Private",
+      "editTitle": "Edit setting · {key}",
+      "knownKeyHint": "This key is registered in the platform schema — value type and group are fixed.",
+      "group": {
+        "branding": "Branding",
+        "locale": "Locales",
+        "currency": "Currencies",
+        "fees": "Fees & commissions",
+        "integrations": "Integrations",
+        "security": "Security",
+        "email": "Email",
+        "general": "General",
+        "custom": "Custom keys"
+      },
+      "field": {
+        "key": "Key",
+        "value": "Value",
+        "valueJsonHint": "Enter valid JSON — array, object, string, number, or boolean.",
+        "group": "Group",
+        "description": "Description",
+        "isPublic": "Expose via /public/settings (no auth)",
+        "knownKey": "Registered platform key — values are validated.",
+        "customKey": "Custom key — only exposed publicly if you check the box below."
+      }
+    },
     "kpi": {
       "users": "Total users",
       "companies": "Companies",
@@ -956,55 +1036,6 @@
         "approve": "Approve this verification request? The target profile will be marked as verified.",
         "reject": "Reject this verification request? The submitter will see the reason."
       }
-    },
-    "requests": {
-      "title": "Requests",
-      "subtitle": "All job requests across companies — feature, close, archive.",
-      "searchPlaceholder": "Search title, slug, description…",
-      "filter": {
-        "allStatuses": "All statuses",
-        "allFeatured": "All",
-        "featuredYes": "Featured only",
-        "featuredNo": "Non-featured",
-        "apply": "Apply"
-      },
-      "col": {
-        "title": "Title",
-        "company": "Company",
-        "status": "Status",
-        "featured": "Featured",
-        "applications": "Apps",
-        "tests": "Tests",
-        "createdAt": "Created",
-        "actions": "Actions"
-      },
-      "status": {
-        "DRAFT": "Draft",
-        "OPEN": "Open",
-        "IN_REVIEW": "In review",
-        "CLOSED": "Closed",
-        "ARCHIVED": "Archived"
-      },
-      "empty": "No requests match the current filters.",
-      "section": {
-        "meta": "Metadata",
-        "skills": "Skills",
-        "counts": "Counts",
-        "actions": "Actions"
-      },
-      "action": {
-        "setStatus": "Set status",
-        "changeStatus": "Change status",
-        "feature": "Feature",
-        "unfeature": "Un-feature",
-        "reasonLabel": "Reason (optional)",
-        "reasonPlaceholder": "Admin note — stored in audit log"
-      },
-      "confirm": {
-        "status": "Change request status?",
-        "featured": "Toggle featured flag?"
-      },
-      "loadMore": "Load more"
     },
     "tests": {
       "title": "Tests",
@@ -1374,39 +1405,6 @@
           "payload": "Payload (JSON)",
           "payloadHint": "Optional JSON object passed to the client (e.g. rollout %, variant)."
         }
-      }
-    },
-    "settings": {
-      "title": "Platform settings",
-      "subtitle": "Brand, locales, currencies, fees, integrations, and security knobs in one place.",
-      "newCustomKey": "New custom key",
-      "edit": "Edit",
-      "save": "Save",
-      "notSet": "not set",
-      "public": "Public",
-      "private": "Private",
-      "editTitle": "Edit setting · {key}",
-      "knownKeyHint": "This key is registered in the platform schema — value type and group are fixed.",
-      "group": {
-        "branding": "Branding",
-        "locale": "Locales",
-        "currency": "Currencies",
-        "fees": "Fees & commissions",
-        "integrations": "Integrations",
-        "security": "Security",
-        "email": "Email",
-        "general": "General",
-        "custom": "Custom keys"
-      },
-      "field": {
-        "key": "Key",
-        "value": "Value",
-        "valueJsonHint": "Enter valid JSON — array, object, string, number, or boolean.",
-        "group": "Group",
-        "description": "Description",
-        "isPublic": "Expose via /public/settings (no auth)",
-        "knownKey": "Registered platform key — values are validated.",
-        "customKey": "Custom key — only exposed publicly if you check the box below."
       }
     },
     "finance": {
@@ -1798,5 +1796,42 @@
       "onsite": "On-site",
       "hybrid": "Hybrid"
     }
+  },
+  "preferences": {
+    "title": "Preferences",
+    "subtitle": "Choose how amounts, dates, and the interface are displayed across Trainova.",
+    "localeLabel": "Interface language",
+    "timezoneLabel": "Time zone",
+    "timezonePlaceholder": "e.g. Europe/Paris",
+    "timezoneHint": "Use an IANA identifier such as Europe/Paris, Asia/Riyadh, or America/Los_Angeles. Leave blank to follow your browser.",
+    "currencyLabel": "Display currency",
+    "currencyHint": "Authoritative payment amounts always remain in the contract currency; this only changes how they are displayed to you.",
+    "localeOptions": {
+      "en": "English",
+      "ar": "العربية",
+      "fr": "Français",
+      "es": "Español"
+    },
+    "currencyOptionFormat": "{code} — {name}",
+    "currencyNames": {
+      "USD": "US Dollar",
+      "EUR": "Euro",
+      "GBP": "British Pound",
+      "SAR": "Saudi Riyal",
+      "AED": "UAE Dirham",
+      "EGP": "Egyptian Pound",
+      "JPY": "Japanese Yen",
+      "CAD": "Canadian Dollar",
+      "AUD": "Australian Dollar",
+      "CHF": "Swiss Franc",
+      "INR": "Indian Rupee",
+      "TRY": "Turkish Lira"
+    },
+    "systemDefault": "System default",
+    "submit": "Save preferences",
+    "saving": "Saving…",
+    "saved": "Preferences saved.",
+    "errorGeneric": "Could not save preferences. Try again.",
+    "fxStaleWarning": "Conversion rates are temporarily unavailable; amounts are shown in their original currency."
   }
 }
