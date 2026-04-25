@@ -67,28 +67,43 @@ export class ReviewsService {
       throw new ConflictException('A review for this contract already exists');
     }
 
-    const review = await this.prisma.$transaction(async (tx) => {
-      const created = await tx.review.create({
-        data: {
-          authorId: actorId,
-          targetId,
-          contractId: contract.id,
-          rating: input.rating,
-          comment: input.comment ?? null,
-        },
-        select: { id: true },
+    let review: { id: string };
+    try {
+      review = await this.prisma.$transaction(async (tx) => {
+        const created = await tx.review.create({
+          data: {
+            authorId: actorId,
+            targetId,
+            contractId: contract.id,
+            rating: input.rating,
+            comment: input.comment ?? null,
+          },
+          select: { id: true },
+        });
+        await tx.auditLog.create({
+          data: {
+            actorId,
+            action: AUDIT_ACTIONS.REVIEW_SUBMITTED,
+            entityType: 'Review',
+            entityId: created.id,
+            diff: { contractId: contract.id, rating: input.rating } as Prisma.JsonObject,
+          },
+        });
+        return created;
       });
-      await tx.auditLog.create({
-        data: {
-          actorId,
-          action: AUDIT_ACTIONS.REVIEW_SUBMITTED,
-          entityType: 'Review',
-          entityId: created.id,
-          diff: { contractId: contract.id, rating: input.rating } as Prisma.JsonObject,
-        },
-      });
-      return created;
-    });
+    } catch (err) {
+      // Authoritative guard is the @@unique([authorId, contractId]) index;
+      // the pre-check above is a fast path. Translate the P2002 race to the
+      // same 409 the pre-check would surface so concurrent submits don't
+      // leak as 500s.
+      if (
+        err instanceof Prisma.PrismaClientKnownRequestError &&
+        err.code === 'P2002'
+      ) {
+        throw new ConflictException('A review for this contract already exists');
+      }
+      throw err;
+    }
 
     return { id: review.id };
   }

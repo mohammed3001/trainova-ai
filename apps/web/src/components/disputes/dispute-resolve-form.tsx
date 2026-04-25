@@ -37,6 +37,13 @@ export function DisputeResolveForm({ disputeId, currentStatus }: Props) {
     [currentStatus],
   );
   const [status, setStatus] = useState<DisputeAdminTransition>(allowed[0] ?? 'UNDER_REVIEW');
+  // Derive the *effective* selection from `allowed` so that when the parent
+  // refreshes after a transition (e.g. OPEN→UNDER_REVIEW), a previously-set
+  // `status` that's no longer allowed is replaced by the new first option.
+  // This keeps `<select value>` aligned with what the user actually sees.
+  const effectiveStatus: DisputeAdminTransition = allowed.includes(status)
+    ? status
+    : (allowed[0] ?? 'UNDER_REVIEW');
   const [resolution, setResolution] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -57,7 +64,7 @@ export function DisputeResolveForm({ disputeId, currentStatus }: Props) {
           credentials: 'same-origin',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            status,
+            status: effectiveStatus,
             ...(resolution.trim() ? { resolution: resolution.trim() } : {}),
           }),
         },
@@ -84,7 +91,7 @@ export function DisputeResolveForm({ disputeId, currentStatus }: Props) {
         </label>
         <select
           id="resolve-status"
-          value={status}
+          value={effectiveStatus}
           onChange={(e) => setStatus(e.currentTarget.value as DisputeAdminTransition)}
           className="w-full rounded-xl border border-slate-200 bg-white/80 px-3 py-2 text-sm shadow-sm focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-200 dark:border-white/10 dark:bg-slate-900/40 dark:text-slate-100"
         >
