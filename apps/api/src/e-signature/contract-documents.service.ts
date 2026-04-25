@@ -15,6 +15,7 @@ import {
   TemplateRenderError,
 } from '@trainova/shared';
 import type { TemplateVariable } from '@trainova/shared';
+import type { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 
 /** SHA-256 hex of the exact UTF-8 body bytes. */
@@ -137,49 +138,58 @@ export class ContractDocumentsService {
     input: SignContractDocumentInput,
     meta: { ip?: string; userAgent?: string } = {},
   ) {
-    const document = await this.prisma.contractDocument.findUnique({
-      where: { id: documentId },
-      include: {
-        signatures: true,
-        contract: { include: { company: { select: { ownerId: true } } } },
-      },
-    });
-    if (!document) throw new NotFoundException('Document not found');
-    if (document.status === 'CANCELLED' || document.status === 'EXPIRED') {
-      throw new BadRequestException('Document is no longer signable');
-    }
-    if (document.expiresAt && document.expiresAt.getTime() < Date.now()) {
-      await this.prisma.contractDocument.update({
-        where: { id: documentId },
-        data: { status: 'EXPIRED' },
-      });
-      throw new BadRequestException('Document has expired');
-    }
-    // Mutation guard.
-    if (hashDocumentBody(document.bodyMarkdown) !== document.bodyHash) {
-      throw new BadRequestException('Document body hash mismatch — refusing to sign');
-    }
-    const role = this.resolveSignerRole(actorId, document);
-    const row = document.signatures.find((s) => s.role === role);
-    if (!row) throw new ForbiddenException('You are not a signer on this document');
-    if (row.status === 'SIGNED') {
-      throw new BadRequestException('You have already signed this document');
-    }
-    if (row.status === 'DECLINED') {
-      throw new BadRequestException('You have already declined this document');
-    }
     if (input.signedName.trim().length < 2) {
       throw new BadRequestException('Typed name is required');
     }
-
-    const signatureHash = createHash('sha256')
-      .update(
-        `${document.bodyHash}:${role}:${actorId}:${input.signedName.trim()}:${input.intent.trim()}`,
-        'utf8',
-      )
-      .digest('hex');
-
+    // All state checks + the write are done inside a single transaction
+    // and serialized via a row-level lock on the ContractDocument row,
+    // so two concurrent signs on the same document cannot both compute
+    // PARTIALLY_SIGNED off stale signature reads.
     const result = await this.prisma.$transaction(async (tx) => {
+      await this.lockDocumentRow(tx, documentId);
+      const document = await tx.contractDocument.findUnique({
+        where: { id: documentId },
+        include: {
+          signatures: true,
+          contract: { include: { company: { select: { ownerId: true } } } },
+        },
+      });
+      if (!document) throw new NotFoundException('Document not found');
+      if (document.status === 'CANCELLED' || document.status === 'EXPIRED') {
+        throw new BadRequestException('Document is no longer signable');
+      }
+      if (document.expiresAt && document.expiresAt.getTime() < Date.now()) {
+        await tx.contractDocument.update({
+          where: { id: documentId },
+          data: { status: 'EXPIRED' },
+        });
+        throw new BadRequestException('Document has expired');
+      }
+      // Mutation guard.
+      if (hashDocumentBody(document.bodyMarkdown) !== document.bodyHash) {
+        throw new BadRequestException(
+          'Document body hash mismatch — refusing to sign',
+        );
+      }
+      const role = this.resolveSignerRole(actorId, document);
+      const row = document.signatures.find((s) => s.role === role);
+      if (!row) {
+        throw new ForbiddenException('You are not a signer on this document');
+      }
+      if (row.status === 'SIGNED') {
+        throw new BadRequestException('You have already signed this document');
+      }
+      if (row.status === 'DECLINED') {
+        throw new BadRequestException('You have already declined this document');
+      }
+
+      const signatureHash = createHash('sha256')
+        .update(
+          `${document.bodyHash}:${role}:${actorId}:${input.signedName.trim()}:${input.intent.trim()}`,
+          'utf8',
+        )
+        .digest('hex');
+
       const updatedRow = await tx.contractSignature.update({
         where: { documentId_role: { documentId, role } },
         data: {
@@ -211,12 +221,12 @@ export class ContractDocumentsService {
           signedAt: allSigned ? new Date() : null,
         },
       });
-      return { row: updatedRow, document: updatedDoc };
+      return { row: updatedRow, document: updatedDoc, role };
     });
     this.logger.log(
-      `Signature stored doc=${documentId} role=${role} signer=${actorId} status=${result.document.status}`,
+      `Signature stored doc=${documentId} role=${result.role} signer=${actorId} status=${result.document.status}`,
     );
-    return result;
+    return { row: result.row, document: result.document };
   }
 
   async decline(
@@ -224,28 +234,31 @@ export class ContractDocumentsService {
     documentId: string,
     input: DeclineContractDocumentInput,
   ) {
-    const document = await this.prisma.contractDocument.findUnique({
-      where: { id: documentId },
-      include: {
-        signatures: true,
-        contract: { include: { company: { select: { ownerId: true } } } },
-      },
-    });
-    if (!document) throw new NotFoundException('Document not found');
-    if (document.status === 'CANCELLED' || document.status === 'EXPIRED') {
-      throw new BadRequestException('Document is no longer signable');
-    }
-    const role = this.resolveSignerRole(actorId, document);
-    const row = document.signatures.find((s) => s.role === role);
-    if (!row) throw new ForbiddenException('You are not a signer on this document');
-    if (row.status === 'SIGNED') {
-      throw new BadRequestException('Cannot decline after signing');
-    }
-    if (row.status === 'DECLINED') {
-      throw new BadRequestException('Already declined');
-    }
     const reason = (input.reason ?? '').trim();
     const result = await this.prisma.$transaction(async (tx) => {
+      await this.lockDocumentRow(tx, documentId);
+      const document = await tx.contractDocument.findUnique({
+        where: { id: documentId },
+        include: {
+          signatures: true,
+          contract: { include: { company: { select: { ownerId: true } } } },
+        },
+      });
+      if (!document) throw new NotFoundException('Document not found');
+      if (document.status === 'CANCELLED' || document.status === 'EXPIRED') {
+        throw new BadRequestException('Document is no longer signable');
+      }
+      const role = this.resolveSignerRole(actorId, document);
+      const row = document.signatures.find((s) => s.role === role);
+      if (!row) {
+        throw new ForbiddenException('You are not a signer on this document');
+      }
+      if (row.status === 'SIGNED') {
+        throw new BadRequestException('Cannot decline after signing');
+      }
+      if (row.status === 'DECLINED') {
+        throw new BadRequestException('Already declined');
+      }
       const updatedRow = await tx.contractSignature.update({
         where: { documentId_role: { documentId, role } },
         data: {
@@ -258,12 +271,25 @@ export class ContractDocumentsService {
         where: { id: documentId },
         data: { status: 'CANCELLED', cancelledAt: new Date() },
       });
-      return { row: updatedRow, document: updatedDoc };
+      return { row: updatedRow, document: updatedDoc, role };
     });
     this.logger.log(
-      `Document declined doc=${documentId} role=${role} signer=${actorId}`,
+      `Document declined doc=${documentId} role=${result.role} signer=${actorId}`,
     );
-    return result;
+    return { row: result.row, document: result.document };
+  }
+
+  /**
+   * Take a row-level lock on the ContractDocument row to serialize
+   * concurrent sign / decline operations on the same document. Postgres
+   * `SELECT ... FOR UPDATE` blocks any other transaction trying to lock
+   * the same row until this transaction commits or rolls back.
+   */
+  private async lockDocumentRow(
+    tx: Prisma.TransactionClient,
+    documentId: string,
+  ): Promise<void> {
+    await tx.$queryRaw`SELECT id FROM "ContractDocument" WHERE id = ${documentId} FOR UPDATE`;
   }
 
   private resolveSignerRole(

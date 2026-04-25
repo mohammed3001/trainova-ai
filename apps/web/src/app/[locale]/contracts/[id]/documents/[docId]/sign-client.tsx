@@ -137,7 +137,7 @@ export function SignDocumentClient({ locale, contractId, documentId, role }: Pro
           onChange={(e) => setSignedName(e.target.value)}
           required
           minLength={2}
-          maxLength={120}
+          maxLength={160}
           autoComplete="name"
           className="rounded-lg border-slate-300 px-3 py-2 shadow-sm focus:border-brand-500 focus:ring-brand-500"
         />
@@ -149,8 +149,8 @@ export function SignDocumentClient({ locale, contractId, documentId, role }: Pro
           value={intent}
           onChange={(e) => setIntent(e.target.value)}
           required
-          minLength={4}
-          maxLength={500}
+          minLength={10}
+          maxLength={2000}
           rows={2}
           className="rounded-lg border-slate-300 px-3 py-2 shadow-sm focus:border-brand-500 focus:ring-brand-500"
         />
