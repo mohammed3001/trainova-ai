@@ -319,11 +319,19 @@ export class MatchingService {
         b.trust.score * w.trust +
         b.history.score * w.history) /
       100;
-    // Sponsor boost is additive and capped, so a paid placement can
-    // raise but never replace the underlying match quality. The
-    // `sponsored` flag on the match row is what actually drives the
-    // "Sponsored" badge and the tiebreak.
-    const total = weighted + b.sponsor.boost;
+    // Apply sponsor boost against the *remaining headroom* rather than
+    // adding it raw and clamping. The naive `min(100, weighted + boost)`
+    // collapsed any sponsored item with weighted >= 50 to 100 at the cap,
+    // letting a moderate sponsored match tie a perfect unsponsored one
+    // and then steal the row via the sponsored tiebreaker. With the
+    // headroom form, a perfect organic score (weighted=100) gets zero
+    // benefit, weighted=50 with boost=50 lifts to 75, and weighted=0
+    // with boost=50 lifts to 50 — preserving the invariant from
+    // packages/shared/src/sponsored.ts that a low-quality sponsored row
+    // can never outrank a high-quality unsponsored one.
+    const headroom = Math.max(0, 100 - weighted);
+    const effectiveBoost = (b.sponsor.boost * headroom) / 100;
+    const total = weighted + effectiveBoost;
     return Math.round(Math.max(0, Math.min(100, total)));
   }
 
