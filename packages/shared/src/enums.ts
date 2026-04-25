@@ -15,7 +15,8 @@ export type UserRole = (typeof UserRoles)[number];
 /**
  * Admin role groups (T7.D). Each group is the set of roles that may
  * access a specific admin domain. SUPER_ADMIN and ADMIN have access to
- * every group; specialized roles only see their own surface.
+ * every group except SUPER_ONLY; specialized roles only see their own
+ * surface.
  *
  * Use these tuples in @Roles(...ADMIN_ROLE_GROUPS.FINANCE) on the API
  * side so the policy is centralized — adding a new role only requires
