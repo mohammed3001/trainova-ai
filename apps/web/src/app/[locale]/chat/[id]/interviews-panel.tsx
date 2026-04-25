@@ -59,8 +59,18 @@ export function InterviewsPanel({ conversationId, canSchedule }: Props) {
     void refresh();
   }, [refresh]);
 
+  // The API returns rows sorted by `scheduledAt DESC` so the most recent
+  // history is cheap to render. For "upcoming" we need ascending order so
+  // `upcoming[0]` (the banner / primary row) is the *soonest* meeting, not
+  // the furthest one.
   const upcoming = useMemo(
-    () => (items ?? []).filter((i) => i.isUpcoming),
+    () =>
+      (items ?? [])
+        .filter((i) => i.isUpcoming)
+        .sort(
+          (a, b) =>
+            new Date(a.scheduledAt).getTime() - new Date(b.scheduledAt).getTime(),
+        ),
     [items],
   );
   const past = useMemo(

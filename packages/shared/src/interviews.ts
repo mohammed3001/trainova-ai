@@ -105,17 +105,25 @@ export const completeInterviewSchema = z
   .default({});
 export type CompleteInterviewInput = z.infer<typeof completeInterviewSchema>;
 
-export const listInterviewsQuerySchema = z.object({
-  conversationId: z.string().min(1).optional(),
-  status: interviewStatusSchema.optional(),
-  /** When true, return only meetings whose `scheduledAt + durationMin`
-   *  has not yet elapsed. Defaults to false (returns history too). */
-  upcomingOnly: z
-    .union([z.boolean(), z.enum(['true', 'false']).transform((v) => v === 'true')])
-    .optional(),
-  limit: z.coerce.number().int().min(1).max(100).default(25),
-  offset: z.coerce.number().int().min(0).default(0),
-});
+export const listInterviewsQuerySchema = z
+  .object({
+    conversationId: z.string().min(1).optional(),
+    status: interviewStatusSchema.optional(),
+    /** When true, return only meetings whose `scheduledAt + durationMin`
+     *  has not yet elapsed. Defaults to false (returns history too). */
+    upcomingOnly: z
+      .union([z.boolean(), z.enum(['true', 'false']).transform((v) => v === 'true')])
+      .optional(),
+    limit: z.coerce.number().int().min(1).max(100).default(25),
+    offset: z.coerce.number().int().min(0).default(0),
+  })
+  // `upcomingOnly` pins status to SCHEDULED, so combining it with a different
+  // explicit status is contradictory. Reject the combo up front instead of
+  // letting the service silently pick one.
+  .refine((q) => !(q.upcomingOnly && q.status), {
+    message: 'Cannot combine `status` with `upcomingOnly`',
+    path: ['upcomingOnly'],
+  });
 export type ListInterviewsQuery = z.infer<typeof listInterviewsQuerySchema>;
 
 export interface InterviewParticipantSummary {
