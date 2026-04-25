@@ -61,6 +61,13 @@ export default async function ApplicationsPage({
           >
             {t('company.applications.manageTests')}
           </Link>
+          <Link
+            href={`/${locale}/company/requests/${id}/pipeline`}
+            className="rounded-md border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50"
+            data-testid="manage-pipeline-link"
+          >
+            {t('company.applications.managePipeline')}
+          </Link>
         </div>
       </div>
       {apps.length === 0 ? (

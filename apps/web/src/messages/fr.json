@@ -499,9 +499,83 @@
         "unknownActor": "Unknown user"
       },
       "manageTests": "Manage tests",
+      "managePipeline": "Gérer le pipeline",
       "answers": {
         "title": "Application answers",
         "empty": "—"
+      }
+    },
+    "pipeline": {
+      "title": "Pipeline d’évaluation",
+      "description": "Définissez les étapes ordonnées que les candidats doivent franchir pour cette demande.",
+      "backToApplications": "Retour aux candidatures",
+      "save": "Enregistrer le pipeline",
+      "saving": "Enregistrement…",
+      "saved": "Pipeline enregistré",
+      "fields": {
+        "name": "Nom du pipeline",
+        "description": "Description",
+        "active": "Actif (visible aux candidats)",
+        "stageTitle": "Titre de l’étape",
+        "stageDescription": "Description de l’étape (visible aux candidats)",
+        "selectTest": "Sélectionner un test…",
+        "passingScoreOverride": "Score de réussite personnalisé (0–100)",
+        "required": "Étape obligatoire (ne peut pas être ignorée)",
+        "optional": "Optionnelle"
+      },
+      "kinds": {
+        "SCREENING": "Présélection",
+        "TEST": "Test pratique",
+        "INTERVIEW": "Entretien",
+        "REVIEW": "Revue finale"
+      },
+      "stages": {
+        "title": "Étapes",
+        "counter": "{count}/{max} étapes",
+        "add": "Ajouter une étape",
+        "moveUp": "Monter",
+        "moveDown": "Descendre",
+        "remove": "Retirer l’étape"
+      },
+      "errors": {
+        "nameRequired": "Le nom du pipeline est requis.",
+        "noStages": "Ajoutez au moins une étape.",
+        "stageTitleRequired": "Toutes les étapes doivent avoir un titre.",
+        "testRequired": "Les étapes de test doivent référencer un test.",
+        "passingScoreRange": "Le score de réussite doit être compris entre 0 et 100."
+      },
+      "statuses": {
+        "IN_PROGRESS": "En cours",
+        "PASSED": "Réussi",
+        "FAILED": "Échoué",
+        "WITHDRAWN": "Retiré"
+      },
+      "statusFootnotes": {
+        "IN_PROGRESS": "",
+        "PASSED": "Ce candidat a franchi toutes les étapes obligatoires.",
+        "FAILED": "Ce candidat n’a pas franchi le pipeline.",
+        "WITHDRAWN": "Ce candidat s’est retiré du pipeline."
+      },
+      "results": {
+        "PENDING": "En attente",
+        "IN_PROGRESS": "En cours",
+        "PASSED": "Réussi",
+        "FAILED": "Échoué",
+        "SKIPPED": "Ignoré",
+        "scoreLabel": "Score : {score}/100"
+      },
+      "actions": {
+        "start": "Démarrer le pipeline pour ce candidat",
+        "advance": "Passer à l’étape suivante",
+        "reject": "Rejeter à cette étape",
+        "skip": "Ignorer cette étape",
+        "notesLabel": "Notes (visibles à votre équipe)",
+        "notesPlaceholder": "Notes facultatives pour cette étape",
+        "reasonLabel": "Motif (partagé avec le candidat)",
+        "reasonPlaceholder": "Motif facultatif"
+      },
+      "progress": {
+        "loading": "Chargement de la progression…"
       }
     },
     "tests": {

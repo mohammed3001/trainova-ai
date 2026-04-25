@@ -82,6 +82,7 @@ export class EvaluationPipelinesService {
         requestId: request.id,
         name: input.name,
         description: input.description ?? null,
+        isActive: input.isActive ?? true,
         stages: {
           create: input.stages.map((stage, index) => ({
             order: index,

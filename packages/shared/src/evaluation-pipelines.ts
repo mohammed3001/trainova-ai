@@ -97,6 +97,7 @@ export const createPipelineSchema = z.object({
   requestId: z.string().min(1),
   name: z.string().trim().min(1).max(PIPELINE_NAME_MAX),
   description: z.string().trim().max(PIPELINE_DESCRIPTION_MAX).optional(),
+  isActive: z.boolean().optional(),
   stages: z.array(stageInputSchema).min(PIPELINE_MIN_STAGES).max(PIPELINE_MAX_STAGES),
 });
 export type CreatePipelineInput = z.infer<typeof createPipelineSchema>;
