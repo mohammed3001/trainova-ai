@@ -513,9 +513,83 @@
         "unknownActor": "Unknown user"
       },
       "manageTests": "Manage tests",
+      "managePipeline": "Manage pipeline",
       "answers": {
         "title": "Application answers",
         "empty": "—"
+      }
+    },
+    "pipeline": {
+      "title": "Evaluation pipeline",
+      "description": "Define the ordered stages applicants must clear for this request.",
+      "backToApplications": "Back to applications",
+      "save": "Save pipeline",
+      "saving": "Saving…",
+      "saved": "Pipeline saved",
+      "fields": {
+        "name": "Pipeline name",
+        "description": "Description",
+        "active": "Active (visible to applicants)",
+        "stageTitle": "Stage title",
+        "stageDescription": "Stage description (shown to applicants)",
+        "selectTest": "Select a test…",
+        "passingScoreOverride": "Passing score override (0–100)",
+        "required": "Required stage (cannot be skipped)",
+        "optional": "Optional"
+      },
+      "kinds": {
+        "SCREENING": "Screening",
+        "TEST": "Practical test",
+        "INTERVIEW": "Interview",
+        "REVIEW": "Final review"
+      },
+      "stages": {
+        "title": "Stages",
+        "counter": "{count}/{max} stages",
+        "add": "Add stage",
+        "moveUp": "Move up",
+        "moveDown": "Move down",
+        "remove": "Remove stage"
+      },
+      "errors": {
+        "nameRequired": "Pipeline name is required.",
+        "noStages": "Add at least one stage.",
+        "stageTitleRequired": "All stages need a title.",
+        "testRequired": "Test stages must reference a test.",
+        "passingScoreRange": "Passing score must be between 0 and 100."
+      },
+      "statuses": {
+        "IN_PROGRESS": "In progress",
+        "PASSED": "Passed",
+        "FAILED": "Failed",
+        "WITHDRAWN": "Withdrawn"
+      },
+      "statusFootnotes": {
+        "IN_PROGRESS": "",
+        "PASSED": "This applicant has cleared every required stage.",
+        "FAILED": "This applicant did not pass the pipeline.",
+        "WITHDRAWN": "This applicant withdrew from the pipeline."
+      },
+      "results": {
+        "PENDING": "Pending",
+        "IN_PROGRESS": "In progress",
+        "PASSED": "Passed",
+        "FAILED": "Failed",
+        "SKIPPED": "Skipped",
+        "scoreLabel": "Score: {score}/100"
+      },
+      "actions": {
+        "start": "Start pipeline for this applicant",
+        "advance": "Advance to next stage",
+        "reject": "Reject at this stage",
+        "skip": "Skip this stage",
+        "notesLabel": "Notes (visible to your team)",
+        "notesPlaceholder": "Optional notes for this stage",
+        "reasonLabel": "Reason (shared with applicant)",
+        "reasonPlaceholder": "Optional reason"
+      },
+      "progress": {
+        "loading": "Loading pipeline progress…"
       }
     },
     "tests": {

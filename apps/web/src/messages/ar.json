@@ -513,9 +513,83 @@
         "unknownActor": "مستخدم غير معروف"
       },
       "manageTests": "إدارة الاختبارات",
+      "managePipeline": "إدارة خط التقييم",
       "answers": {
         "title": "إجابات التقديم",
         "empty": "—"
+      }
+    },
+    "pipeline": {
+      "title": "خط التقييم متعدد المراحل",
+      "description": "حدّد المراحل المرتّبة التي يجب على المتقدمين اجتيازها لهذا الطلب.",
+      "backToApplications": "الرجوع إلى المتقدمين",
+      "save": "حفظ الخط",
+      "saving": "جاري الحفظ…",
+      "saved": "تم حفظ الخط",
+      "fields": {
+        "name": "اسم الخط",
+        "description": "الوصف",
+        "active": "مفعّل (مرئي للمتقدمين)",
+        "stageTitle": "عنوان المرحلة",
+        "stageDescription": "وصف المرحلة (يُعرض للمتقدمين)",
+        "selectTest": "اختر اختباراً…",
+        "passingScoreOverride": "درجة النجاح المخصّصة (٠–١٠٠)",
+        "required": "مرحلة إلزامية (لا يمكن تخطيها)",
+        "optional": "اختيارية"
+      },
+      "kinds": {
+        "SCREENING": "فرز",
+        "TEST": "اختبار عملي",
+        "INTERVIEW": "مقابلة",
+        "REVIEW": "مراجعة نهائية"
+      },
+      "stages": {
+        "title": "المراحل",
+        "counter": "{count}/{max} مراحل",
+        "add": "إضافة مرحلة",
+        "moveUp": "تحريك للأعلى",
+        "moveDown": "تحريك للأسفل",
+        "remove": "إزالة المرحلة"
+      },
+      "errors": {
+        "nameRequired": "اسم الخط مطلوب.",
+        "noStages": "أضف مرحلة واحدة على الأقل.",
+        "stageTitleRequired": "كل مرحلة تحتاج إلى عنوان.",
+        "testRequired": "مراحل الاختبار يجب أن تربط باختبار.",
+        "passingScoreRange": "درجة النجاح يجب أن تكون بين ٠ و ١٠٠."
+      },
+      "statuses": {
+        "IN_PROGRESS": "قيد التقدّم",
+        "PASSED": "اجتاز",
+        "FAILED": "لم يجتز",
+        "WITHDRAWN": "منسحب"
+      },
+      "statusFootnotes": {
+        "IN_PROGRESS": "",
+        "PASSED": "اجتاز هذا المتقدّم جميع المراحل الإلزامية.",
+        "FAILED": "لم يجتز المتقدّم خط التقييم.",
+        "WITHDRAWN": "انسحب المتقدّم من خط التقييم."
+      },
+      "results": {
+        "PENDING": "بانتظار",
+        "IN_PROGRESS": "قيد التقدّم",
+        "PASSED": "اجتاز",
+        "FAILED": "لم يجتز",
+        "SKIPPED": "تم التخطي",
+        "scoreLabel": "النتيجة: {score}/١٠٠"
+      },
+      "actions": {
+        "start": "ابدأ خط التقييم لهذا المتقدّم",
+        "advance": "الانتقال إلى المرحلة التالية",
+        "reject": "رفض في هذه المرحلة",
+        "skip": "تخطي هذه المرحلة",
+        "notesLabel": "ملاحظات (مرئية لفريقك)",
+        "notesPlaceholder": "ملاحظات اختيارية لهذه المرحلة",
+        "reasonLabel": "السبب (يُشارك مع المتقدّم)",
+        "reasonPlaceholder": "سبب اختياري"
+      },
+      "progress": {
+        "loading": "جاري تحميل تقدّم خط التقييم…"
       }
     },
     "tests": {

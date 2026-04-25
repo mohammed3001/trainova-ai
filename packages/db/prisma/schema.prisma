@@ -96,6 +96,7 @@ model User {
   interviewsScheduledByMe       InterviewMeeting[]        @relation("InterviewScheduler")
   interviewsAsTrainer           InterviewMeeting[]        @relation("InterviewTrainer")
   interviewsCancelledByMe       InterviewMeeting[]        @relation("InterviewCanceller")
+  reviewedStageResults          ApplicationStageResult[]  @relation("StageReviewer")
 
   @@index([role, status])
 }
@@ -434,6 +435,7 @@ model JobRequest {
   conversations       Conversation[]
   modelCalls          ModelCall[]
   sponsoredPlacements SponsoredPlacement[]
+  evaluationPipeline  EvaluationPipeline?
 
   @@index([status, publishedAt])
   @@index([companyId])
@@ -491,13 +493,14 @@ model Application {
   createdAt            DateTime          @default(now())
   updatedAt            DateTime          @updatedAt
 
-  request     JobRequest              @relation(fields: [requestId], references: [id], onDelete: Cascade)
-  trainer     User                    @relation(fields: [trainerId], references: [id], onDelete: Cascade)
-  attempts    TestAttempt[]
-  attachments ApplicationAttachment[]
-  modelCalls  ModelCall[]
-  contracts   Contract[]
-  interviews  InterviewMeeting[]
+  request          JobRequest                   @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  trainer          User                         @relation(fields: [trainerId], references: [id], onDelete: Cascade)
+  attempts         TestAttempt[]
+  attachments      ApplicationAttachment[]
+  modelCalls       ModelCall[]
+  contracts        Contract[]
+  interviews       InterviewMeeting[]
+  pipelineProgress ApplicationPipelineProgress?
 
   @@unique([requestId, trainerId])
   @@index([trainerId])
@@ -540,9 +543,10 @@ model Test {
   createdAt    DateTime        @default(now())
   updatedAt    DateTime        @updatedAt
 
-  request  JobRequest?   @relation(fields: [requestId], references: [id], onDelete: SetNull)
-  tasks    TestTask[]
-  attempts TestAttempt[]
+  request          JobRequest?       @relation(fields: [requestId], references: [id], onDelete: SetNull)
+  tasks            TestTask[]
+  attempts         TestAttempt[]
+  evaluationStages EvaluationStage[]
 }
 
 model TestTask {
@@ -2222,4 +2226,138 @@ model InterviewMeeting {
   @@index([trainerId, status, scheduledAt])
   @@index([scheduledById, status, scheduledAt])
   @@index([status, scheduledAt])
+}
+
+// =========================
+// Evaluation Pipelines (Tier 8.D)
+// Multi-stage evaluation workflow attached to a JobRequest. Each
+// Application picks up an `ApplicationPipelineProgress` row when the
+// company moves it into the funnel, and progresses through ordered
+// `EvaluationStage` rows manually. Stages can be SCREENING (manual
+// review of the application form), TEST (links to an existing Test),
+// INTERVIEW (links to a scheduled InterviewMeeting), or REVIEW (free
+// text — used for offer letters, reference checks, etc).
+// =========================
+
+enum EvaluationStageKind {
+  SCREENING
+  TEST
+  INTERVIEW
+  REVIEW
+}
+
+enum EvaluationStageStatus {
+  PENDING
+  IN_PROGRESS
+  PASSED
+  FAILED
+  SKIPPED
+}
+
+enum ApplicationPipelineStatus {
+  IN_PROGRESS
+  PASSED
+  FAILED
+  WITHDRAWN
+}
+
+model EvaluationPipeline {
+  id          String   @id @default(cuid())
+  /// One pipeline per request; multi-pipeline templating is not in
+  /// scope for T8.D — companies can clone a pipeline by archiving the
+  /// request and creating a new one if they need variants.
+  requestId   String   @unique
+  name        String
+  description String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  request    JobRequest                    @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  stages     EvaluationStage[]
+  progresses ApplicationPipelineProgress[]
+
+  @@index([requestId, isActive])
+}
+
+model EvaluationStage {
+  id           String              @id @default(cuid())
+  pipelineId   String
+  /// 0-based stage index within the pipeline. Reorders happen via the
+  /// `reorderStages` service method which rewrites every row inside a
+  /// transaction so the unique constraint stays satisfied.
+  order        Int
+  kind         EvaluationStageKind
+  title        String
+  description  String?
+  /// For `kind = TEST`: the Test that must be assigned + graded. Null
+  /// for any other stage kind.
+  testId       String?
+  /// Optional override of the linked Test's passingScore. When null,
+  /// the linked Test's own passingScore is used.
+  passingScore Int?
+  /// `REQUIRED` stages block progression; `OPTIONAL` stages can be
+  /// skipped without failing the pipeline (e.g. reference checks).
+  isRequired   Boolean             @default(true)
+  createdAt    DateTime            @default(now())
+  updatedAt    DateTime            @updatedAt
+
+  pipeline EvaluationPipeline       @relation(fields: [pipelineId], references: [id], onDelete: Cascade)
+  test     Test?                    @relation(fields: [testId], references: [id], onDelete: SetNull)
+  results  ApplicationStageResult[]
+
+  @@unique([pipelineId, order])
+  @@index([pipelineId])
+  @@index([testId])
+}
+
+model ApplicationPipelineProgress {
+  id             String                    @id @default(cuid())
+  pipelineId     String
+  /// One progress row per application — the company moves an applicant
+  /// into the pipeline once. Withdrawing + re-entering is not in scope.
+  applicationId  String                    @unique
+  status         ApplicationPipelineStatus @default(IN_PROGRESS)
+  /// Pointer to the stage currently being worked on. Null when the
+  /// pipeline is fully resolved (PASSED / FAILED / WITHDRAWN).
+  currentStageId String?
+  startedAt      DateTime                  @default(now())
+  finishedAt     DateTime?
+  createdAt      DateTime                  @default(now())
+  updatedAt      DateTime                  @updatedAt
+
+  pipeline    EvaluationPipeline       @relation(fields: [pipelineId], references: [id], onDelete: Cascade)
+  application Application              @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  results     ApplicationStageResult[]
+
+  @@index([pipelineId, status])
+}
+
+model ApplicationStageResult {
+  id           String                @id @default(cuid())
+  progressId   String
+  stageId      String
+  status       EvaluationStageStatus @default(PENDING)
+  /// Auto-filled from the linked TestAttempt when stage kind=TEST and
+  /// the attempt has been graded. Manual stages (SCREENING / REVIEW)
+  /// can carry an arbitrary 0..100 score the reviewer enters.
+  score        Int?
+  notes        String?
+  reviewedById String?
+  startedAt    DateTime?
+  finishedAt   DateTime?
+  /// Free-form per-stage payload — e.g. interview meeting id, offer
+  /// letter PDF objectKey. Kept JSON to avoid schema churn on every
+  /// new stage variant.
+  metadata     Json?
+  createdAt    DateTime              @default(now())
+  updatedAt    DateTime              @updatedAt
+
+  progress   ApplicationPipelineProgress @relation(fields: [progressId], references: [id], onDelete: Cascade)
+  stage      EvaluationStage             @relation(fields: [stageId], references: [id], onDelete: Cascade)
+  reviewedBy User?                       @relation("StageReviewer", fields: [reviewedById], references: [id])
+
+  @@unique([progressId, stageId])
+  @@index([progressId])
+  @@index([stageId, status])
 }

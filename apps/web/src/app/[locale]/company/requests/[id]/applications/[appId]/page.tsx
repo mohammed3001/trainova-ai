@@ -10,6 +10,7 @@ import { AttemptsCard } from './attempts-card';
 import { AnswersCard } from './answers-card';
 import { StartChatButton } from '@/components/chat/start-chat-button';
 import { ApplicationAttachmentsPanel } from '@/app/[locale]/requests/[slug]/application-attachments-panel';
+import { PipelineProgressPanel } from './pipeline-progress-panel';
 
 interface Application {
   id: string;
@@ -127,6 +128,7 @@ export default async function ApplicationDetailPage({
 
       <ApplicationAttachmentsPanel applicationId={appId} canEdit={false} />
 
+      <PipelineProgressPanel applicationId={appId} canEdit={true} />
 
       <AttemptsCard applicationId={appId} requestId={id} locale={locale} />
 
