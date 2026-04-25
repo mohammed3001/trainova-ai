@@ -63,6 +63,13 @@ export class DisputesService {
     if (contract.status === 'CANCELLED') {
       throw new BadRequestException('Cannot raise a dispute on a CANCELLED contract');
     }
+    // DRAFT contracts haven't entered the escrow lifecycle yet, so there is
+    // nothing for an admin to dispute. Allowing them in created a silent
+    // status promotion (DRAFT → DISPUTED → ACTIVE on resolve) because
+    // `maybeRestoreContractStatus` only knows ACTIVE/COMPLETED.
+    if (contract.status === 'DRAFT') {
+      throw new BadRequestException('Cannot raise a dispute on a DRAFT contract');
+    }
 
     const active = await this.prisma.dispute.findFirst({
       where: {
