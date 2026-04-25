@@ -289,8 +289,10 @@ export class AiAssistService {
         return {
           subject: '[mock] Subject placeholder',
           preheader: '[mock] Preheader placeholder',
-          bodyHtml: '<p>[mock] Email body placeholder.</p>',
-          bodyText: '[mock] Email body placeholder.',
+          bodyHtml:
+            '<p>[mock] Email body placeholder — configure an AI provider key for tailored copy.</p>',
+          bodyText:
+            '[mock] Email body placeholder — configure an AI provider key for tailored copy.',
         };
       case 'PRICING_SUGGEST':
         return {
@@ -308,7 +310,7 @@ export class AiAssistService {
               title: '[mock] Sample task',
               prompt:
                 '[mock] Configure an AI provider to generate real practical tasks for this job.',
-              rubric: '[mock] Stub rubric.',
+              rubric: '[mock] Stub rubric — configure an AI provider for a real grading rubric.',
               expectedSeconds: 600,
               kind: 'TEXT',
             },
