@@ -8,7 +8,7 @@ import {
   type ChatSummaryResult,
   type ChatTaskItem,
   type ChatTasksResult,
-} from '@/lib/chat-api';
+} from '@/lib/chat-ai-api';
 
 interface Props {
   conversationId: string;
@@ -133,6 +133,14 @@ export function AiPanel({ conversationId }: Props) {
             </header>
             {summary ? (
               <div className="space-y-2 text-sm">
+                {summaryState === 'error' && summaryError && (
+                  <p
+                    className="rounded-md border border-rose-200 bg-rose-50 px-2 py-1 text-xs text-rose-700"
+                    role="status"
+                  >
+                    {summaryError}
+                  </p>
+                )}
                 <p className="whitespace-pre-wrap text-slate-700" lang={summary.language}>
                   {summary.summary}
                 </p>
@@ -170,15 +178,25 @@ export function AiPanel({ conversationId }: Props) {
               </button>
             </header>
             {tasks ? (
-              tasks.tasks.length === 0 ? (
-                <p className="text-xs text-slate-500">{t('tasksEmpty')}</p>
-              ) : (
-                <ul className="space-y-1.5 text-sm">
-                  {tasks.tasks.map((task, i) => (
-                    <TaskRow key={i} task={task} t={t} />
-                  ))}
-                </ul>
-              )
+              <div className="space-y-2">
+                {tasksState === 'error' && tasksError && (
+                  <p
+                    className="rounded-md border border-rose-200 bg-rose-50 px-2 py-1 text-xs text-rose-700"
+                    role="status"
+                  >
+                    {tasksError}
+                  </p>
+                )}
+                {tasks.tasks.length === 0 ? (
+                  <p className="text-xs text-slate-500">{t('tasksEmpty')}</p>
+                ) : (
+                  <ul className="space-y-1.5 text-sm">
+                    {tasks.tasks.map((task, i) => (
+                      <TaskRow key={i} task={task} t={t} />
+                    ))}
+                  </ul>
+                )}
+              </div>
             ) : tasksState === 'error' ? (
               <p className="text-sm text-rose-600">{tasksError}</p>
             ) : (
