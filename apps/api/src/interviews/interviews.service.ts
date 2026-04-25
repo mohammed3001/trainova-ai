@@ -9,6 +9,7 @@ import { Prisma, type InterviewMeeting, type User } from '@trainova/db';
 import {
   INTERVIEW_DEFAULT_DURATION_MIN,
   INTERVIEW_MAX_DAYS_AHEAD,
+  INTERVIEW_MAX_DURATION_MIN,
   type CancelInterviewInput,
   type CompleteInterviewInput,
   type CreateInterviewInput,
@@ -122,7 +123,13 @@ export class InterviewsService {
       ...(query.upcomingOnly
         ? {
             status: 'SCHEDULED',
-            scheduledAt: { gte: new Date(now.getTime() - 1000 * 60 * 60) },
+            // `isUpcoming` on the DTO is `scheduledAt + durationMin >= now`,
+            // so the DB-side filter has to be at least as wide as the longest
+            // possible meeting — otherwise an in-progress 4-hour interview
+            // would be filtered out while still rendering as upcoming.
+            scheduledAt: {
+              gte: new Date(now.getTime() - INTERVIEW_MAX_DURATION_MIN * 60_000),
+            },
           }
         : {}),
     };
