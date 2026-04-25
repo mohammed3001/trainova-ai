@@ -75,42 +75,57 @@ export class DisputesService {
       throw new ConflictException('An active dispute already exists for this contract');
     }
 
-    const dispute = await this.prisma.$transaction(async (tx) => {
-      const created = await tx.dispute.create({
-        data: {
-          contractId: contract.id,
-          raisedById: actorId,
-          raisedByRole: role,
-          reason: input.reason,
-          description: input.description,
-          evidence: (input.evidence ?? null) as Prisma.InputJsonValue,
-          status: 'OPEN',
-        },
-        select: { id: true },
-      });
-      // Mirror DISPUTED on the contract so finance dashboards reflect the
-      // hold. We avoid clobbering CANCELLED (already rejected above).
-      if (contract.status !== 'DISPUTED') {
-        await tx.contract.update({
-          where: { id: contract.id },
-          data: { status: 'DISPUTED' },
-        });
-      }
-      await tx.auditLog.create({
-        data: {
-          actorId,
-          action: AUDIT_ACTIONS.DISPUTE_RAISED,
-          entityType: 'Dispute',
-          entityId: created.id,
-          diff: {
+    let dispute: { id: string };
+    try {
+      dispute = await this.prisma.$transaction(async (tx) => {
+        const created = await tx.dispute.create({
+          data: {
             contractId: contract.id,
+            raisedById: actorId,
+            raisedByRole: role,
             reason: input.reason,
-            role,
-          } as Prisma.JsonObject,
-        },
+            description: input.description,
+            evidence: (input.evidence ?? null) as Prisma.InputJsonValue,
+            status: 'OPEN',
+          },
+          select: { id: true },
+        });
+        // Mirror DISPUTED on the contract so finance dashboards reflect the
+        // hold. We avoid clobbering CANCELLED (already rejected above).
+        if (contract.status !== 'DISPUTED') {
+          await tx.contract.update({
+            where: { id: contract.id },
+            data: { status: 'DISPUTED' },
+          });
+        }
+        await tx.auditLog.create({
+          data: {
+            actorId,
+            action: AUDIT_ACTIONS.DISPUTE_RAISED,
+            entityType: 'Dispute',
+            entityId: created.id,
+            diff: {
+              contractId: contract.id,
+              reason: input.reason,
+              role,
+            } as Prisma.JsonObject,
+          },
+        });
+        return created;
       });
-      return created;
-    });
+    } catch (err) {
+      // The pre-check above is best-effort. The authoritative guard is the
+      // partial unique index `Dispute_contract_active_unique` (see migration
+      // 20260429000000_t5e_reviews_disputes), so under concurrent raises we
+      // re-translate the P2002 to the same 409 the pre-check would surface.
+      if (
+        err instanceof Prisma.PrismaClientKnownRequestError &&
+        err.code === 'P2002'
+      ) {
+        throw new ConflictException('An active dispute already exists for this contract');
+      }
+      throw err;
+    }
 
     this.logger.log(`Dispute ${dispute.id} raised on contract ${contract.id} by ${role}`);
     return { id: dispute.id };

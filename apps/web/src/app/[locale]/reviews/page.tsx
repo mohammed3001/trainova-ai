@@ -24,7 +24,7 @@ export default async function ReviewsPage() {
   const locale = await getLocale();
   const [token, role] = await Promise.all([getToken(), getRole()]);
   if (!token) redirect(`/${locale}/login?redirect=/${locale}/reviews`);
-  if (role !== 'TRAINER' && role !== 'COMPANY_OWNER' && role !== 'SUPER_ADMIN') {
+  if (role !== 'TRAINER' && role !== 'COMPANY_OWNER') {
     redirect(`/${locale}/dashboard`);
   }
 
