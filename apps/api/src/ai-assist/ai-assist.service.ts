@@ -688,7 +688,7 @@ export class AiAssistService {
             currentBio: profile.bio ?? '',
             currentSkills: profile.skills.map((s) => s.skill.slug),
             yearsExperience,
-            industries: profile.languages,
+            languages: profile.languages,
             locale: profile.user.locale,
           }),
           contextEntityType: 'TrainerProfile',

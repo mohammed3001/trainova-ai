@@ -19,14 +19,14 @@ function toErrorMessage(err: unknown): string {
 
 const KIND_TO_PATH: Record<AiAssistKind, string> = {
   REQUEST_DRAFT: '/ai-assist/request-draft',
-  APPLICATION_SCREEN: '/ai-assist/application-screen',
+  APPLICATION_SCREEN: '/ai-assist/screen-application',
   CHAT_SUMMARY: '/ai-assist/chat-summary',
   CHAT_TASKS: '/ai-assist/chat-tasks',
   SEO_META: '/ai-assist/seo-meta',
   EMAIL_DRAFT: '/ai-assist/email-draft',
   PRICING_SUGGEST: '/ai-assist/pricing-suggest',
   TEST_GEN: '/ai-assist/test-gen',
-  PROFILE_OPT: '/ai-assist/profile-opt',
+  PROFILE_OPT: '/ai-assist/profile-optimize',
 };
 
 export async function runAiAssistAction(

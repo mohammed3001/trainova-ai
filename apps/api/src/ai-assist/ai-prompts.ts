@@ -288,7 +288,7 @@ export function buildProfileOptPrompt(args: {
   currentBio: string;
   currentSkills: string[];
   yearsExperience: number | null;
-  industries: string[];
+  languages: string[];
   locale: string;
 }): ChatMessage[] {
   return [
@@ -310,7 +310,7 @@ Write headline and bio in ${lang(args.locale)}. Skills stay lowercase English.`,
     {
       role: 'user',
       content: `Years experience: ${args.yearsExperience ?? 'unknown'}
-Industries: ${args.industries.join(', ') || '(none)'}
+Spoken languages: ${args.languages.join(', ') || '(none)'}
 Current skills: ${args.currentSkills.join(', ') || '(none)'}
 Current headline: ${args.currentHeadline}
 Current bio:
