@@ -48,6 +48,12 @@ import { StripeService } from '../payments/stripe.service';
 @Injectable()
 export class SponsoredService {
   private readonly logger = new Logger(SponsoredService.name);
+  /** Wall-clock of the last expireDue sweep — used to throttle the lazy
+   *  cleanup that fires on every read path so we don't issue an UPDATE
+   *  storm under load. 60s is fine: the badge re-validation in list
+   *  endpoints already filters expired rows visually. */
+  private lastExpireSweepMs = 0;
+  private static readonly EXPIRE_SWEEP_COOLDOWN_MS = 60_000;
 
   constructor(
     private readonly prisma: PrismaService,
@@ -69,6 +75,11 @@ export class SponsoredService {
    * apply boost to a candidate pool with one round trip.
    */
   async getActiveBoostMap(kind: SponsoredKind): Promise<Map<string, number>> {
+    // Lazy cleanup keeps the denormalised `sponsoredUntil` mirrors honest:
+    // without it, expired placements would silently keep elevating their
+    // subject in `orderBy sponsoredUntil desc` queries on the public lists
+    // and the matching candidate cap. Throttled so it doesn't thrash.
+    await this.expireDue();
     const now = new Date();
     const rows = await this.prisma.sponsoredPlacement.findMany({
       where: {
@@ -391,6 +402,68 @@ export class SponsoredService {
         reason ?? 'no reason'
       }`,
     );
+  }
+
+  // ===================================================================
+  // Lazy expiration sweep
+  // ===================================================================
+
+  /**
+   * Flips `ACTIVE` placements whose `endsAt` has elapsed to `EXPIRED` and
+   * recomputes the `sponsoredUntil` mirror on the affected subject rows.
+   *
+   * Throttled by `EXPIRE_SWEEP_COOLDOWN_MS` so the read path can call this
+   * unconditionally. Returns the number of rows expired (mostly for tests).
+   */
+  async expireDue(): Promise<number> {
+    const now = Date.now();
+    if (now - this.lastExpireSweepMs < SponsoredService.EXPIRE_SWEEP_COOLDOWN_MS) {
+      return 0;
+    }
+    this.lastExpireSweepMs = now;
+
+    const due = await this.prisma.sponsoredPlacement.findMany({
+      where: { status: 'ACTIVE', endsAt: { lt: new Date(now) } },
+      select: {
+        id: true,
+        kind: true,
+        trainerProfileId: true,
+        jobRequestId: true,
+      },
+    });
+    if (due.length === 0) return 0;
+
+    // Bucket affected subjects so we refresh each mirror exactly once even
+    // if multiple placements expired against the same subject in this pass.
+    const trainerSubjects = new Set<string>();
+    const jobSubjects = new Set<string>();
+    for (const r of due) {
+      if (r.kind === 'TRAINER' && r.trainerProfileId) trainerSubjects.add(r.trainerProfileId);
+      if (r.kind === 'JOB_REQUEST' && r.jobRequestId) jobSubjects.add(r.jobRequestId);
+    }
+
+    await this.prisma.$transaction(async (tx) => {
+      await tx.sponsoredPlacement.updateMany({
+        where: { id: { in: due.map((r) => r.id) } },
+        data: { status: 'EXPIRED' },
+      });
+      for (const trainerProfileId of trainerSubjects) {
+        await this.refreshSubjectMirror(tx, 'TRAINER', {
+          trainerProfileId,
+          jobRequestId: null,
+        });
+      }
+      for (const jobRequestId of jobSubjects) {
+        await this.refreshSubjectMirror(tx, 'JOB_REQUEST', {
+          trainerProfileId: null,
+          jobRequestId,
+        });
+      }
+    });
+    this.logger.log(
+      `expireDue swept ${due.length} placement(s); refreshed ${trainerSubjects.size} trainer + ${jobSubjects.size} job mirror(s)`,
+    );
+    return due.length;
   }
 
   // ===================================================================
