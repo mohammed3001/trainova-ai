@@ -5,6 +5,7 @@ import { useLocale, useTranslations } from 'next-intl';
 import type { Socket } from 'socket.io-client';
 import { getChatSocket } from '@/lib/chat-socket';
 import type { ChatMessage } from '@/lib/chat-api';
+import { TemplatesPicker } from './templates-picker';
 
 interface Props {
   conversationId: string;
@@ -12,6 +13,9 @@ interface Props {
   otherName: string;
   otherRole: string;
   initialMessages: ChatMessage[];
+  /** Last time the *other* participant marked the conversation as read.
+   *  Drives the per-message ✓ / ✓✓ seen indicator on outgoing bubbles. */
+  initialOtherLastReadAt: string | null;
 }
 
 function initials(name: string): string {
@@ -33,6 +37,7 @@ export function ChatRoom({
   otherName,
   otherRole,
   initialMessages,
+  initialOtherLastReadAt,
 }: Props) {
   const locale = useLocale();
   const t = useTranslations('chat');
@@ -42,6 +47,14 @@ export function ChatRoom({
   const [error, setError] = useState<string | null>(null);
   const [otherTyping, setOtherTyping] = useState(false);
   const [connected, setConnected] = useState(false);
+  // Mirror of the other participant's `lastReadAt` from the server. Updated
+  // live by the gateway's `read:update` event so my outgoing bubbles flip
+  // from ✓ to ✓✓ as soon as they're acknowledged. We keep it as ISO string
+  // (not Date) because the websocket payload is a string and rolling up the
+  // type at the boundary keeps comparisons consistent.
+  const [otherLastReadAt, setOtherLastReadAt] = useState<string | null>(
+    initialOtherLastReadAt,
+  );
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const typingTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
   const socketRef = useRef<Socket | null>(null);
@@ -83,6 +96,23 @@ export function ChatRoom({
       if (cid !== conversationId || userId === currentUserId) return;
       setOtherTyping(typing);
     };
+    const onRead = ({
+      conversationId: cid,
+      userId,
+      lastReadAt,
+    }: {
+      conversationId: string;
+      userId: string;
+      lastReadAt: string;
+    }) => {
+      // Only bump on the *other* participant's read marker. Our own
+      // markRead bursts on every new message and would otherwise cause
+      // pointless re-renders.
+      if (cid !== conversationId || userId === currentUserId) return;
+      setOtherLastReadAt((prev) =>
+        prev && prev >= lastReadAt ? prev : lastReadAt,
+      );
+    };
 
     (async () => {
       try {
@@ -99,6 +129,7 @@ export function ChatRoom({
         socket.on('disconnect', onDisconnect);
         socket.on('message:new', onMessage);
         socket.on('typing', onTyping);
+        socket.on('read:update', onRead);
         socket.emit('conversation:join', { conversationId });
       } catch (e) {
         // Realtime unavailable; UI still works via REST.
@@ -114,6 +145,7 @@ export function ChatRoom({
         socket.off('disconnect', onDisconnect);
         socket.off('message:new', onMessage);
         socket.off('typing', onTyping);
+        socket.off('read:update', onRead);
       }
     };
   }, [conversationId, currentUserId]);
@@ -236,8 +268,32 @@ export function ChatRoom({
                       <div className={mine ? 'chat-bubble-mine' : 'chat-bubble-theirs'}>
                         <p className="whitespace-pre-wrap break-words">{m.body}</p>
                       </div>
-                      <span className="mt-0.5 text-[10px] text-slate-400">
+                      <span className="mt-0.5 inline-flex items-center gap-1 text-[10px] text-slate-400">
                         {formatTime(m.createdAt, locale)}
+                        {mine ? (
+                          <span
+                            aria-label={
+                              otherLastReadAt && otherLastReadAt >= m.createdAt
+                                ? t('room.seen')
+                                : t('room.delivered')
+                            }
+                            data-testid={`chat-msg-receipt-${m.id}`}
+                            data-seen={
+                              otherLastReadAt && otherLastReadAt >= m.createdAt
+                                ? 'true'
+                                : 'false'
+                            }
+                            className={
+                              otherLastReadAt && otherLastReadAt >= m.createdAt
+                                ? 'text-brand-600'
+                                : 'text-slate-400'
+                            }
+                          >
+                            {otherLastReadAt && otherLastReadAt >= m.createdAt
+                              ? '✓✓'
+                              : '✓'}
+                          </span>
+                        ) : null}
                       </span>
                     </div>
                   </div>
@@ -264,6 +320,13 @@ export function ChatRoom({
         }}
         className="border-t border-slate-200 bg-white/70 px-3 py-3"
       >
+        <div className="mb-1.5 flex items-center justify-between gap-2">
+          <TemplatesPicker
+            onPick={(body) =>
+              setDraft((prev) => (prev.length === 0 ? body : `${prev}\n${body}`))
+            }
+          />
+        </div>
         <div className="flex items-end gap-2">
           <textarea
             className="input min-h-[44px] max-h-40 flex-1 resize-none"

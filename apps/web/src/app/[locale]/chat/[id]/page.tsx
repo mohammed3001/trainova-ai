@@ -70,6 +70,7 @@ export default async function ChatRoomPage({
         otherName={otherName}
         otherRole={other?.user.role ?? ''}
         initialMessages={messages}
+        initialOtherLastReadAt={other?.lastReadAt ?? null}
       />
     </div>
   );

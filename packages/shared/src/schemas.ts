@@ -272,6 +272,23 @@ export const startConversationSchema = z.object({
 });
 export type StartConversationInput = z.infer<typeof startConversationSchema>;
 
+// T7.H — chat search & saved templates.
+export const messageSearchQuerySchema = z.object({
+  q: z.string().min(2).max(200),
+  conversationId: z.string().cuid().optional(),
+  limit: z.coerce.number().int().min(1).max(50).default(20),
+});
+export type MessageSearchQuery = z.infer<typeof messageSearchQuerySchema>;
+
+export const messageTemplateCreateSchema = z.object({
+  name: z.string().trim().min(1).max(80),
+  body: z.string().trim().min(1).max(5000),
+});
+export type MessageTemplateCreateInput = z.infer<typeof messageTemplateCreateSchema>;
+
+export const messageTemplateUpdateSchema = messageTemplateCreateSchema.partial();
+export type MessageTemplateUpdateInput = z.infer<typeof messageTemplateUpdateSchema>;
+
 // =========================================================================
 // Admin (T5.A)
 // =========================================================================
