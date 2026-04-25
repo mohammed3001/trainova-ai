@@ -116,6 +116,11 @@ export class TeamService {
   ): Promise<CompanyInvitationDto> {
     const { company, callerRole } = await this.requireMembership(callerId, ['OWNER', 'ADMIN']);
 
+    // Flip stale PENDING rows to EXPIRED before counting / dedup-checking
+    // so an admin can re-invite the same email (and reclaim cap slots)
+    // without first navigating to the team page to trigger lazy cleanup.
+    await this.expirePending(company.id);
+
     // Block invites that would shadow an existing member (whether owner or
     // through a previous accept) — the company would end up with two slots
     // for the same human and surprising role-resolution behavior.
@@ -553,8 +558,8 @@ export class TeamService {
         <h1 style="font:600 20px system-ui">You're invited to ${escapeHtml(companyName)}</h1>
         <p style="font:400 14px system-ui;color:#475569">${escapeHtml(inviter)} invited you to join their team as <strong>${invitation.role}</strong>.</p>
         <p style="font:400 14px system-ui;color:#475569">The invitation expires on ${invitation.expiresAt.toUTCString()}.</p>
-        <p style="margin:24px 0"><a href="${url}" style="display:inline-block;padding:10px 16px;background:#0f172a;color:#fff;border-radius:6px;text-decoration:none">Review invitation</a></p>
-        <p style="font:400 12px system-ui;color:#94a3b8">If the button doesn't work, copy and paste this link:<br/>${url}</p>
+        <p style="margin:24px 0"><a href="${escapeHtml(url)}" style="display:inline-block;padding:10px 16px;background:#0f172a;color:#fff;border-radius:6px;text-decoration:none">Review invitation</a></p>
+        <p style="font:400 12px system-ui;color:#94a3b8">If the button doesn't work, copy and paste this link:<br/>${escapeHtml(url)}</p>
       `;
       await this.email.sendRaw(invitation.email, subject, html);
     } catch (err) {
