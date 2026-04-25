@@ -21,17 +21,22 @@ export class TaxProfileService {
       where: { userId },
     });
     const nextTaxId = data.taxId ?? null;
+    const nextCountry = data.countryCode.toUpperCase();
     // Only invalidate prior admin verification when the taxId itself
-    // actually changes. Editing unrelated fields (address, legal name,
-    // etc.) must not silently downgrade a verified profile, otherwise
-    // a trainer who updates their address would lose reverse-charge
-    // eligibility on future contracts.
-    const taxIdChanged = !existing || existing.taxId !== nextTaxId;
+    // actually changes OR when the country code changes. Editing
+    // unrelated fields (address, legal name, etc.) must not silently
+    // downgrade a verified profile. Country must invalidate too: a tax
+    // ID verified by ZATCA (Saudi Arabia) is not valid under BZSt
+    // (Germany), and `payments.service.ts` resolves tax rules off the
+    // *current* countryCode, so reusing a stale `taxIdVerified` flag
+    // across jurisdictions would zero-rate the wrong invoices.
+    const countryChanged = existing != null && existing.countryCode !== nextCountry;
+    const taxIdChanged = !existing || existing.taxId !== nextTaxId || countryChanged;
     const row = await this.prisma.taxProfile.upsert({
       where: { userId },
       create: {
         userId,
-        countryCode: data.countryCode.toUpperCase(),
+        countryCode: nextCountry,
         kind: data.kind,
         legalName: data.legalName ?? null,
         taxId: nextTaxId,
@@ -42,7 +47,7 @@ export class TaxProfileService {
         postalCode: data.postalCode ?? null,
       },
       update: {
-        countryCode: data.countryCode.toUpperCase(),
+        countryCode: nextCountry,
         kind: data.kind,
         legalName: data.legalName ?? null,
         taxId: nextTaxId,
