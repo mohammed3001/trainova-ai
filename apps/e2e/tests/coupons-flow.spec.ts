@@ -177,6 +177,8 @@ test.describe('T7.E coupons — admin CRUD + preview discount math + audience/sc
   });
 
   test('C5: TRAINER cannot redeem COMPANY-only coupon (audience guard)', async () => {
+    // Audience/scope/expiry/disabled guards are authorization-style
+    // rejections — the server returns 403 (ForbiddenException), not 400.
     await apiJson('/coupons/preview', {
       method: 'POST',
       token: trainerToken,
@@ -186,7 +188,7 @@ test.describe('T7.E coupons — admin CRUD + preview discount math + audience/sc
         amountMinor: 100_00,
         currency: 'USD',
       }),
-      expectStatus: 400,
+      expectStatus: 403,
     });
   });
 
@@ -200,7 +202,7 @@ test.describe('T7.E coupons — admin CRUD + preview discount math + audience/sc
         amountMinor: 100_00,
         currency: 'USD',
       }),
-      expectStatus: 400,
+      expectStatus: 403,
     });
   });
 
@@ -214,7 +216,7 @@ test.describe('T7.E coupons — admin CRUD + preview discount math + audience/sc
         amountMinor: 100_00,
         currency: 'USD',
       }),
-      expectStatus: 400,
+      expectStatus: 403,
     });
   });
 
@@ -281,7 +283,9 @@ test.describe('T7.E coupons — admin CRUD + preview discount math + audience/sc
       token: adminToken,
     });
 
-    // Post-disable: preview is rejected.
+    // Post-disable: preview is rejected with 403 (status !== 'ACTIVE'
+    // is treated as an authorization-style rejection, same as audience
+    // and scope guards).
     await apiJson('/coupons/preview', {
       method: 'POST',
       token: companyToken,
@@ -291,7 +295,7 @@ test.describe('T7.E coupons — admin CRUD + preview discount math + audience/sc
         amountMinor: 200_00,
         currency: 'USD',
       }),
-      expectStatus: 400,
+      expectStatus: 403,
     });
   });
 
