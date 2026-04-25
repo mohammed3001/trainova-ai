@@ -1,7 +1,7 @@
-import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { getLocale, getTranslations } from 'next-intl/server';
 import { getRole, getToken } from '@/lib/session';
+import { AdminNav } from '@/components/admin/admin-nav';
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const t = await getTranslations();
@@ -41,19 +41,12 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           <div className="px-2 pb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
             {t('admin.nav.title')}
           </div>
-          <nav className="flex flex-col gap-1">
-            {links.map((l) => (
-              <Link
-                key={l.href}
-                href={l.href}
-                className="rounded-lg px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-brand-50 hover:text-brand-700"
-              >
-                {l.label}
-              </Link>
-            ))}
-          </nav>
+          <AdminNav links={links} label={t('admin.nav.title')} />
         </aside>
-        <main className="min-w-0">{children}</main>
+        {/* `<main>` is already rendered by the locale layout —
+            using <div> here avoids a nested landmark that would
+            confuse AT (WCAG 1.3.1 — info and relationships). */}
+        <div className="min-w-0">{children}</div>
       </div>
     </div>
   );

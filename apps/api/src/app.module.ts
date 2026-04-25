@@ -29,6 +29,7 @@ import { MatchingModule } from './matching/matching.module';
 import { CurrencyModule } from './currency/currency.module';
 import { ReviewsModule } from './reviews/reviews.module';
 import { DisputesModule } from './disputes/disputes.module';
+import { InvoicingModule } from './invoicing/invoicing.module';
 import { HealthController } from './health.controller';
 
 @Module({
@@ -64,6 +65,7 @@ import { HealthController } from './health.controller';
     CurrencyModule,
     ReviewsModule,
     DisputesModule,
+    InvoicingModule,
   ],
   controllers: [HealthController],
   providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],

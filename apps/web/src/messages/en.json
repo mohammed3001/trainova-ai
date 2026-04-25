@@ -1,4 +1,17 @@
 {
+  "a11y": {
+    "skipToContent": "Skip to main content",
+    "primaryNav": "Primary navigation",
+    "userNav": "Account navigation",
+    "footerNav": "Footer navigation",
+    "adminNav": "Admin navigation",
+    "closeDialog": "Close dialog",
+    "openMenu": "Open menu",
+    "unreadBadge": "{count} unread",
+    "loading": "Loading content",
+    "requiredField": "required",
+    "errorSummary": "There are {count, plural, one {# error} other {# errors}} in this form"
+  },
   "common": {
     "appName": "Trainova AI",
     "tagline": "The Global Marketplace for AI Training Talent",
@@ -8,6 +21,7 @@
     "forTrainers": "For trainers",
     "signIn": "Sign in",
     "signOut": "Sign out",
+    "switchLanguage": "Switch language",
     "register": "Create account",
     "login": "Login",
     "dashboard": "Dashboard",

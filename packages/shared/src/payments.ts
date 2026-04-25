@@ -118,7 +118,12 @@ export interface PublicMilestone {
   contractId: string;
   title: string;
   description: string | null;
+  /** Gross amount charged to the buyer (subtotal + tax). */
   amountCents: number;
+  /** Tax-exclusive subtotal portion of `amountCents`. Defaults to `amountCents` on pre-T6.C milestones. */
+  subtotalCents: number;
+  /** Tax portion of `amountCents`. Zero for reverse-charge / export / pre-T6.C. */
+  taxAmountCents: number;
   order: number;
   dueDate: string | null;
   status: MilestoneStatus;
@@ -136,7 +141,20 @@ export interface PublicContract {
   title: string;
   description: string | null;
   currency: string;
+  /** Gross total (subtotal + tax). */
   totalAmountCents: number;
+  /** Tax-exclusive subtotal. */
+  subtotalAmountCents: number;
+  /** Basis points, 1500 = 15%. */
+  taxRateBps: number;
+  /** Tax portion of `totalAmountCents`. */
+  taxAmountCents: number;
+  /** Jurisdiction label (e.g. "VAT", "GST"). Null when no tax applies. */
+  taxLabel: string | null;
+  /** Free-text legal note rendered on invoices (reverse charge / export clause). */
+  taxNote: string | null;
+  /** True when the buyer must self-account for the tax (zero-rated invoice with note). */
+  reverseCharge: boolean;
   platformFeeBps: number;
   status: ContractStatus;
   acceptedAt: string | null;
@@ -163,7 +181,14 @@ export interface PublicStripeConnectAccount {
 export interface PublicPayout {
   id: string;
   milestoneId: string | null;
+  /** Net amount hitting the trainer's Connect account (gross − fee). */
   amountCents: number;
+  /** Original milestone gross before any deductions. Zero on pre-T6.C payouts. */
+  grossAmountCents: number;
+  /** Platform service fee withheld. Zero on pre-T6.C payouts. */
+  feeAmountCents: number;
+  /** Tax portion of the original milestone (informational only on self-billing statement). */
+  taxAmountCents: number;
   currency: string;
   status: PayoutStatus;
   stripeTransferId: string | null;

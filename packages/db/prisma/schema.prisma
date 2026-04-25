@@ -72,6 +72,8 @@ model User {
   emailTemplatesUpdated         EmailTemplate[]           @relation("EmailTemplateUpdatedBy")
   disputesRaised                Dispute[]                 @relation("DisputeRaiser")
   disputesResolved              Dispute[]                 @relation("DisputeResolver")
+  taxProfile                    TaxProfile?
+  invoicesIssued                Invoice[]                 @relation("InvoiceIssuedBy")
 
   @@index([role, status])
 }
@@ -768,21 +770,32 @@ enum PayoutStatus {
 /// money through escrow (PaymentIntent → held on platform → Transfer to
 /// Connect account on release).
 model Contract {
-  id               String         @id @default(cuid())
-  applicationId    String
-  companyId        String
-  trainerId        String
-  title            String
-  description      String?
-  currency         String         @default("USD")
-  totalAmountCents Int
-  platformFeeBps   Int            @default(1000) // 10% default commission
-  status           ContractStatus @default(DRAFT)
-  acceptedAt       DateTime?
-  completedAt      DateTime?
-  cancelledAt      DateTime?
-  createdAt        DateTime       @default(now())
-  updatedAt        DateTime       @updatedAt
+  id                  String         @id @default(cuid())
+  applicationId       String
+  companyId           String
+  trainerId           String
+  title               String
+  description         String?
+  currency            String         @default("USD")
+  // Pricing breakdown. `totalAmountCents` is the gross amount the buyer
+  // pays (subtotal + tax). `subtotalAmountCents` and `taxAmountCents`
+  // are derived at contract-creation time from `taxRateBps` resolved via
+  // TaxRule + buyer/seller TaxProfile (see TaxService). For pre-T6.C
+  // contracts these default to total/0/0 (treated as tax-inclusive).
+  totalAmountCents    Int
+  subtotalAmountCents Int            @default(0)
+  taxRateBps          Int            @default(0) // basis points, 1500 = 15%
+  taxAmountCents      Int            @default(0)
+  taxLabel            String? // "VAT", "GST", "Sales Tax", etc.
+  taxNote             String? // e.g. "Reverse charge — buyer to account for VAT"
+  reverseCharge       Boolean        @default(false)
+  platformFeeBps      Int            @default(1000) // 10% default commission
+  status              ContractStatus @default(DRAFT)
+  acceptedAt          DateTime?
+  completedAt         DateTime?
+  cancelledAt         DateTime?
+  createdAt           DateTime       @default(now())
+  updatedAt           DateTime       @updatedAt
 
   application Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
   company     Company     @relation(fields: [companyId], references: [id], onDelete: Cascade)
@@ -790,6 +803,7 @@ model Contract {
   milestones  Milestone[]
   reviews     Review[]
   disputes    Dispute[]
+  invoices    Invoice[]
 
   @@index([companyId, status])
   @@index([trainerId, status])
@@ -849,23 +863,29 @@ model Dispute {
 /// → RELEASED (Transfer to trainer Connect account + Payout queued)
 /// OR → REFUNDED (funds returned to company).
 model Milestone {
-  id          String          @id @default(cuid())
-  contractId  String
-  title       String
-  description String?
-  amountCents Int
-  order       Int             @default(0)
-  dueDate     DateTime?
-  status      MilestoneStatus @default(PENDING)
-  fundedAt    DateTime?
-  releasedAt  DateTime?
-  refundedAt  DateTime?
-  createdAt   DateTime        @default(now())
-  updatedAt   DateTime        @updatedAt
+  id             String          @id @default(cuid())
+  contractId     String
+  title          String
+  description    String?
+  // `amountCents` is the gross amount Stripe charges the buyer. Tax
+  // breakdown is preserved on the milestone so each invoice can be
+  // generated independently of the parent contract aggregate.
+  amountCents    Int
+  subtotalCents  Int             @default(0)
+  taxAmountCents Int             @default(0)
+  order          Int             @default(0)
+  dueDate        DateTime?
+  status         MilestoneStatus @default(PENDING)
+  fundedAt       DateTime?
+  releasedAt     DateTime?
+  refundedAt     DateTime?
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
 
   contract       Contract        @relation(fields: [contractId], references: [id], onDelete: Cascade)
   paymentIntents PaymentIntent[]
   payouts        Payout[]
+  invoices       Invoice[]
 
   @@index([contractId, order])
 }
@@ -898,7 +918,15 @@ model Payout {
   milestoneId      String?
   stripeTransferId String?      @unique
   stripePayoutId   String?      @unique
+  // `amountCents` is what hits the trainer Connect account (gross −
+  // platform fee). `grossAmountCents` is the milestone gross before any
+  // deductions, kept here so the trainer-side self-billing statement
+  // can render fee + tax breakdown without joining back through the
+  // milestone (which may have been refunded/cancelled later).
   amountCents      Int
+  grossAmountCents Int          @default(0)
+  feeAmountCents   Int          @default(0)
+  taxAmountCents   Int          @default(0)
   currency         String       @default("USD")
   status           PayoutStatus @default(PENDING)
   failureMessage   String?
@@ -908,6 +936,7 @@ model Payout {
 
   user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
   milestone Milestone? @relation(fields: [milestoneId], references: [id], onDelete: SetNull)
+  invoices  Invoice[]
 
   @@index([userId, createdAt])
   @@index([milestoneId])
@@ -925,6 +954,145 @@ model StripeWebhookEvent {
   createdAt     DateTime  @default(now())
 
   @@index([type, createdAt])
+}
+
+// =========================
+// Tax & Invoicing (T6.C)
+// =========================
+
+enum TaxKind {
+  VAT
+  GST
+  SALES_TAX
+  ZAKAT
+  OTHER
+}
+
+/// Admin-managed catalog of tax rules keyed by ISO-3166 country code.
+/// `b2bReverseCharge=true` means cross-border B2B sales between two
+/// VAT-registered businesses zero-rate the tax and add a reverse-charge
+/// note instead (typical EU + GCC behaviour). Inactive rules are kept
+/// for historical invoices but excluded from new contracts.
+model TaxRule {
+  id               String   @id @default(cuid())
+  countryCode      String   @unique // ISO-3166-1 alpha-2 (e.g. "SA", "DE")
+  label            String // Display label, e.g. "VAT", "GST", "Sales Tax"
+  kind             TaxKind  @default(VAT)
+  rateBps          Int // basis points; 1500 = 15%
+  b2bReverseCharge Boolean  @default(false)
+  exportZeroRated  Boolean  @default(true) // exports to non-domestic buyers zero-rated
+  active           Boolean  @default(true)
+  notes            String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@index([active])
+}
+
+enum TaxEntityKind {
+  INDIVIDUAL
+  BUSINESS
+}
+
+/// Per-user tax registration profile. A `taxId` is the VAT/GST/EIN
+/// number issued by the local tax authority; presence of a verified id
+/// for both parties triggers reverse-charge logic where applicable.
+model TaxProfile {
+  id            String        @id @default(cuid())
+  userId        String        @unique
+  countryCode   String // ISO-3166-1 alpha-2
+  kind          TaxEntityKind @default(INDIVIDUAL)
+  legalName     String?
+  taxId         String? // VAT registration number, EIN, etc.
+  taxIdVerified Boolean       @default(false)
+  addressLine1  String?
+  addressLine2  String?
+  city          String?
+  region        String?
+  postalCode    String?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([countryCode])
+}
+
+enum InvoiceKind {
+  PURCHASE // company-paid milestone invoice (platform → company)
+  PAYOUT_STATEMENT // self-billing statement to trainer (platform issues on trainer's behalf)
+}
+
+enum InvoiceStatus {
+  ISSUED
+  PAID
+  VOID
+}
+
+/// Immutable financial document generated when a milestone is funded
+/// (PURCHASE) or released (PAYOUT_STATEMENT). The `number` is a
+/// platform-wide sequential identifier formatted as YYYY-NNNNNN; once
+/// issued, line items and totals are frozen — corrections require a new
+/// invoice with `replacesInvoiceId` set.
+model Invoice {
+  id                String        @id @default(cuid())
+  number            String        @unique // e.g. "2026-000123"
+  kind              InvoiceKind
+  status            InvoiceStatus @default(ISSUED)
+  contractId        String?
+  milestoneId       String?
+  payoutId          String?
+  // Counterparties — denormalized so historical invoices remain
+  // accurate even if the underlying TaxProfile is later edited.
+  issuerName        String
+  issuerCountry     String?
+  issuerTaxId       String?
+  issuerAddress     String?
+  recipientName     String
+  recipientCountry  String?
+  recipientTaxId    String?
+  recipientAddress  String?
+  // Money. Values are in `currency` minor units (cents).
+  currency          String        @default("USD")
+  subtotalCents     Int
+  taxRateBps        Int           @default(0)
+  taxAmountCents    Int           @default(0)
+  totalCents        Int
+  taxLabel          String?
+  taxNote           String?
+  reverseCharge     Boolean       @default(false)
+  // Line items as JSON: [{description, quantity, unitCents, totalCents}].
+  lineItemsJson     Json
+  // Audit + linkage.
+  issuedById        String? // admin/system actor; nullable for system-issued
+  issuedAt          DateTime      @default(now())
+  paidAt            DateTime?
+  voidedAt          DateTime?
+  replacesInvoiceId String?       @unique // chained corrections
+  notes             String?
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  contract   Contract?  @relation(fields: [contractId], references: [id], onDelete: SetNull)
+  milestone  Milestone? @relation(fields: [milestoneId], references: [id], onDelete: SetNull)
+  payout     Payout?    @relation(fields: [payoutId], references: [id], onDelete: SetNull)
+  issuedBy   User?      @relation("InvoiceIssuedBy", fields: [issuedById], references: [id], onDelete: SetNull)
+  replaces   Invoice?   @relation("InvoiceReplaces", fields: [replacesInvoiceId], references: [id], onDelete: SetNull)
+  replacedBy Invoice?   @relation("InvoiceReplaces")
+
+  @@index([kind, issuedAt])
+  @@index([contractId])
+  @@index([milestoneId])
+  @@index([payoutId])
+}
+
+/// Atomic counter used to mint the `Invoice.number` sequence. A single
+/// row keyed by `year` is incremented inside a transaction so two
+/// concurrent invoice issuances cannot collide.
+model InvoiceCounter {
+  year      Int      @id
+  lastSeq   Int      @default(0)
+  updatedAt DateTime @updatedAt
 }
 
 enum AdCampaignStatus {

@@ -1,4 +1,17 @@
 {
+  "a11y": {
+    "skipToContent": "تخطَّ إلى المحتوى الرئيسي",
+    "primaryNav": "القائمة الرئيسية",
+    "userNav": "قائمة الحساب",
+    "footerNav": "قائمة التذييل",
+    "adminNav": "قائمة لوحة التحكم",
+    "closeDialog": "إغلاق الحوار",
+    "openMenu": "فتح القائمة",
+    "unreadBadge": "{count} غير مقروء",
+    "loading": "جارٍ تحميل المحتوى",
+    "requiredField": "مطلوب",
+    "errorSummary": "يوجد {count, plural, one {خطأ واحد} two {خطآن} few {# أخطاء} other {# خطأ}} في هذا النموذج"
+  },
   "common": {
     "appName": "Trainova AI",
     "tagline": "المنصة العالمية لتوظيف خبراء تدريب الذكاء الاصطناعي",
@@ -8,6 +21,7 @@
     "forTrainers": "للمدربين",
     "signIn": "تسجيل الدخول",
     "signOut": "تسجيل الخروج",
+    "switchLanguage": "تبديل اللغة",
     "register": "إنشاء حساب",
     "login": "تسجيل الدخول",
     "dashboard": "لوحة التحكم",

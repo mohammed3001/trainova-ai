@@ -13,3 +13,4 @@ export * from './matching';
 export * from './currency';
 export * from './preferences';
 export * from './reviews';
+export * from './invoicing';
