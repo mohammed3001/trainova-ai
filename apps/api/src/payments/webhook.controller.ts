@@ -15,6 +15,7 @@ import type { Stripe } from 'stripe/cjs/stripe.core.js';
 import { Prisma } from '@trainova/db';
 import { PrismaService } from '../prisma/prisma.service';
 import { AdsService } from '../ads/ads.service';
+import { SponsoredService } from '../sponsored/sponsored.service';
 import { PaymentsService } from './payments.service';
 import { StripeService } from './stripe.service';
 
@@ -47,6 +48,11 @@ export class StripeWebhookController {
    */
   private ads(): AdsService {
     return this.moduleRef.get(AdsService, { strict: false });
+  }
+
+  /** Same lazy lookup pattern for SponsoredService (T7.G). */
+  private sponsored(): SponsoredService {
+    return this.moduleRef.get(SponsoredService, { strict: false });
   }
 
   @Post()
@@ -115,14 +121,17 @@ export class StripeWebhookController {
         const pi = event.data.object as Stripe.PaymentIntent;
         const milestoneId = pi.metadata?.trainovaMilestoneId;
         const adTopupId = pi.metadata?.trainovaAdTopupId;
+        const sponsoredId = pi.metadata?.trainovaSponsoredPlacementId;
         await this.payments.markPaymentIntentStatus(pi.id, 'SUCCEEDED');
         if (milestoneId) await this.payments.markMilestoneFunded(milestoneId, pi.id);
         if (adTopupId) await this.ads().handleTopupSucceeded(pi.id);
+        if (sponsoredId) await this.sponsored().handlePaymentSucceeded(pi.id);
         return;
       }
       case 'payment_intent.payment_failed': {
         const pi = event.data.object as Stripe.PaymentIntent;
         const adTopupId = pi.metadata?.trainovaAdTopupId;
+        const sponsoredId = pi.metadata?.trainovaSponsoredPlacementId;
         await this.payments.markPaymentIntentStatus(
           pi.id,
           'FAILED',
@@ -134,11 +143,28 @@ export class StripeWebhookController {
             pi.last_payment_error?.message ?? null,
           );
         }
+        if (sponsoredId) {
+          await this.sponsored().handlePaymentFailed(
+            pi.id,
+            pi.last_payment_error?.message ?? null,
+          );
+        }
         return;
       }
       case 'payment_intent.canceled': {
         const pi = event.data.object as Stripe.PaymentIntent;
+        const sponsoredId = pi.metadata?.trainovaSponsoredPlacementId;
         await this.payments.markPaymentIntentStatus(pi.id, 'CANCELED');
+        // Mirror payment_failed: a canceled PI (3DS timeout, admin
+        // dashboard, etc.) leaves the placement in PENDING_PAYMENT and we'd
+        // never refund. Reuse handlePaymentFailed which is the
+        // PENDING_PAYMENT/DRAFT lifecycle reset path.
+        if (sponsoredId) {
+          await this.sponsored().handlePaymentFailed(
+            pi.id,
+            pi.cancellation_reason ?? 'payment_intent.canceled',
+          );
+        }
         return;
       }
       case 'account.updated': {

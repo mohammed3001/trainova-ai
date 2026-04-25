@@ -1,11 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import {
   MATCHING_WEIGHTS,
+  SPONSORED_WEIGHT_MAX,
   type JobMatch,
   type MatchingScoreBreakdown,
   type TrainerMatch,
 } from '@trainova/shared';
 import { PrismaService } from '../prisma/prisma.service';
+import { SponsoredService } from '../sponsored/sponsored.service';
 
 interface TrainerView {
   userId: string;
@@ -13,6 +15,7 @@ interface TrainerView {
   email: string;
   avatarUrl: string | null;
   profile: {
+    id: string;
     slug: string;
     headline: string | null;
     country: string | null;
@@ -43,7 +46,10 @@ interface JobView {
 
 @Injectable()
 export class MatchingService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly sponsored: SponsoredService,
+  ) {}
 
   // =====================================================================
   // Public entrypoints
@@ -65,10 +71,15 @@ export class MatchingService {
     // with the request OR who match a request language. We then re-score the
     // pool in-process. We cap the pool to keep cold-path latency bounded.
     const trainers = await this.candidateTrainersForJob(job, 200);
+    // T7.G — load active sponsorship boosts for the trainer pool in one
+    // round trip so per-row scoring stays O(1).
+    const boostMap = await this.sponsored.getActiveBoostMap('TRAINER');
 
     const scored: TrainerMatch[] = trainers
       .map((t) => {
-        const breakdown = this.scoreTrainerAgainstJob(t, job);
+        const baseBreakdown = this.scoreTrainerAgainstJob(t, job);
+        const boost = boostMap.get(t.profile.id) ?? 0;
+        const breakdown = this.applySponsorBoost(baseBreakdown, boost);
         const score = this.combine(breakdown);
         return {
           trainerId: t.userId,
@@ -82,12 +93,18 @@ export class MatchingService {
           hourlyRateMax: t.profile.hourlyRateMax,
           currency: job.currency,
           score,
+          sponsored: boost > 0,
           breakdown,
         } satisfies TrainerMatch;
       })
       .filter((m) => (opts.minScore ? m.score >= opts.minScore : true))
       .sort((a, b) => {
+        // Score is primary so a low-quality sponsored match can never beat a
+        // high-quality unsponsored one — applySponsorBoost has already added
+        // the (capped) sponsor weight into score. Sponsored only acts as a
+        // tiebreaker at exactly equal score.
         if (b.score !== a.score) return b.score - a.score;
+        if (a.sponsored !== b.sponsored) return a.sponsored ? -1 : 1;
         if (a.breakdown.trust.verified !== b.breakdown.trust.verified) {
           return a.breakdown.trust.verified ? -1 : 1;
         }
@@ -110,10 +127,13 @@ export class MatchingService {
     if (!trainer) return [];
 
     const jobs = await this.candidateJobsForTrainer(trainer, 200);
+    const boostMap = await this.sponsored.getActiveBoostMap('JOB_REQUEST');
 
     const scored: JobMatch[] = jobs
       .map((j) => {
-        const breakdown = this.scoreTrainerAgainstJob(trainer, j);
+        const baseBreakdown = this.scoreTrainerAgainstJob(trainer, j);
+        const boost = boostMap.get(j.id) ?? 0;
+        const breakdown = this.applySponsorBoost(baseBreakdown, boost);
         const score = this.combine(breakdown);
         return {
           jobRequestId: j.id,
@@ -127,11 +147,16 @@ export class MatchingService {
           currency: j.currency,
           publishedAt: j.publishedAt?.toISOString() ?? null,
           score,
+          sponsored: boost > 0,
           breakdown,
         } satisfies JobMatch;
       })
       .filter((m) => (opts.minScore ? m.score >= opts.minScore : true))
-      .sort((a, b) => b.score - a.score);
+      .sort((a, b) => {
+        if (b.score !== a.score) return b.score - a.score;
+        if (a.sponsored !== b.sponsored) return a.sponsored ? -1 : 1;
+        return 0;
+      });
 
     return scored.slice(0, opts.limit);
   }
@@ -218,6 +243,31 @@ export class MatchingService {
         pastApplications: trainer.history.total,
         acceptedApplications: trainer.history.accepted,
       },
+      // Default sponsor block — `applySponsorBoost` sets the real values
+      // when the row is in the boost map. Keeps `MatchingScoreBreakdown`
+      // total here so callers don't have to merge two shapes.
+      sponsor: { score: 0, boost: 0, active: false },
+    };
+  }
+
+  /**
+   * Returns a fresh breakdown with the sponsor signal populated. The
+   * boost itself is added on top of the weighted score in `combine()`,
+   * which lets the existing component weights stay 100%.
+   */
+  private applySponsorBoost(
+    breakdown: MatchingScoreBreakdown,
+    boost: number,
+  ): MatchingScoreBreakdown {
+    const safe = Math.max(0, Math.min(SPONSORED_WEIGHT_MAX, Math.round(boost)));
+    if (safe === 0) return breakdown;
+    return {
+      ...breakdown,
+      sponsor: {
+        score: Math.min(100, safe * 2),
+        boost: safe,
+        active: true,
+      },
     };
   }
 
@@ -262,13 +312,26 @@ export class MatchingService {
 
   private combine(b: MatchingScoreBreakdown): number {
     const w = MATCHING_WEIGHTS;
-    const total =
+    const weighted =
       (b.skills.score * w.skills +
         b.languages.score * w.languages +
         b.rate.score * w.rate +
         b.trust.score * w.trust +
         b.history.score * w.history) /
       100;
+    // Apply sponsor boost against the *remaining headroom* rather than
+    // adding it raw and clamping. The naive `min(100, weighted + boost)`
+    // collapsed any sponsored item with weighted >= 50 to 100 at the cap,
+    // letting a moderate sponsored match tie a perfect unsponsored one
+    // and then steal the row via the sponsored tiebreaker. With the
+    // headroom form, a perfect organic score (weighted=100) gets zero
+    // benefit, weighted=50 with boost=50 lifts to 75, and weighted=0
+    // with boost=50 lifts to 50 — preserving the invariant from
+    // packages/shared/src/sponsored.ts that a low-quality sponsored row
+    // can never outrank a high-quality unsponsored one.
+    const headroom = Math.max(0, 100 - weighted);
+    const effectiveBoost = (b.sponsor.boost * headroom) / 100;
+    const total = weighted + effectiveBoost;
     return Math.round(Math.max(0, Math.min(100, total)));
   }
 
@@ -286,6 +349,7 @@ export class MatchingService {
         avatarUrl: true,
         trainerProfile: {
           select: {
+            id: true,
             slug: true,
             headline: true,
             country: true,
@@ -317,6 +381,7 @@ export class MatchingService {
       email: user.email,
       avatarUrl: user.avatarUrl,
       profile: {
+        id: user.trainerProfile.id,
         slug: user.trainerProfile.slug,
         headline: user.trainerProfile.headline,
         country: user.trainerProfile.country,
@@ -383,8 +448,13 @@ export class MatchingService {
         ...(orConditions.length ? { OR: orConditions } : {}),
       },
       take: cap,
-      orderBy: [{ verified: 'desc' }, { updatedAt: 'desc' }],
+      orderBy: [
+        { sponsoredUntil: { sort: 'desc', nulls: 'last' } },
+        { verified: 'desc' },
+        { updatedAt: 'desc' },
+      ],
       select: {
+        id: true,
         slug: true,
         headline: true,
         country: true,
@@ -425,6 +495,7 @@ export class MatchingService {
       email: p.user.email,
       avatarUrl: p.user.avatarUrl,
       profile: {
+        id: p.id,
         slug: p.slug,
         headline: p.headline,
         country: p.country,
@@ -452,7 +523,11 @@ export class MatchingService {
         ...(orConditions.length ? { OR: orConditions } : {}),
       },
       take: cap,
-      orderBy: [{ featured: 'desc' }, { publishedAt: 'desc' }],
+      orderBy: [
+        { sponsoredUntil: { sort: 'desc', nulls: 'last' } },
+        { featured: 'desc' },
+        { publishedAt: 'desc' },
+      ],
       select: {
         id: true,
         slug: true,

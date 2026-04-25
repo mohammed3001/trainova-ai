@@ -34,6 +34,7 @@ import { AiAssistModule } from './ai-assist/ai-assist.module';
 import { ContactModule } from './contact/contact.module';
 import { ESignatureModule } from './e-signature/e-signature.module';
 import { CouponsModule } from './coupons/coupons.module';
+import { SponsoredModule } from './sponsored/sponsored.module';
 import { HealthController } from './health.controller';
 
 @Module({
@@ -74,6 +75,7 @@ import { HealthController } from './health.controller';
     ContactModule,
     ESignatureModule,
     CouponsModule,
+    SponsoredModule,
   ],
   controllers: [HealthController],
   providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],

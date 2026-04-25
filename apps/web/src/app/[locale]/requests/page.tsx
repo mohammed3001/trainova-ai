@@ -38,6 +38,9 @@ interface RequestItem {
   budgetMax: number | null;
   durationDays: number | null;
   publishedAt: string | null;
+  /** T7.G — set by the API when an active sponsored placement covers
+   *  this row. Drives the "Sponsored" badge in the public list. */
+  sponsored?: boolean;
   company: { name: string; slug: string; logoUrl: string | null; country: string | null; verified: boolean };
   skills: { skill: { id: string; slug: string; nameEn: string; nameAr: string } }[];
 }
@@ -86,7 +89,12 @@ export default async function RequestsPage() {
                     {r.company.country ? ` · ${r.company.country}` : ''}
                   </div>
                 </div>
-                {r.company.verified ? <span className="badge-accent">Verified</span> : null}
+                <div className="flex flex-wrap items-center gap-1">
+                  {r.sponsored ? (
+                    <span className="badge-sponsored">{t('sponsored.badge')}</span>
+                  ) : null}
+                  {r.company.verified ? <span className="badge-accent">Verified</span> : null}
+                </div>
               </div>
               <p className="mt-3 line-clamp-3 text-sm text-slate-600">{r.description}</p>
               <div className="mt-3 flex flex-wrap gap-2">
