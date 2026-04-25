@@ -1817,7 +1817,7 @@
         "next": "Siguiente"
       }
     },
-        "emailMarketing": {
+    "emailMarketing": {
       "title": "Marketing por correo",
       "subtitle": "Campañas de marketing redactadas por el administrador y secuencias automáticas. Los envíos se procesan en segundo plano y se rastrean por destinatario.",
       "open": "Abrir",
@@ -2124,6 +2124,21 @@
       "TRAINER": "Trainer",
       "ADMIN": "Admin",
       "SUPER_ADMIN": "Admin"
+    },
+    "ai": {
+      "title": "Copiloto de IA",
+      "summaryTitle": "Resumen",
+      "tasksTitle": "Acciones",
+      "summarize": "Resumir",
+      "extract": "Extraer tareas",
+      "regenerate": "Regenerar",
+      "working": "Procesando…",
+      "summaryHint": "Genera un resumen de un párrafo de esta conversación, con los puntos clave que debes recordar.",
+      "tasksHint": "Extrae todas las acciones acordadas, con el responsable y la fecha de entrega cuando se mencionen.",
+      "tasksEmpty": "Aún no se detectan acciones.",
+      "owner": "Responsable",
+      "due": "Fecha",
+      "errorGeneric": "Algo salió mal. Inténtalo de nuevo."
     }
   },
   "matching": {

@@ -92,3 +92,69 @@ export const searchMessages = (q: string, conversationId?: string) => {
 
 export const listTemplates = () =>
   authedFetch<MessageTemplate[]>('/chat/templates');
+
+// T8.A — inline AI chat summary + action-item extraction. Both endpoints
+// live on the AI Assist module (gated by the `ai_assistant` feature flag);
+// the browser hits them through `/api/proxy/ai-assist/...` like any other
+// authenticated API call. We deliberately type the response shapes here
+// instead of importing from `@trainova/shared` because the web bundle does
+// not ship the zod schemas.
+export interface ChatSummaryResult {
+  summary: string;
+  keyPoints: string[];
+  language: string;
+  upToMessageId: string;
+}
+
+export interface ChatTaskItem {
+  text: string;
+  ownerHint: string | null;
+  dueHint: string | null;
+}
+
+export interface ChatTasksResult {
+  tasks: ChatTaskItem[];
+  upToMessageId: string;
+}
+
+/**
+ * Called from the chat-room **client** component, where `authedFetch`
+ * cannot run (it reads httpOnly cookies via `next/headers`, which is
+ * server-only). We forward through the Next.js catch-all proxy at
+ * `/api/proxy/[...path]` instead — that route attaches the auth cookie
+ * and rewrites the trusted client IP exactly like the chat send /
+ * markRead calls do.
+ */
+async function postProxy<T>(path: string, body: unknown): Promise<T> {
+  const res = await fetch(`/api/proxy${path}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) {
+    const text = await res.text();
+    let message = text || `Request failed (${res.status})`;
+    try {
+      const parsed = JSON.parse(text) as { message?: unknown };
+      if (parsed && typeof parsed.message === 'string') message = parsed.message;
+    } catch {
+      // non-JSON body — leave the raw text in `message`.
+    }
+    const err: Error & { status?: number } = new Error(message);
+    err.status = res.status;
+    throw err;
+  }
+  return (await res.json()) as T;
+}
+
+export const summarizeChat = (conversationId: string, maxMessages = 80) =>
+  postProxy<ChatSummaryResult>('/ai-assist/chat-summary', {
+    conversationId,
+    maxMessages,
+  });
+
+export const extractChatTasks = (conversationId: string, maxMessages = 80) =>
+  postProxy<ChatTasksResult>('/ai-assist/chat-tasks', {
+    conversationId,
+    maxMessages,
+  });

@@ -1837,7 +1837,7 @@
         "next": "Next"
       }
     },
-        "emailMarketing": {
+    "emailMarketing": {
       "title": "Email marketing",
       "subtitle": "Admin-authored marketing campaigns and automated drip sequences. Sends are processed in the background and tracked per recipient.",
       "open": "Open",
@@ -2144,6 +2144,21 @@
       "TRAINER": "Trainer",
       "ADMIN": "Admin",
       "SUPER_ADMIN": "Admin"
+    },
+    "ai": {
+      "title": "AI Co-pilot",
+      "summaryTitle": "Summary",
+      "tasksTitle": "Action items",
+      "summarize": "Summarize",
+      "extract": "Extract tasks",
+      "regenerate": "Regenerate",
+      "working": "Working…",
+      "summaryHint": "Generate a one-paragraph recap of this conversation, plus the key points you should remember.",
+      "tasksHint": "Pull every action item the participants agreed to, with the owner and the due date when they were stated.",
+      "tasksEmpty": "No action items detected yet.",
+      "owner": "Owner",
+      "due": "Due",
+      "errorGeneric": "Something went wrong. Please try again."
     }
   },
   "matching": {
