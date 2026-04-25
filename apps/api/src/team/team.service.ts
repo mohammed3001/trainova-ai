@@ -256,8 +256,16 @@ export class TeamService {
     let status = invitation.status;
     if (status === 'PENDING' && invitation.expiresAt < new Date()) {
       status = 'EXPIRED';
+      // Atomic claim: only flip PENDING → EXPIRED. previewInvitation runs
+      // outside any transaction, so a concurrent acceptInvitation /
+      // revokeInvitation can commit between the findUnique above and
+      // this write. updateMany with `status: 'PENDING'` makes this a
+      // no-op when that happens, preserving the audit trail's truth.
       await this.prisma.companyInvitation
-        .update({ where: { id: invitation.id }, data: { status: 'EXPIRED' } })
+        .updateMany({
+          where: { id: invitation.id, status: 'PENDING' },
+          data: { status: 'EXPIRED' },
+        })
         .catch(() => undefined);
     }
 
@@ -315,8 +323,12 @@ export class TeamService {
         throw new ConflictException(`Invitation is already ${invitation.status.toLowerCase()}`);
       }
       if (invitation.expiresAt < new Date()) {
-        await tx.companyInvitation.update({
-          where: { id: invitation.id },
+        // Same atomic claim as the ACCEPTED paths below: refuse to
+        // overwrite a row a concurrent revoke / accept already moved
+        // away from PENDING. A 0-row updateMany still proceeds to
+        // throw — the invitation is no longer actionable either way.
+        await tx.companyInvitation.updateMany({
+          where: { id: invitation.id, status: 'PENDING' },
           data: { status: 'EXPIRED' },
         });
         throw new ConflictException('Invitation has expired; ask the company to issue a new one');
