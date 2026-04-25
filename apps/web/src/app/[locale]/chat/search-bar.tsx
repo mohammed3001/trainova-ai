@@ -27,6 +27,12 @@ export function ChatSearchBar({ locale }: { locale: string }) {
 
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
+    // Race-guard: bump the request id on every effect run — including the
+    // short-query early-return path — so any in-flight fetch from a prior
+    // cycle is invalidated immediately. If we only bumped inside the
+    // setTimeout, a fetch fired by the previous timeout could still resolve
+    // and overwrite state for the current query.
+    const myId = ++reqIdRef.current;
     const trimmed = q.trim();
     if (trimmed.length < 2) {
       setItems([]);
@@ -35,10 +41,6 @@ export function ChatSearchBar({ locale }: { locale: string }) {
     }
     setLoading(true);
     debounceRef.current = setTimeout(async () => {
-      // Race-guard: only the most recent in-flight request mutates state.
-      // Without this, fast typing can leave a stale earlier response
-      // overwriting the current one when the network is choppy.
-      const myId = ++reqIdRef.current;
       try {
         const res = await fetch(
           `/api/proxy/chat/messages/search?q=${encodeURIComponent(trimmed)}`,
