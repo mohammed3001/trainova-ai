@@ -322,6 +322,17 @@ export class CouponsService {
     const coupon = await tx.coupon.findUnique({ where: { code: args.code } });
     if (!coupon) throw new NotFoundException('Coupon not found');
 
+    // Serialize all redemption attempts for this coupon. SELECT ... FOR
+    // UPDATE on the Coupon row makes the maxRedemptions / perUserLimit
+    // check-then-write below atomic w.r.t. concurrent transactions:
+    // a second tx can't read redeemedCount or count(redemptions) until
+    // this transaction commits or rolls back. Without this guard, two
+    // concurrent fundMilestone calls under READ COMMITTED could each
+    // observe redeemedCount == maxRedemptions - 1, both pass the cap
+    // check, and both insert a redemption + increment the counter,
+    // exceeding the cap by one.
+    await tx.$executeRaw`SELECT 1 FROM "Coupon" WHERE id = ${coupon.id} FOR UPDATE`;
+
     // Idempotency for fundMilestone retries: the unique constraint on
     // CouponRedemption.milestoneId means a concurrent/retry path that
     // already wrote the redemption (with a possibly-discounted Stripe
@@ -447,6 +458,11 @@ export class CouponsService {
   ): Promise<{ couponId: string; stripeCouponId: string }> {
     const coupon = await tx.coupon.findUnique({ where: { code: args.code } });
     if (!coupon) throw new NotFoundException('Coupon not found');
+    // Lock the coupon row to serialize redemption writes for this coupon
+    // — see applyToMilestone for the full rationale on why a plain
+    // check-then-write would lose the maxRedemptions / perUserLimit cap
+    // under concurrency.
+    await tx.$executeRaw`SELECT 1 FROM "Coupon" WHERE id = ${coupon.id} FOR UPDATE`;
     this.assertEligible(coupon, {
       scope: 'SUBSCRIPTION',
       planId: args.planId,
