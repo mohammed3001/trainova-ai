@@ -83,6 +83,11 @@ export function NotificationsBell({ locale: localeProp, initialUnread = 0 }: Pro
   const [pushBusy, setPushBusy] = useState(false);
   const wrapRef = useRef<HTMLDivElement | null>(null);
   const socketRef = useRef<Socket | null>(null);
+  // StrictMode-safe dedup: tracks which notification ids have already been
+  // counted so the setItems updater stays pure (no side effects). Using a
+  // ref ensures the second StrictMode invocation of the updater short-
+  // circuits without re-incrementing the unread badge.
+  const seenIdsRef = useRef<Set<string>>(new Set());
 
   const l = localeProp ?? locale;
 
@@ -91,6 +96,9 @@ export function NotificationsBell({ locale: localeProp, initialUnread = 0 }: Pro
     setError(null);
     try {
       const data: NotificationList = await listNotifications({ limit: 20 });
+      // Seed the dedup set so a socket event arriving before this resolves
+      // doesn't double-count notifications we already pulled via REST.
+      seenIdsRef.current = new Set(data.items.map((x) => x.id));
       setItems(data.items);
       setUnread(data.unreadCount);
       setLoaded(true);
@@ -129,14 +137,13 @@ export function NotificationsBell({ locale: localeProp, initialUnread = 0 }: Pro
         if (cancelled) return;
         socketRef.current = s;
         s.on('notification:new', (n: NotificationNewEvent) => {
-          // Dedupe against what's already buffered — the REST fetch and the
-          // socket event race on first open, and we don't want the badge
-          // to drift upward for a notification we already counted.
-          setItems((prev) => {
-            if (prev.some((x) => x.id === n.id)) return prev;
-            setUnread((u) => u + 1);
-            return [n, ...prev].slice(0, 50);
-          });
+          // Dedupe via the seenIdsRef so the setItems updater stays pure;
+          // the side-effecting setUnread call lives outside the updater so
+          // StrictMode's double-invocation can't re-fire it.
+          if (seenIdsRef.current.has(n.id)) return;
+          seenIdsRef.current.add(n.id);
+          setItems((prev) => [n, ...prev].slice(0, 50));
+          setUnread((u) => u + 1);
         });
       } catch {
         /* silent — UI still works via REST */
