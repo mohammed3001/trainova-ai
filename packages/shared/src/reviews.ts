@@ -85,8 +85,21 @@ export const raiseDisputeInputSchema = z.object({
   evidence: z
     .object({
       attachmentIds: z.array(z.string().min(1)).max(20).optional(),
+      // `z.string().url()` accepts `javascript:` and `data:` URLs (anything
+      // `new URL()` parses). The dispute detail UIs render these as
+      // clickable `<a target="_blank">` links, so a malicious party could
+      // craft an evidence link that runs script in an admin's browser.
+      // Restrict to http(s) only.
       links: z
-        .array(z.string().url().max(500))
+        .array(
+          z
+            .string()
+            .url()
+            .max(500)
+            .refine((u) => /^https?:\/\//i.test(u), {
+              message: 'Only http/https links are allowed',
+            }),
+        )
         .max(10)
         .optional(),
     })
