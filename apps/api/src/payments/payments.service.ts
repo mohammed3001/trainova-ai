@@ -294,8 +294,13 @@ export class PaymentsService {
     //                       per-user + global redemption caps, currency
     //                       match, Stripe-min-charge gate, discount math.
     //                       Throws *before* anything irreversible runs.
-    //   2. Stripe call    — idempotent via `fund-${milestone.id}`. If
-    //                       this throws, no DB row has been written yet,
+    //   2. Stripe call    — idempotent via
+    //                       `fund-${milestone.id}-${couponCode ?? 'none'}`.
+    //                       The coupon code is part of the key because
+    //                       changing it changes the charge amount;
+    //                       Stripe rejects (HTTP 400) any reuse of an
+    //                       idempotency key with different parameters.
+    //                       If this throws, no DB row has been written yet,
     //                       so the coupon is preserved. If it returns a
     //                       PI in `requires_payment_method` (e.g. card
     //                       decline), that's a normal flow — the caller
@@ -349,7 +354,9 @@ export class PaymentsService {
         trainovaTrainerId: milestone.contract.trainerId,
         ...(plannedCoupon ? { trainovaCouponId: plannedCoupon.couponId } : {}),
       },
-      idempotencyKey: `fund-${milestone.id}`,
+      idempotencyKey: `fund-${milestone.id}-${
+        input.couponCode ? input.couponCode.trim().toUpperCase() : 'none'
+      }`,
     });
 
     const mapped = this.mapStripePiStatus(pi.status);
@@ -814,7 +821,12 @@ export class PaymentsService {
         planId: plan.id,
         ...(resolvedCoupon ? { trainovaCouponCode: resolvedCoupon.code } : {}),
       },
-      idempotencyKey: `subscribe-${user.id}-${plan.id}`,
+      // Coupon code is part of the idempotency key — changing the
+      // coupon between attempts changes the discount Stripe applies,
+      // and reusing a key with different params is a 400 from Stripe.
+      idempotencyKey: `subscribe-${user.id}-${plan.id}-${
+        input.couponCode ? input.couponCode.trim().toUpperCase() : 'none'
+      }`,
       couponId: stripeCouponId,
     });
 
