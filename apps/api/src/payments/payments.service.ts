@@ -858,44 +858,69 @@ export class PaymentsService {
       couponId: stripeCouponId,
     });
 
-    await this.prisma.$transaction(async (tx) => {
-      const created = await tx.subscription.create({
-        data: {
-          userId,
-          planId: plan.id,
-          status: subscription.status.toUpperCase(),
-          stripeSubscriptionId: subscription.id,
-          stripeCustomerId: customer.id,
-          currentPeriodStart: (subscription as unknown as { current_period_start?: number })
-            .current_period_start
-            ? new Date(
-                ((subscription as unknown as { current_period_start: number })
-                  .current_period_start) * 1000,
-              )
-            : null,
-          currentPeriodEnd: (subscription as unknown as { current_period_end?: number })
-            .current_period_end
-            ? new Date(
-                ((subscription as unknown as { current_period_end: number })
-                  .current_period_end) * 1000,
-              )
-            : null,
-        },
-      });
-      if (resolvedCoupon) {
-        await this.coupons.applyToSubscription(tx, {
-          code: resolvedCoupon.code,
-          userId,
-          userRole,
-          planId: plan.id,
-          subscriptionId: created.id,
-          originalMinor: resolvedCoupon.originalMinor,
-          discountMinor: resolvedCoupon.discountMinor,
-          finalMinor: resolvedCoupon.finalMinor,
-          currency: resolvedCoupon.currency,
+    // The Stripe subscription is now live and billing the customer. If
+    // the local DB transaction below throws — e.g. `applyToSubscription`
+    // detects the coupon's `maxRedemptions` was exhausted, `perUserLimit`
+    // was hit, or the coupon was disabled/expired between
+    // `resolveForSubscription` and here — we MUST cancel the Stripe
+    // subscription so the customer isn't charged for something we have
+    // no local record of. Without this compensation the row never
+    // appears in the admin panel, billing portal, or cancellation flow,
+    // because the webhook handler's `subscription.updateMany` matches
+    // zero rows.
+    try {
+      await this.prisma.$transaction(async (tx) => {
+        const created = await tx.subscription.create({
+          data: {
+            userId,
+            planId: plan.id,
+            status: subscription.status.toUpperCase(),
+            stripeSubscriptionId: subscription.id,
+            stripeCustomerId: customer.id,
+            currentPeriodStart: (subscription as unknown as { current_period_start?: number })
+              .current_period_start
+              ? new Date(
+                  ((subscription as unknown as { current_period_start: number })
+                    .current_period_start) * 1000,
+                )
+              : null,
+            currentPeriodEnd: (subscription as unknown as { current_period_end?: number })
+              .current_period_end
+              ? new Date(
+                  ((subscription as unknown as { current_period_end: number })
+                    .current_period_end) * 1000,
+                )
+              : null,
+          },
         });
+        if (resolvedCoupon) {
+          await this.coupons.applyToSubscription(tx, {
+            code: resolvedCoupon.code,
+            userId,
+            userRole,
+            planId: plan.id,
+            subscriptionId: created.id,
+            originalMinor: resolvedCoupon.originalMinor,
+            discountMinor: resolvedCoupon.discountMinor,
+            finalMinor: resolvedCoupon.finalMinor,
+            currency: resolvedCoupon.currency,
+          });
+        }
+      });
+    } catch (err) {
+      try {
+        await this.stripe.cancelSubscription(subscription.id, { immediate: true });
+      } catch (cancelErr) {
+        // Surface both the original cause and the compensation failure
+        // — the customer may need a manual refund if Stripe cancel
+        // also failed (network blip, etc.).
+        this.logger.error(
+          `Failed to cancel orphaned Stripe subscription ${subscription.id} after local persistence error`,
+          cancelErr instanceof Error ? cancelErr.stack : String(cancelErr),
+        );
       }
-    });
+      throw err;
+    }
 
     const invoice = subscription.latest_invoice as Stripe.Invoice | null | undefined;
     const pi = invoice && typeof invoice !== 'string'
