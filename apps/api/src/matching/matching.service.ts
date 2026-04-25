@@ -99,10 +99,12 @@ export class MatchingService {
       })
       .filter((m) => (opts.minScore ? m.score >= opts.minScore : true))
       .sort((a, b) => {
-        // Sponsored rows always float above unsponsored at equal score so
-        // a paid placement is visibly distinct, not just a tiebreaker.
-        if (a.sponsored !== b.sponsored) return a.sponsored ? -1 : 1;
+        // Score is primary so a low-quality sponsored match can never beat a
+        // high-quality unsponsored one — applySponsorBoost has already added
+        // the (capped) sponsor weight into score. Sponsored only acts as a
+        // tiebreaker at exactly equal score.
         if (b.score !== a.score) return b.score - a.score;
+        if (a.sponsored !== b.sponsored) return a.sponsored ? -1 : 1;
         if (a.breakdown.trust.verified !== b.breakdown.trust.verified) {
           return a.breakdown.trust.verified ? -1 : 1;
         }
@@ -151,8 +153,9 @@ export class MatchingService {
       })
       .filter((m) => (opts.minScore ? m.score >= opts.minScore : true))
       .sort((a, b) => {
+        if (b.score !== a.score) return b.score - a.score;
         if (a.sponsored !== b.sponsored) return a.sponsored ? -1 : 1;
-        return b.score - a.score;
+        return 0;
       });
 
     return scored.slice(0, opts.limit);
