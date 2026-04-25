@@ -153,7 +153,18 @@ export class StripeWebhookController {
       }
       case 'payment_intent.canceled': {
         const pi = event.data.object as Stripe.PaymentIntent;
+        const sponsoredId = pi.metadata?.trainovaSponsoredPlacementId;
         await this.payments.markPaymentIntentStatus(pi.id, 'CANCELED');
+        // Mirror payment_failed: a canceled PI (3DS timeout, admin
+        // dashboard, etc.) leaves the placement in PENDING_PAYMENT and we'd
+        // never refund. Reuse handlePaymentFailed which is the
+        // PENDING_PAYMENT/DRAFT lifecycle reset path.
+        if (sponsoredId) {
+          await this.sponsored().handlePaymentFailed(
+            pi.id,
+            pi.cancellation_reason ?? 'payment_intent.canceled',
+          );
+        }
         return;
       }
       case 'account.updated': {
