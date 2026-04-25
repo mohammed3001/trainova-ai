@@ -174,7 +174,8 @@
     "myApplications": "My applications",
     "myTests": "My tests",
     "openInDashboard": "Open",
-    "applicationsCount": "{count} applications"
+    "applicationsCount": "{count} applications",
+    "teamLink": "Team & members"
   },
   "requests": {
     "listTitle": "Open AI training requests",
@@ -623,6 +624,38 @@
         "result": {
           "title": "Grading recorded"
         }
+      }
+    },
+    "team": {
+      "title": "Team & members",
+      "subtitle": "Invite teammates to collaborate on {company} — control who can post requests, review applicants, run tests and chat with trainers.",
+      "inviteTitle": "Invite a teammate",
+      "inviteHelp": "Send an email invitation. The invitee accepts after signing in with the same email address.",
+      "email": "Email",
+      "role": "Role",
+      "name": "Name",
+      "actions": "Actions",
+      "sendInvite": "Send invitation",
+      "members": "Members",
+      "invitations": "Invitations",
+      "noInvitations": "No invitations have been sent yet.",
+      "empty": "No members yet.",
+      "remove": "Remove",
+      "revoke": "Revoke",
+      "you": "you",
+      "expiresAt": "expires {date}",
+      "helpFooter": "Owners can grant the ADMIN role; admins can manage recruiters and viewers.",
+      "roles": {
+        "OWNER": "Owner",
+        "ADMIN": "Admin",
+        "RECRUITER": "Recruiter",
+        "VIEWER": "Viewer"
+      },
+      "statuses": {
+        "PENDING": "Pending",
+        "ACCEPTED": "Accepted",
+        "REVOKED": "Revoked",
+        "EXPIRED": "Expired"
       }
     }
   },
@@ -2860,6 +2893,27 @@
       "cancel": "Cancel",
       "paymentError": "Payment failed. No charge was made.",
       "requirePaymentMethod": "Add a payment method on file before boosting."
+    }
+  },
+  "invitations": {
+    "title": "Team invitation",
+    "subtitle": "Review the role and the inviting company before joining.",
+    "company": "Company",
+    "role": "Role",
+    "invitedBy": "Invited by",
+    "invitedEmail": "Invited email",
+    "expiresAt": "Expires",
+    "status": "Status",
+    "accept": "Accept invitation",
+    "cancel": "Not now",
+    "notFound": "This invitation no longer exists or its link is invalid.",
+    "errors": {
+      "generic": "We could not process this invitation.",
+      "emailMismatch": "This invitation was issued to {email}. Sign in with that account to accept.",
+      "pending": "This invitation is awaiting your decision.",
+      "accepted": "You have already accepted this invitation.",
+      "revoked": "This invitation was revoked by the company.",
+      "expired": "This invitation has expired. Ask the company to issue a new one."
     }
   }
 }

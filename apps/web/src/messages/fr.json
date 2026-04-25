@@ -160,7 +160,8 @@
     "myApplications": "My applications",
     "myTests": "My tests",
     "openInDashboard": "Open",
-    "applicationsCount": "{count} applications"
+    "applicationsCount": "{count} applications",
+    "teamLink": "Équipe & membres"
   },
   "requests": {
     "listTitle": "Open AI training requests",
@@ -609,6 +610,38 @@
         "result": {
           "title": "Grading recorded"
         }
+      }
+    },
+    "team": {
+      "title": "Équipe & membres",
+      "subtitle": "Invitez vos collègues à collaborer sur {company} — contrôlez qui peut publier des demandes, examiner les candidats, lancer des tests et discuter avec les formateurs.",
+      "inviteTitle": "Inviter un coéquipier",
+      "inviteHelp": "Envoyez une invitation par e-mail. L'invité l'accepte après s'être connecté avec la même adresse.",
+      "email": "E-mail",
+      "role": "Rôle",
+      "name": "Nom",
+      "actions": "Actions",
+      "sendInvite": "Envoyer l'invitation",
+      "members": "Membres",
+      "invitations": "Invitations",
+      "noInvitations": "Aucune invitation n'a encore été envoyée.",
+      "empty": "Aucun membre pour le moment.",
+      "remove": "Retirer",
+      "revoke": "Révoquer",
+      "you": "vous",
+      "expiresAt": "expire le {date}",
+      "helpFooter": "Les propriétaires peuvent attribuer le rôle ADMIN ; les administrateurs gèrent les recruteurs et observateurs.",
+      "roles": {
+        "OWNER": "Propriétaire",
+        "ADMIN": "Administrateur",
+        "RECRUITER": "Recruteur",
+        "VIEWER": "Observateur"
+      },
+      "statuses": {
+        "PENDING": "En attente",
+        "ACCEPTED": "Acceptée",
+        "REVOKED": "Révoquée",
+        "EXPIRED": "Expirée"
       }
     }
   },
@@ -2726,6 +2759,27 @@
       "cancel": "Annuler",
       "paymentError": "Paiement échoué. Aucun montant n’a été prélevé.",
       "requirePaymentMethod": "Ajoutez un moyen de paiement avant de booster."
+    }
+  },
+  "invitations": {
+    "title": "Invitation d'équipe",
+    "subtitle": "Vérifiez le rôle et l'entreprise avant de rejoindre.",
+    "company": "Entreprise",
+    "role": "Rôle",
+    "invitedBy": "Invité par",
+    "invitedEmail": "E-mail invité",
+    "expiresAt": "Expire",
+    "status": "Statut",
+    "accept": "Accepter l'invitation",
+    "cancel": "Pas maintenant",
+    "notFound": "Cette invitation n'existe plus ou son lien est invalide.",
+    "errors": {
+      "generic": "Impossible de traiter cette invitation.",
+      "emailMismatch": "Cette invitation a été émise à {email}. Connectez-vous avec ce compte pour accepter.",
+      "pending": "Cette invitation attend votre décision.",
+      "accepted": "Vous avez déjà accepté cette invitation.",
+      "revoked": "Cette invitation a été révoquée par l'entreprise.",
+      "expired": "Cette invitation a expiré. Demandez à l'entreprise d'en émettre une nouvelle."
     }
   }
 }

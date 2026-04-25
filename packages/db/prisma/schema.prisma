@@ -96,6 +96,9 @@ model User {
   interviewsScheduledByMe       InterviewMeeting[]        @relation("InterviewScheduler")
   interviewsAsTrainer           InterviewMeeting[]        @relation("InterviewTrainer")
   interviewsCancelledByMe       InterviewMeeting[]        @relation("InterviewCanceller")
+  companyInvitationsCreated     CompanyInvitation[]       @relation("CompanyInvitationCreator")
+  companyInvitationsRevoked     CompanyInvitation[]       @relation("CompanyInvitationRevoker")
+  companyInvitationsAccepted    CompanyInvitation[]       @relation("CompanyInvitationAccepter")
 
   @@index([role, status])
 }
@@ -175,6 +178,7 @@ model Company {
   updatedAt        DateTime @updatedAt
 
   members          CompanyMember[]
+  invitations      CompanyInvitation[]
   requests         JobRequest[]
   adCampaigns      AdCampaign[]
   modelConnections ModelConnection[]
@@ -196,11 +200,47 @@ model CompanyMember {
   userId    String
   role      CompanyMemberRole @default(RECRUITER)
   createdAt DateTime          @default(now())
+  updatedAt DateTime          @updatedAt @default(now())
 
   company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
   user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([companyId, userId])
+}
+
+enum CompanyInvitationStatus {
+  PENDING
+  ACCEPTED
+  REVOKED
+  EXPIRED
+}
+
+// T9.A — Team collaboration: invitations issued by a company owner/admin
+// to add an external user to the company workspace under a chosen role.
+// `tokenHash` is a SHA-256 of the random 32-byte token; the plaintext
+// is delivered via email and never persisted.
+model CompanyInvitation {
+  id          String                  @id @default(cuid())
+  companyId   String
+  email       String
+  role        CompanyMemberRole       @default(RECRUITER)
+  tokenHash   String                  @unique
+  status      CompanyInvitationStatus @default(PENDING)
+  expiresAt   DateTime
+  createdById String
+  createdAt   DateTime                @default(now())
+  acceptedAt  DateTime?
+  acceptedById String?
+  revokedAt   DateTime?
+  revokedById String?
+
+  company    Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  createdBy  User    @relation("CompanyInvitationCreator", fields: [createdById], references: [id], onDelete: Cascade)
+  acceptedBy User?   @relation("CompanyInvitationAccepter", fields: [acceptedById], references: [id], onDelete: SetNull)
+  revokedBy  User?   @relation("CompanyInvitationRevoker", fields: [revokedById], references: [id], onDelete: SetNull)
+
+  @@index([companyId, status])
+  @@index([email])
 }
 
 // =========================
