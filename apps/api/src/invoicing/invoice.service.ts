@@ -35,6 +35,31 @@ type PayoutFull = Prisma.PayoutGetPayload<{
 
 type InvoiceRow = Prisma.InvoiceGetPayload<Record<string, never>>;
 
+interface CreateInput {
+  kind: InvoiceKind;
+  contractId: string | null;
+  milestoneId: string | null;
+  payoutId: string | null;
+  issuerName: string;
+  issuerCountry: string | null;
+  issuerTaxId: string | null;
+  issuerAddress: string | null;
+  recipientName: string;
+  recipientCountry: string | null;
+  recipientTaxId: string | null;
+  recipientAddress: string | null;
+  currency: string;
+  subtotalCents: number;
+  taxRateBps: number;
+  taxAmountCents: number;
+  totalCents: number;
+  taxLabel: string | null;
+  taxNote: string | null;
+  reverseCharge: boolean;
+  lineItems: InvoiceLineItem[];
+  notes: string | null;
+}
+
 /**
  * Issues invoices for milestone funding (PURCHASE) and milestone
  * release (PAYOUT_STATEMENT).
@@ -60,12 +85,9 @@ export class InvoiceService {
 
   async issueForMilestoneFunding(milestoneId: string): Promise<PublicInvoice> {
     const milestone = await this.loadMilestone(milestoneId);
-    const existing = await this.prisma.invoice.findFirst({
-      where: {
-        milestoneId,
-        kind: 'PURCHASE',
-        status: { not: 'VOID' },
-      },
+    const existing = await this.findExistingActive({
+      milestoneId,
+      kind: 'PURCHASE',
     });
     if (existing) return toPublic(existing);
 
@@ -86,7 +108,7 @@ export class InvoiceService {
       },
     ];
 
-    return this.create({
+    return this.createOrReturnExisting({
       kind: 'PURCHASE',
       contractId: contract.id,
       milestoneId: milestone.id,
@@ -118,12 +140,9 @@ export class InvoiceService {
 
   async issueForPayout(payoutId: string): Promise<PublicInvoice> {
     const payout = await this.loadPayout(payoutId);
-    const existing = await this.prisma.invoice.findFirst({
-      where: {
-        payoutId,
-        kind: 'PAYOUT_STATEMENT',
-        status: { not: 'VOID' },
-      },
+    const existing = await this.findExistingActive({
+      payoutId,
+      kind: 'PAYOUT_STATEMENT',
     });
     if (existing) return toPublic(existing);
 
@@ -153,7 +172,7 @@ export class InvoiceService {
     // Payout statements are always tax-exempt from the platform side —
     // the trainer is responsible for declaring income tax under their
     // local regime. We keep `taxRateBps=0` and emit a note for clarity.
-    return this.create({
+    return this.createOrReturnExisting({
       kind: 'PAYOUT_STATEMENT',
       contractId: contract?.id ?? null,
       milestoneId: payout.milestoneId,
@@ -285,30 +304,61 @@ export class InvoiceService {
   // Internals
   // ===================================================================
 
-  private async create(input: {
+  /**
+   * Returns the active (non-VOID) invoice for the given entity if one
+   * already exists. Used both before `create` (fast path) and after a
+   * P2002 collision (slow path, race resolution).
+   */
+  private findExistingActive(key: {
     kind: InvoiceKind;
-    contractId: string | null;
-    milestoneId: string | null;
-    payoutId: string | null;
-    issuerName: string;
-    issuerCountry: string | null;
-    issuerTaxId: string | null;
-    issuerAddress: string | null;
-    recipientName: string;
-    recipientCountry: string | null;
-    recipientTaxId: string | null;
-    recipientAddress: string | null;
-    currency: string;
-    subtotalCents: number;
-    taxRateBps: number;
-    taxAmountCents: number;
-    totalCents: number;
-    taxLabel: string | null;
-    taxNote: string | null;
-    reverseCharge: boolean;
-    lineItems: InvoiceLineItem[];
-    notes: string | null;
-  }): Promise<PublicInvoice> {
+    milestoneId?: string;
+    payoutId?: string;
+  }): Promise<InvoiceRow | null> {
+    return this.prisma.invoice.findFirst({
+      where: {
+        kind: key.kind,
+        milestoneId: key.milestoneId,
+        payoutId: key.payoutId,
+        status: { not: 'VOID' },
+      },
+    });
+  }
+
+  /**
+   * Wraps `create` so a unique-constraint collision on the partial
+   * indexes `Invoice_kind_milestoneId_active_uniq` /
+   * `Invoice_kind_payoutId_active_uniq` (see
+   * `20260502000000_t6c_invoice_unique_per_entity/migration.sql`) is
+   * resolved by returning the row that won the race instead of
+   * bubbling a 500 to the caller. This is the last line of defence
+   * against duplicate invoices under concurrent webhook replays + a
+   * manual admin retry landing simultaneously.
+   */
+  private async createOrReturnExisting(input: CreateInput): Promise<PublicInvoice> {
+    try {
+      return await this.create(input);
+    } catch (err) {
+      if (
+        err instanceof Prisma.PrismaClientKnownRequestError &&
+        err.code === 'P2002'
+      ) {
+        const existing = await this.findExistingActive({
+          kind: input.kind,
+          milestoneId: input.milestoneId ?? undefined,
+          payoutId: input.payoutId ?? undefined,
+        });
+        if (existing) {
+          this.logger.warn(
+            `Invoice issuance raced on (${input.kind}, milestone=${input.milestoneId ?? '-'}, payout=${input.payoutId ?? '-'}); returning winner ${existing.number}`,
+          );
+          return toPublic(existing);
+        }
+      }
+      throw err;
+    }
+  }
+
+  private async create(input: CreateInput): Promise<PublicInvoice> {
     const year = new Date().getUTCFullYear();
 
     const row = await this.prisma.$transaction(async (tx) => {
