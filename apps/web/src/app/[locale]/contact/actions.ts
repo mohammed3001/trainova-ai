@@ -28,15 +28,20 @@ export async function submitContactAction(
   _prev: ContactState,
   formData: FormData,
 ): Promise<ContactState> {
+  // Honeypot: silently report success when the hidden field has any value
+  // so bots cannot tell the field is monitored. Must run BEFORE the
+  // schema parse so a bot-generated payload that fails other validators
+  // still doesn't reveal the trap.
+  const websiteRaw = formData.get('website');
+  if (typeof websiteRaw === 'string' && websiteRaw.trim().length > 0) {
+    return { done: true };
+  }
   const parsed = contactSubmissionSchema.safeParse({
     name: asTrimmedString(formData.get('name')),
     email: asTrimmedString(formData.get('email')),
     topic: asTrimmedString(formData.get('topic')) ?? 'GENERAL',
     company: asTrimmedString(formData.get('company')),
     message: asTrimmedString(formData.get('message')),
-    website: typeof formData.get('website') === 'string'
-      ? (formData.get('website') as string)
-      : '',
     locale: asTrimmedString(formData.get('locale')),
   });
   if (!parsed.success) {
@@ -62,6 +67,11 @@ export async function submitAdvertiseAction(
   _prev: ContactState,
   formData: FormData,
 ): Promise<ContactState> {
+  // Honeypot: see submitContactAction.
+  const websiteRaw = formData.get('website');
+  if (typeof websiteRaw === 'string' && websiteRaw.trim().length > 0) {
+    return { done: true };
+  }
   const budgetUsd = asInteger(formData.get('budgetUsd'));
   const parsed = advertiseEnquirySchema.safeParse({
     name: asTrimmedString(formData.get('name')),
@@ -70,9 +80,6 @@ export async function submitAdvertiseAction(
     packageId: asTrimmedString(formData.get('packageId')) ?? 'CUSTOM',
     budgetUsd,
     message: asTrimmedString(formData.get('message')),
-    website: typeof formData.get('website') === 'string'
-      ? (formData.get('website') as string)
-      : '',
     locale: asTrimmedString(formData.get('locale')),
   });
   if (!parsed.success) {

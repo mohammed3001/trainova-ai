@@ -26,8 +26,11 @@ export const contactSubmissionSchema = z.object({
     .optional()
     .transform((v) => (v && v.length > 0 ? v : undefined)),
   message: z.string().trim().min(20).max(4000),
-  /// Honeypot — must be empty. Bots tend to fill every field.
-  website: z.string().max(0).optional(),
+  /// Honeypot — bots tend to fill every field. We accept any string here
+  /// (bounded so it can't be abused as a vector) and the controller drops
+  /// the request silently when it is non-empty. Returning a validation
+  /// error would tell bots the field is monitored.
+  website: z.string().max(500).optional(),
   locale: z.string().trim().min(2).max(10).optional(),
 });
 
@@ -61,7 +64,8 @@ export const advertiseEnquirySchema = z.object({
     .pipe(z.number().int().nonnegative().max(10_000_000))
     .optional(),
   message: z.string().trim().min(20).max(4000),
-  website: z.string().max(0).optional(),
+  /// Honeypot — see contactSubmissionSchema.website above.
+  website: z.string().max(500).optional(),
   locale: z.string().trim().min(2).max(10).optional(),
 });
 
