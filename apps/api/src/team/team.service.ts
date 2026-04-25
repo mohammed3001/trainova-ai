@@ -319,10 +319,21 @@ export class TeamService {
         select: { id: true, ownerId: true },
       });
       if (company.ownerId === caller.id) {
-        await tx.companyInvitation.update({
-          where: { id: invitation.id },
+        // Atomic claim: only flip PENDING → ACCEPTED. If a concurrent
+        // `revokeInvitation` (or another accept) already changed the
+        // status between the read above and now, `updateMany` returns
+        // `count: 0` and we surface a conflict instead of silently
+        // overwriting the new state. Mirrors `resetPassword` in
+        // `auth.service.ts`.
+        const claimed = await tx.companyInvitation.updateMany({
+          where: { id: invitation.id, status: 'PENDING' },
           data: { status: 'ACCEPTED', acceptedAt: new Date(), acceptedById: caller.id },
         });
+        if (claimed.count === 0) {
+          throw new ConflictException(
+            'Invitation is no longer pending; it may have been revoked or accepted concurrently',
+          );
+        }
         return {
           companyId: company.id,
           role: 'OWNER' as const,
@@ -362,12 +373,23 @@ export class TeamService {
         );
       }
 
+      // Atomic claim before creating the member row. If a concurrent
+      // `revokeInvitation` (or another accept) flipped the status
+      // between our initial read and now, `updateMany` returns
+      // `count: 0` and the transaction unwinds — no `CompanyMember`
+      // row is created and no `User.role` transition is applied.
+      // Mirrors `resetPassword` in `auth.service.ts`.
+      const claimed = await tx.companyInvitation.updateMany({
+        where: { id: invitation.id, status: 'PENDING' },
+        data: { status: 'ACCEPTED', acceptedAt: new Date(), acceptedById: caller.id },
+      });
+      if (claimed.count === 0) {
+        throw new ConflictException(
+          'Invitation is no longer pending; it may have been revoked or accepted concurrently',
+        );
+      }
       await tx.companyMember.create({
         data: { companyId: company.id, userId: caller.id, role: invitation.role },
-      });
-      await tx.companyInvitation.update({
-        where: { id: invitation.id },
-        data: { status: 'ACCEPTED', acceptedAt: new Date(), acceptedById: caller.id },
       });
 
       // Trainers (and any other non-COMPANY caller) need their User.role
