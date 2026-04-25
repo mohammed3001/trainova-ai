@@ -8,6 +8,7 @@ import type {
   AdminListArticlesQuery,
   AdminListFaqQuery,
   AdminListPagesQuery,
+  CmsLocale,
   UpsertArticleInput,
   UpsertCategoryInput,
   UpsertFaqEntryInput,
@@ -480,7 +481,7 @@ export class CmsService {
   // Public read APIs (unauthenticated)
   // ---------------------------------------------------------------------------
 
-  async publicArticles(locale: 'en' | 'ar', cursor?: string, limit = 20) {
+  async publicArticles(locale: CmsLocale, cursor?: string, limit = 20) {
     const take = clampLimit(limit, 20, 50);
     const rows = await this.prisma.article.findMany({
       where: { locale, status: 'PUBLISHED' },
@@ -496,7 +497,7 @@ export class CmsService {
     return { items, nextCursor: hasMore ? items[items.length - 1]!.id : null };
   }
 
-  async publicArticleBySlug(slug: string, locale: 'en' | 'ar') {
+  async publicArticleBySlug(slug: string, locale: CmsLocale) {
     const row = await this.prisma.article.findUnique({
       where: { slug_locale: { slug, locale } },
       include: {
@@ -507,7 +508,7 @@ export class CmsService {
     return row;
   }
 
-  publicFaq(locale: 'en' | 'ar') {
+  publicFaq(locale: CmsLocale) {
     return this.prisma.faqEntry.findMany({
       where: { locale, published: true },
       orderBy: [{ section: 'asc' }, { order: 'asc' }, { id: 'asc' }],

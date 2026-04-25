@@ -1,5 +1,6 @@
 import { getTranslations } from 'next-intl/server';
 import { saveArticleAction } from '@/lib/cms-actions';
+import { locales as LOCALES } from '@/i18n/config';
 
 interface CategoryOption {
   id: string;
@@ -22,7 +23,6 @@ interface Initial {
 }
 
 const STATUSES = ['DRAFT', 'PUBLISHED', 'ARCHIVED'] as const;
-const LOCALES = ['en', 'ar'] as const;
 
 export async function ArticleForm({
   initial,

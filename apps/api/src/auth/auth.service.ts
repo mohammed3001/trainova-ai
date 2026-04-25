@@ -110,7 +110,7 @@ export class AuthService {
    * emails exist. If the account exists and is unverified, a fresh token is
    * issued and the old unconsumed ones for that user are invalidated.
    */
-  async resendVerification(email: string, locale: 'en' | 'ar'): Promise<void> {
+  async resendVerification(email: string, locale: string): Promise<void> {
     const user = await this.prisma.user.findUnique({ where: { email } });
     if (!user) return; // silent
     if (user.emailVerifiedAt) return; // already verified
@@ -200,7 +200,7 @@ export class AuthService {
    * observe real failures. The public `forgotPassword` wraps this in a
    * swallowing try/catch so the external endpoint stays enumeration-safe.
    */
-  async issuePasswordResetEmail(userId: string, locale: 'en' | 'ar'): Promise<void> {
+  async issuePasswordResetEmail(userId: string, locale: string): Promise<void> {
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
     if (!user) throw new NotFoundException('User not found');
 
@@ -234,7 +234,7 @@ export class AuthService {
    * token-issuance / email-provider errors are swallowed so the response
    * stays neutral (no user enumeration via 200 vs 500 differential).
    */
-  async forgotPassword(email: string, locale: 'en' | 'ar'): Promise<void> {
+  async forgotPassword(email: string, locale: string): Promise<void> {
     const user = await this.prisma.user.findUnique({ where: { email } });
     if (!user) return;
     if (user.status !== 'ACTIVE') return;

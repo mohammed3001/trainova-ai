@@ -1,5 +1,6 @@
 import { getTranslations } from 'next-intl/server';
 import { saveFaqAction } from '@/lib/cms-actions';
+import { locales as LOCALES } from '@/i18n/config';
 
 interface Initial {
   id: string;
@@ -11,7 +12,6 @@ interface Initial {
   published: boolean;
 }
 
-const LOCALES = ['en', 'ar'] as const;
 const SECTIONS = [
   'GENERAL',
   'COMPANIES',

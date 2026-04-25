@@ -154,5 +154,13 @@ export const SkillCategories = [
 ] as const;
 export type SkillCategory = (typeof SkillCategories)[number];
 
-export const Locales = ['en', 'ar'] as const;
+export const Locales = ['en', 'ar', 'fr', 'es'] as const;
 export type Locale = (typeof Locales)[number];
+
+// Email templates are only authored in English + Arabic. Fallback other locales
+// to English so sends do not fail for fr/es users until templates are authored.
+export const EmailLocales = ['en', 'ar'] as const;
+export type EmailLocale = (typeof EmailLocales)[number];
+export function toEmailLocale(l: Locale | string | null | undefined): EmailLocale {
+  return l === 'ar' ? 'ar' : 'en';
+}

@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { getLocale, getTranslations } from 'next-intl/server';
 import { authedFetch } from '@/lib/authed-fetch';
 import { deleteFaqAction } from '@/lib/cms-actions';
+import { locales as LOCALES } from '@/i18n/config';
 
 interface Row {
   id: string;
@@ -28,7 +29,6 @@ interface PageProps {
   }>;
 }
 
-const LOCALES = ['en', 'ar'] as const;
 const SECTIONS = [
   'GENERAL',
   'COMPANIES',

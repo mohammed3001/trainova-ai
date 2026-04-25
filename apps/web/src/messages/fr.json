@@ -1,0 +1,1784 @@
+{
+  "common": {
+    "appName": "Trainova AI",
+    "tagline": "The Global Marketplace for AI Training Talent",
+    "heroSub": "Hire. Test. Trust. Train. Connect with elite AI trainers tested on your actual model.",
+    "getStarted": "Get started",
+    "forCompanies": "For companies",
+    "forTrainers": "For trainers",
+    "signIn": "Sign in",
+    "signOut": "Sign out",
+    "register": "Create account",
+    "login": "Login",
+    "dashboard": "Dashboard",
+    "browseTrainers": "Browse trainers",
+    "browseRequests": "Open requests",
+    "skills": "Skills",
+    "about": "About",
+    "pricing": "Pricing",
+    "search": "Search",
+    "save": "Save",
+    "cancel": "Cancel",
+    "submit": "Submit",
+    "loading": "Loading…",
+    "error": "Something went wrong"
+  },
+  "nav": {
+    "home": "Home",
+    "company": "Company",
+    "trainer": "Trainer",
+    "admin": "Admin"
+  },
+  "seo": {
+    "trainersList": {
+      "title": "AI Trainers & Experts — Verified on Your Model",
+      "description": "Browse the Trainova AI directory of fine-tuning, RLHF, prompt engineering, evaluation, safety and data-labeling specialists. Every verified trainer has been tested on a live company model."
+    },
+    "requestsList": {
+      "title": "Open AI Training Requests",
+      "description": "Live requests from global companies hiring AI trainers. Fine-tuning, prompt engineering, RLHF, evaluation, data labeling and more — apply directly on Trainova AI."
+    },
+    "skillsList": {
+      "title": "AI Skills Directory",
+      "description": "Explore every AI training specialty on Trainova AI — from LLM fine-tuning to safety alignment — with expert counts, trainers and live requests per skill."
+    },
+    "pricing": {
+      "title": "Pricing for Companies and Trainers",
+      "description": "Simple, transparent pricing for AI training teams. Free to start, Pro for growth, Enterprise for large model programs."
+    },
+    "about": {
+      "title": "About Trainova AI",
+      "description": "Trainova AI is the global marketplace, evaluation system and collaboration workspace for AI training talent — built for companies that need verified specialists on their actual models."
+    },
+    "trainer": {
+      "titleTemplate": "{name} — {headline}",
+      "descriptionTemplate": "{name} is an AI trainer on Trainova AI specialising in {skills}. {country}",
+      "countryAffix": "Based in {country}.",
+      "noCountry": "",
+      "defaultHeadline": "AI training specialist"
+    },
+    "company": {
+      "titleTemplate": "{name} — AI training projects",
+      "descriptionTemplate": "{name} is a verified company on Trainova AI, hiring AI trainers for model training, evaluation and data projects."
+    },
+    "request": {
+      "descriptionFallback": "Open AI training request on Trainova AI."
+    },
+    "skill": {
+      "titleTemplate": "{name} — AI Trainers, Experts and Open Requests",
+      "descriptionTemplate": "Find {name} specialists on Trainova AI. Browse verified trainers, review open requests and test candidates on your live model."
+    }
+  },
+  "landing": {
+    "heroTitle": "Hire, test and train the world's best AI specialists.",
+    "heroBody": "Post a request, link your model or sandbox, and Trainova AI matches you with verified experts — screened on the exact problem you need solved.",
+    "heroCtaCompany": "I'm hiring",
+    "heroCtaTrainer": "I'm a trainer",
+    "statsCompanies": "companies",
+    "statsTrainers": "trainers",
+    "statsRequests": "open requests",
+    "pillars": {
+      "marketplaceTitle": "Global Marketplace",
+      "marketplaceBody": "Discover verified specialists in fine-tuning, RLHF, prompt engineering, safety alignment and more.",
+      "evalTitle": "Model-Linked Evaluation",
+      "evalBody": "Test candidates on your actual model, sandbox or API. Automated + human scoring with full audit trails.",
+      "workspaceTitle": "Collaboration Workspace",
+      "workspaceBody": "Chat, negotiate, contract, pay and review — all inside one secure, audit-ready platform."
+    },
+    "plansTitle": "Built for every stage",
+    "plansSub": "Start free. Scale to enterprise."
+  },
+  "auth": {
+    "emailLabel": "Email",
+    "passwordLabel": "Password",
+    "nameLabel": "Full name",
+    "roleLabel": "I want to…",
+    "roleCompany": "Entreprise",
+    "roleTrainer": "Formateur",
+    "haveAccount": "Already have an account?",
+    "noAccount": "Pas encore de compte ?",
+    "registerTitle": "Create your Trainova account",
+    "loginTitle": "Welcome back",
+    "registerCta": "Create account",
+    "loginCta": "Sign in",
+    "forgotPasswordLink": "Forgot password?",
+    "forgotPasswordTitle": "Reset your password",
+    "forgotPasswordLead": "Enter your account email. If it matches an active account we’ll send a reset link.",
+    "forgotPasswordCta": "Send reset link",
+    "forgotPasswordSent": "If the email exists, a reset link is on its way. Check your inbox (and spam).",
+    "resetPasswordTitle": "Choose a new password",
+    "resetPasswordLead": "Pick a strong password (8+ characters). This link can only be used once.",
+    "newPasswordLabel": "New password",
+    "resetPasswordCta": "Set new password",
+    "resetPasswordDone": "Password updated. You can sign in now.",
+    "resetPasswordInvalid": "This reset link is invalid or has expired. Request a new one.",
+    "verifyEmailTitle": "Verifying your email…",
+    "verifyEmailSuccess": "E-mail vérifié avec succès !",
+    "verifyEmailInvalid": "This verification link is invalid or has expired. Request a new one from your account.",
+    "verifyEmailMissing": "Missing verification token.",
+    "backToLogin": "Back to sign in"
+  },
+  "dashboard": {
+    "welcome": "Bienvenue, {name}",
+    "companyOverview": "Your hiring overview",
+    "trainerOverview": "Your trainer overview",
+    "createRequest": "Post a new request",
+    "myRequests": "My requests",
+    "myApplications": "My applications",
+    "myTests": "My tests",
+    "openInDashboard": "Open",
+    "applicationsCount": "{count} applications"
+  },
+  "requests": {
+    "listTitle": "Open AI training requests",
+    "noResults": "Aucune offre trouvée.",
+    "budget": "Budget",
+    "duration": "Duration",
+    "days": "days",
+    "model": "Model",
+    "industry": "Industry",
+    "skills": "Compétences requises",
+    "apply": "Apply",
+    "coverLetter": "Cover letter",
+    "proposedRate": "Your proposed rate (USD)",
+    "proposedTimeline": "Proposed timeline (days)",
+    "applied": "Application submitted",
+    "customFields": "Additional questions from the company",
+    "answerErrors": "Please fix the highlighted answers.",
+    "formBuilder": {
+      "title": "Application form",
+      "description": "Add custom questions trainers must answer when applying. Optional.",
+      "empty": "No custom questions yet. Use the buttons below to add fields.",
+      "remove": "Remove",
+      "dragHandle": "Drag to reorder",
+      "labelEn": "Label (English)",
+      "labelAr": "Label (Arabic)",
+      "helpEn": "Help text (English)",
+      "helpAr": "Help text (Arabic)",
+      "required": "Required",
+      "options": "Options",
+      "optionValue": "Value",
+      "addOption": "Add option",
+      "removeOption": "Remove option",
+      "kinds": {
+        "short_text": "Short text",
+        "long_text": "Long text",
+        "single_select": "Single choice",
+        "multi_select": "Multiple choice",
+        "number": "Number",
+        "date": "Date",
+        "url": "URL",
+        "email": "Email",
+        "boolean": "Yes / No"
+      },
+      "errors": {
+        "missingLabels": "Every custom field needs both English and Arabic labels.",
+        "missingOptions": "Choice fields need at least two options."
+      }
+    },
+    "fields": {
+      "title": "Title",
+      "description": "Description",
+      "objective": "Objective",
+      "modelFamily": "Model family",
+      "industry": "Industry",
+      "durationDays": "Duration (days)",
+      "budgetMin": "Budget min (USD)",
+      "budgetMax": "Budget max (USD)",
+      "workType": "Work type",
+      "skills": "Required skills",
+      "modelConnection": "Attached model (optional)",
+      "modelConnectionNone": "— No model attached —",
+      "modelConnectionHint": "Shortlisted trainers will get live access to this model through the workbench."
+    }
+  },
+  "trainers": {
+    "listTitle": "AI trainers",
+    "rate": "Hourly rate",
+    "noResults": "Aucun formateur trouvé."
+  },
+  "trainerProfile": {
+    "verified": "Verified",
+    "downloadCv": "Download CV (PDF)",
+    "website": "Website",
+    "about": "À propos",
+    "skills": "Compétences",
+    "portfolio": "Portfolio",
+    "certifications": "Certifications",
+    "rate": "Hourly rate",
+    "hour": "hr",
+    "availability": "Availability",
+    "skillsCount": "Skills",
+    "memberSince": "Membre depuis",
+    "responseWithin": "Responds within {hours}h",
+    "untitled": "Untitled"
+  },
+  "applications": {
+    "attachments": "Pièces jointes"
+  },
+  "profile": {
+    "trainer": {
+      "title": "My profile",
+      "subtitle": "This is what companies see when they browse trainers. Fill it out to get matched.",
+      "sections": {
+        "basics": "Basics",
+        "avatar": "Profile photo",
+        "rates": "Availability & rates",
+        "links": "Links",
+        "skills": "Skills & expertise",
+        "portfolio": "Portfolio"
+      },
+      "fields": {
+        "headline": "Headline",
+        "headlineHelp": "One-line summary, e.g. \"Senior RLHF annotator for Arabic LLMs\".",
+        "bio": "About you",
+        "bioHelp": "Markdown-safe text. Describe your experience, domains, model families, and what you want to work on.",
+        "country": "Country",
+        "languages": "Languages spoken",
+        "languagesHelp": "Press Enter to add each language.",
+        "timezone": "Timezone",
+        "timezoneHelp": "IANA timezone (e.g. Asia/Riyadh, Europe/London).",
+        "availability": "Availability",
+        "availabilityHelp": "e.g. 20h/week, open to full-time.",
+        "responseTimeHours": "Typical response time (hours)",
+        "hourlyRateMin": "Hourly rate min (USD)",
+        "hourlyRateMax": "Hourly rate max (USD)",
+        "linkedinUrl": "LinkedIn URL",
+        "githubUrl": "GitHub URL",
+        "websiteUrl": "Website / portfolio URL"
+      },
+      "skills": {
+        "searchPlaceholder": "Search skills…",
+        "noResults": "No skills match your search.",
+        "levelLabel": "Level",
+        "yearsLabel": "Years",
+        "addCta": "Add skill",
+        "removeCta": "Remove",
+        "noneSelected": "No skills selected yet. Pick at least 3 so companies can match you.",
+        "levels": {
+          "BEGINNER": "Beginner",
+          "INTERMEDIATE": "Intermediate",
+          "ADVANCED": "Advanced",
+          "EXPERT": "Expert"
+        }
+      },
+      "completeness": {
+        "title": "Profile completeness",
+        "lead": "{pct}% complete — profiles at 80%+ get matched 3× more often.",
+        "missing": "Still missing:",
+        "fields": {
+          "headline": "headline",
+          "bio": "about section",
+          "country": "country",
+          "languages": "at least one language",
+          "hourlyRate": "hourly rate range",
+          "skills": "at least 3 skills",
+          "linkedinOrWebsite": "LinkedIn or website URL"
+        }
+      },
+      "save": "Save profile",
+      "saved": "Profile saved",
+      "saveFailed": "Could not save: {message}",
+      "rateOrderError": "Hourly rate min must be ≤ max."
+    },
+    "company": {
+      "title": "Company profile",
+      "subtitle": "Public information shown on your company page and on every request you post.",
+      "sections": {
+        "identity": "Identity",
+        "details": "Details"
+      },
+      "fields": {
+        "name": "Company name",
+        "websiteUrl": "Website",
+        "country": "Country",
+        "industry": "Industry",
+        "size": "Team size",
+        "sizeHelp": "e.g. 1-10, 11-50, 51-200.",
+        "description": "About the company",
+        "descriptionHelp": "Short public description — mission, domain, what you use AI for.",
+        "logo": "Company logo",
+        "logoHelp": "Shown on your company page and on every request you post."
+      },
+      "save": "Save company profile",
+      "saved": "Company profile saved",
+      "saveFailed": "Could not save: {message}",
+      "editCta": "Edit company profile"
+    },
+    "uploads": {
+      "dropLogo": "Drag a logo here, or click to choose a file",
+      "replaceLogo": "Drag a new logo, or click to replace",
+      "dropAvatar": "Drag a photo here, or click to choose",
+      "replaceAvatar": "Drag a new photo, or click to replace",
+      "dropPortfolio": "Drag images or PDFs here, or click to choose",
+      "avatarPlaceholder": "No photo",
+      "avatarHelp": "PNG, JPEG, or WebP up to 512 KB. Shown on your public profile.",
+      "portfolioHelp": "Images and PDF case studies — up to 10 items, 5 MB each.",
+      "portfolioFormats": "PNG, JPEG, WebP, or PDF · 5 MB max per file.",
+      "portfolioEmpty": "No portfolio items yet.",
+      "remove": "Remove",
+      "limits": "Max {maxKb} KB · {types}",
+      "stage": {
+        "validating": "Checking file…",
+        "presigning": "Preparing upload…",
+        "uploading": "Uploading…",
+        "committing": "Finishing up…"
+      },
+      "errors": {
+        "clientValidation": "That file can't be uploaded. Max {maxKb} KB and types: {types}.",
+        "rateLimit": "Too many uploads. Please wait a moment and try again.",
+        "tooLarge": "File is larger than the allowed size.",
+        "unsupportedType": "That file type isn't allowed.",
+        "presignFailed": "Couldn't start the upload. Please try again.",
+        "uploadFailed": "Upload failed partway through. Please try again.",
+        "commitFailed": "Upload finished but couldn't be saved. Please try again."
+      }
+    }
+  },
+  "company": {
+    "models": {
+      "badge": "Model registry",
+      "title": "Registre des modèles",
+      "subtitle": "Bind your live AI models — OpenAI-compatible, Anthropic, Bedrock, HuggingFace or any HTTPS endpoint — so trainers can evaluate them inside Trainova without ever seeing your credentials. Keys are encrypted at rest and rotated through the platform proxy.",
+      "add": "Ajouter un modèle",
+      "edit": "Edit",
+      "delete": "Delete",
+      "test": "Test connection",
+      "testing": "Testing…",
+      "testingLive": "Probing the provider — this can take up to 8 seconds.",
+      "helper": "Connections start as draft and auto-promote to active on the first successful test.",
+      "confirmDelete": "Soft-delete this connection? Trainers using it will lose access immediately.",
+      "empty": {
+        "title": "No models connected yet",
+        "body": "Add your first connection to enable in-platform evaluation. We never store credentials in plaintext."
+      },
+      "status": "Statut",
+      "providers": {
+        "OPENAI_COMPATIBLE": "OpenAI-compatible",
+        "ANTHROPIC": "Anthropic",
+        "BEDROCK": "AWS Bedrock",
+        "HUGGINGFACE": "HuggingFace Inference",
+        "RAW_HTTPS": "Custom HTTPS"
+      },
+      "auth": {
+        "api_key": "API key (Bearer)",
+        "bearer": "Bearer token",
+        "aws_sigv4": "AWS SigV4",
+        "none": "None / public"
+      },
+      "fields": {
+        "name": "Display name",
+        "provider": "Provider",
+        "endpointUrl": "Endpoint URL",
+        "modelId": "Model identifier",
+        "modelIdPlaceholder": "e.g. gpt-4o-mini, claude-3-5-sonnet, anthropic.claude-3-haiku-20240307",
+        "region": "Region",
+        "authKind": "Auth type",
+        "credentials": "Credentials",
+        "credentialsHint": "Pasted once, encrypted at rest. We display only the first/last 4 characters afterwards.",
+        "credentialsUpdate": "Replace credentials",
+        "credentialsUpdateHint": "Leave blank to keep the existing key (current preview: {preview}).",
+        "lastChecked": "Last checked",
+        "ok": "ok",
+        "failed": "failed",
+        "none": "—"
+      },
+      "result": {
+        "ok": "Connection healthy",
+        "fail": "Connection failed"
+      },
+      "editor": {
+        "newTitle": "Connect a model",
+        "editTitle": "Edit connection",
+        "subtitle": "We probe the live endpoint after save and only mark it Active when it responds.",
+        "create": "Connect",
+        "save": "Save changes",
+        "cancel": "Cancel",
+        "dismiss": "Close editor"
+      }
+    },
+    "applications": {
+      "title": "Candidatures reçues",
+      "empty": "No applications yet.",
+      "viewDetail": "View detail",
+      "backToList": "Back to applications",
+      "terminal": "This application has reached a final state.",
+      "updated": "Status updated",
+      "status": {
+        "applied": "Applied",
+        "shortlisted": "In review",
+        "testAssigned": "Test assigned",
+        "testSubmitted": "Test submitted",
+        "interview": "Interview",
+        "offered": "Offered",
+        "accepted": "Accepted",
+        "rejected": "Rejected",
+        "withdrawn": "Withdrawn"
+      },
+      "actions": {
+        "shortlist": "Move to review",
+        "accept": "Accept",
+        "reject": "Reject",
+        "revert": "Move back to applied",
+        "change": "Change status"
+      },
+      "confirm": {
+        "accept": "Accept this application?",
+        "reject": "Reject this application?",
+        "shortlist": "Move this application into review?",
+        "revert": "Move this application back to applied?"
+      },
+      "note": {
+        "label": "Note to the internal audit trail (optional, max 500 chars)",
+        "placeholder": "e.g. Strong portfolio, invite to an intro interview."
+      },
+      "history": {
+        "title": "Status history",
+        "empty": "No status changes yet.",
+        "changedStatus": "changed status from {from} to {to}",
+        "unknownActor": "Unknown user"
+      },
+      "manageTests": "Manage tests",
+      "answers": {
+        "title": "Application answers",
+        "empty": "—"
+      }
+    },
+    "tests": {
+      "title": "Tests",
+      "empty": "No tests yet.",
+      "new": "New test",
+      "edit": "Edit",
+      "delete": "Delete",
+      "confirmDelete": "Delete this test?",
+      "confirmDeleteYes": "Yes, delete",
+      "backToList": "Back to tests",
+      "backToApplications": "Back to applications",
+      "meta": {
+        "tasks": "{count, plural, one {# task} other {# tasks}}",
+        "attempts": "{count, plural, one {# attempt} other {# attempts}}",
+        "timeLimit": "{minutes}-minute limit"
+      },
+      "errors": {
+        "generic": "Something went wrong. Please try again.",
+        "hasAttempts": "This test already has attempts and can't be deleted.",
+        "titleRequired": "Title must be at least 3 characters.",
+        "noTasks": "Add at least one task.",
+        "promptRequired": "Task {n}: prompt is required.",
+        "mcqNeedsOptions": "Task {n}: MCQ needs at least 2 options.",
+        "mcqNeedsAnswer": "Task {n}: pick one option as the correct answer."
+      },
+      "editor": {
+        "createTitle": "New test",
+        "editTitle": "Edit test",
+        "fields": {
+          "title": "Title",
+          "description": "Description",
+          "timeLimitMin": "Time limit (minutes)",
+          "passingScore": "Passing score",
+          "passingScoreHint": "Hint for reviewers — the decision is still manual.",
+          "scoringMode": "Scoring mode"
+        },
+        "scoringMode": {
+          "auto": "Auto",
+          "manual": "Manual",
+          "hybrid": "Hybrid"
+        },
+        "tasks": {
+          "heading": "Tasks",
+          "empty": "No tasks yet — add one using the buttons above.",
+          "addMcq": "+ MCQ",
+          "addText": "+ Text",
+          "addCode": "+ Code",
+          "prompt": "Prompt",
+          "options": "Options",
+          "addOption": "+ Option",
+          "removeOption": "Remove option",
+          "markCorrect": "Mark as the correct answer",
+          "rubricHint": "Grading hint for reviewers (hidden from trainer)",
+          "rubricPlaceholder": "e.g. Look for correct framing, not just keywords.",
+          "maxScore": "Max score",
+          "row": "Task {n} · {type}",
+          "remove": "Remove",
+          "moveUp": "Move up",
+          "moveDown": "Move down"
+        }
+      },
+      "assign": {
+        "button": "Assign test",
+        "pickButton": "Assign",
+        "success": "Test assigned. The trainer has been notified by email.",
+        "popover": {
+          "title": "Pick a test to assign",
+          "empty": "No tests authored yet — create one first."
+        }
+      },
+      "attempts": {
+        "title": "Test attempts",
+        "empty": "No attempts yet.",
+        "total": "Score {score}/100",
+        "gradeCta": "Grade attempt",
+        "reviewCta": "Review grading",
+        "status": {
+          "in_progress": "In progress",
+          "submitted": "Submitted — awaiting grading",
+          "graded": "Graded",
+          "inProgress": "In progress"
+        }
+      },
+      "grading": {
+        "backToApplicant": "Back to applicant",
+        "currentTotal": "Current total: {score}/100",
+        "passingHint": "Passing hint: ≥ {score}",
+        "passingHintTooltip": "Suggested by the test author; the decision is still yours.",
+        "reviewerNotes": "Internal reviewer notes",
+        "reviewerNotesHint": "Not shown to the trainer.",
+        "submit": "Submit grades",
+        "alreadyGraded": "This attempt has already been graded.",
+        "taskHeading": "Task {n} · {type} · max {max}",
+        "errors": {
+          "scoreRange": "Score must be between 0 and {max}."
+        },
+        "task": {
+          "auto": "Auto-scored {score}/{max}",
+          "manual": "Manual score (0–{max})",
+          "comments": "Comments for the trainer (optional)",
+          "correctOption": "correct answer",
+          "noResponse": "(no response)"
+        },
+        "result": {
+          "title": "Grading recorded"
+        }
+      }
+    }
+  },
+  "trainer": {
+    "tests": {
+      "dashboardRow": {
+        "testAssigned": "A test has been assigned — take it to move forward.",
+        "testSubmitted": "Test submitted — awaiting grading.",
+        "graded": "Test graded — open to see your result.",
+        "takeCta": "Take test",
+        "viewResultCta": "View result"
+      },
+      "page": {
+        "backToDashboard": "Back to my applications",
+        "title": "{testTitle}",
+        "companyLine": "Assigned by {companyName}",
+        "tasksCount": "{count, plural, one {# task} other {# tasks}}",
+        "timeLimit": "{minutes}-minute limit",
+        "passingHint": "Passing hint: ≥ {score}/100",
+        "passingHintTooltip": "Guidance from the company — grading is still manual.",
+        "description": "Description",
+        "ready": {
+          "title": "Ready to start?",
+          "body": "You'll answer each task in order. You can only submit once.",
+          "startCta": "Start attempt",
+          "starting": "Starting…"
+        },
+        "noTest": {
+          "title": "No test is assigned yet",
+          "body": "The company hasn't assigned a test to this application. Check back later."
+        }
+      },
+      "take": {
+        "taskHeading": "Task {n} of {total} · {type} · max {max}",
+        "type": {
+          "MCQ": "Multiple choice",
+          "TEXT": "Short answer"
+        },
+        "mcqHint": "Pick one option.",
+        "textHint": "Type your answer.",
+        "textPlaceholder": "Your answer…",
+        "submit": "Submit attempt",
+        "submitting": "Submitting…",
+        "confirmSubmit": "Submit your attempt? You won't be able to change answers after this.",
+        "unanswered": "{count, plural, one {# task is unanswered} other {# tasks are unanswered}} — submit anyway?",
+        "errors": {
+          "generic": "We couldn't submit your attempt. Please try again.",
+          "alreadySubmitted": "This attempt has already been submitted."
+        }
+      },
+      "result": {
+        "title": "Attempt submitted",
+        "submittedAt": "Submitted {date}",
+        "autoScore": "Your auto-score: {score}/100",
+        "pending": "Awaiting reviewer grading.",
+        "graded": "Graded by the company.",
+        "totalScore": "Final score: {score}/100",
+        "passed": "Above the company's passing hint of {score}/100.",
+        "missed": "Below the company's passing hint of {score}/100."
+      }
+    },
+    "workbench": {
+      "back": "Back to my applications",
+      "eyebrow": "Model Workbench",
+      "subtitle": "Interact live with the company's model — every call is logged for review.",
+      "applicationStatus": "Status",
+      "noModel": "No model attached",
+      "empty": {
+        "title": "Workbench not available",
+        "body": "We couldn't load workbench context for this application."
+      },
+      "dashboardRow": {
+        "body": "A live model is attached — open the workbench to run evaluation calls.",
+        "cta": "Open workbench"
+      },
+      "composer": {
+        "title": "Compose a call",
+        "operation": "Operation",
+        "temperature": "Temperature",
+        "maxTokens": "Max tokens",
+        "system": "System (optional)",
+        "systemPlaceholder": "You are a concise assistant…",
+        "user": "User message",
+        "userPlaceholder": "Your prompt…",
+        "input": "Input text",
+        "inputPlaceholder": "Text to embed",
+        "submit": "Run",
+        "submitting": "Running…",
+        "hint": "Credentials never leave the server. Each call is persisted for the company's audit trail."
+      },
+      "operations": {
+        "chat": "Chat",
+        "complete": "Complete",
+        "embed": "Embed",
+        "custom": "Custom"
+      },
+      "result": {
+        "title": "Latest response",
+        "raw": "Raw response"
+      },
+      "history": {
+        "title": "Recent calls",
+        "empty": "You haven't run any calls yet.",
+        "requestPreview": "Request",
+        "responsePreview": "Response"
+      },
+      "reasons": {
+        "noModel": "The company hasn't attached a live model to this request yet.",
+        "disabled": "The company has disabled this connection.",
+        "inactive": "This connection hasn't been activated yet.",
+        "notShortlisted": "Workbench access opens after the company shortlists your application."
+      }
+    }
+  },
+  "billing": {
+    "companyTitle": "Billing & Subscription",
+    "companySubtitle": "Manage your workspace plan, billing details, and invoices.",
+    "currentPlan": "Plan actuel",
+    "unknownTier": "Active plan",
+    "status": "Status",
+    "cancelScheduled": "cancels at period end",
+    "renewsOn": "renews on",
+    "openPortal": "Open billing portal",
+    "cancelCta": "Cancel plan",
+    "availablePlans": "Available plans",
+    "noPlansYet": "No plans are configured yet.",
+    "free": "Free",
+    "perMonth": "per month",
+    "selectCta": "Select plan",
+    "confirmCta": "Subscribe securely",
+    "confirmTitle": "Subscribe to {tier}",
+    "confirmHint": "Your card is tokenised by Stripe. We never see full card numbers.",
+    "notConfigured": "This tier is not yet connected to Stripe — it will be available shortly.",
+    "currentBadge": "Current plan",
+    "subscribedOk": "Subscription activated.",
+    "cancelledOk": "Cancellation scheduled — access stays until the end of this period.",
+    "noActiveCompany": "You are on the free workspace tier.",
+    "noActiveTrainer": "You are on the free trainer tier.",
+    "errors": {
+      "subscribeFailed": "We couldn't start the subscription. Please try again.",
+      "cancelFailed": "We couldn't cancel the subscription. Please try again.",
+      "portalFailed": "Stripe billing portal is not reachable right now."
+    }
+  },
+  "contracts": {
+    "listTitle": "Contracts",
+    "listSubtitle": "Escrow-backed milestones with your accepted trainers.",
+    "listEmpty": "No contracts yet. Create one from an accepted application.",
+    "newTitle": "New contract",
+    "newSubtitle": "Define milestones and fund them through Stripe escrow.",
+    "newNeedsApplication": "Open an accepted application and click \"Create contract\" to start here.",
+    "backToDashboard": "Back to dashboard",
+    "backToList": "Back to contracts",
+    "total": "Total",
+    "milestones": "Jalons",
+    "fee": "Platform fee",
+    "currencyLabel": "Currency",
+    "trainerUnknown": "Trainer",
+    "companyUnknown": "Company",
+    "counterparty": "Counterparty",
+    "statusLabel": "Status",
+    "createdAt": "Created",
+    "milestonesTitle": "Milestones",
+    "milestoneNumber": "Milestone #{n}",
+    "totalLabel": "Total",
+    "fields": {
+      "title": "Contract title",
+      "description": "Description",
+      "currency": "Currency",
+      "platformFee": "Platform fee"
+    },
+    "placeholders": {
+      "title": "e.g. RLHF fine-tuning for customer-support bot",
+      "description": "Scope, deliverables, constraints, and communication cadence.",
+      "milestoneTitle": "e.g. Phase 1 — dataset review"
+    },
+    "milestoneFields": {
+      "title": "Title",
+      "description": "Description",
+      "amount": "Amount",
+      "remove": "Remove milestone",
+      "add": "Add milestone"
+    },
+    "createCta": "Create contract",
+    "fundCta": "Fund",
+    "fundConfirmCta": "Charge & hold in escrow",
+    "fundConfirmTitle": "Fund milestone ({amount})",
+    "fundConfirmHint": "Funds are held by the platform until you explicitly release them.",
+    "fundedOk": "Milestone funded. Funds are held in escrow.",
+    "releaseCta": "Release to trainer",
+    "releasedOk": "Milestone released to the trainer.",
+    "refundCta": "Refund",
+    "refundPrompt": "Reason for refund (optional)",
+    "refundedOk": "Milestone refunded.",
+    "errors": {
+      "titleRequired": "A contract title of at least 4 characters is required.",
+      "milestoneTitleRequired": "Each milestone needs a title of at least 2 characters.",
+      "milestoneMinAmount": "Milestones must be at least $1.00.",
+      "createFailed": "We couldn't create the contract.",
+      "fundFailed": "We couldn't fund this milestone.",
+      "releaseFailed": "We couldn't release this milestone.",
+      "refundFailed": "We couldn't refund this milestone."
+    }
+  },
+  "payments": {
+    "trainerTitle": "Earnings & payouts",
+    "trainerSubtitle": "Track escrow, payouts, and upgrade your trainer visibility.",
+    "earningsTitle": "Earnings",
+    "pending": "En attente",
+    "available": "Available",
+    "paidOut": "Paid out",
+    "totalEarned": "Total earned",
+    "connectTitle": "Stripe Connect",
+    "connectSubtitle": "Complete onboarding to receive payouts directly to your bank.",
+    "chargesEnabled": "Charges enabled",
+    "payoutsEnabled": "Payouts enabled",
+    "detailsSubmitted": "Details submitted",
+    "country": "Country",
+    "yes": "Yes",
+    "no": "No",
+    "startOnboardCta": "Start Stripe onboarding",
+    "resumeOnboardCta": "Resume onboarding",
+    "refreshStatusCta": "Refresh status",
+    "refreshedOk": "Stripe status refreshed.",
+    "contractsTitle": "Active contracts",
+    "contractsEmpty": "No active contracts yet.",
+    "companyUnknown": "Company",
+    "viewDashboard": "View dashboard",
+    "payoutsTitle": "Payout history",
+    "payoutsEmpty": "No payouts yet.",
+    "payoutDate": "Initiated",
+    "payoutAmount": "Amount",
+    "payoutStatus": "Status",
+    "payoutArrived": "Arrived",
+    "plansTitle": "Premium visibility",
+    "errors": {
+      "onboardFailed": "We couldn't start the Stripe onboarding flow.",
+      "refreshFailed": "We couldn't refresh the Stripe status."
+    }
+  },
+  "admin": {
+    "overview": "Vue d'ensemble",
+    "users": "Utilisateurs",
+    "companies": "Entreprises",
+    "requests": {
+      "title": "Offres",
+      "subtitle": "All job requests across companies — feature, close, archive.",
+      "searchPlaceholder": "Search title, slug, description…",
+      "filter": {
+        "allStatuses": "All statuses",
+        "allFeatured": "All",
+        "featuredYes": "Featured only",
+        "featuredNo": "Non-featured",
+        "apply": "Apply"
+      },
+      "col": {
+        "title": "Title",
+        "company": "Company",
+        "status": "Status",
+        "featured": "Featured",
+        "applications": "Apps",
+        "tests": "Tests",
+        "createdAt": "Created",
+        "actions": "Actions"
+      },
+      "status": {
+        "DRAFT": "Draft",
+        "OPEN": "Open",
+        "IN_REVIEW": "In review",
+        "CLOSED": "Closed",
+        "ARCHIVED": "Archived"
+      },
+      "empty": "No requests match the current filters.",
+      "section": {
+        "meta": "Metadata",
+        "skills": "Skills",
+        "counts": "Counts",
+        "actions": "Actions"
+      },
+      "action": {
+        "setStatus": "Set status",
+        "changeStatus": "Change status",
+        "feature": "Feature",
+        "unfeature": "Un-feature",
+        "reasonLabel": "Reason (optional)",
+        "reasonPlaceholder": "Admin note — stored in audit log"
+      },
+      "confirm": {
+        "status": "Change request status?",
+        "featured": "Toggle featured flag?"
+      },
+      "loadMore": "Load more"
+    },
+    "skills": "Skills",
+    "settings": {
+      "title": "Paramètres",
+      "subtitle": "Brand, locales, currencies, fees, integrations, and security knobs in one place.",
+      "newCustomKey": "New custom key",
+      "edit": "Edit",
+      "save": "Save",
+      "notSet": "not set",
+      "public": "Public",
+      "private": "Private",
+      "editTitle": "Edit setting · {key}",
+      "knownKeyHint": "This key is registered in the platform schema — value type and group are fixed.",
+      "group": {
+        "branding": "Branding",
+        "locale": "Locales",
+        "currency": "Currencies",
+        "fees": "Fees & commissions",
+        "integrations": "Integrations",
+        "security": "Security",
+        "email": "Email",
+        "general": "General",
+        "custom": "Custom keys"
+      },
+      "field": {
+        "key": "Key",
+        "value": "Value",
+        "valueJsonHint": "Enter valid JSON — array, object, string, number, or boolean.",
+        "group": "Group",
+        "description": "Description",
+        "isPublic": "Expose via /public/settings (no auth)",
+        "knownKey": "Registered platform key — values are validated.",
+        "customKey": "Custom key — only exposed publicly if you check the box below."
+      }
+    },
+    "kpi": {
+      "users": "Total users",
+      "companies": "Companies",
+      "trainers": "Trainers",
+      "requestsOpen": "Open requests",
+      "applications": "Applications",
+      "usersSub": "{active} active · {suspended} suspended",
+      "pendingVerifications": "Pending verifications",
+      "verifiedOf": "{verified} verified"
+    },
+    "ads": {
+      "title": "Publicités",
+      "subtitle": "Review, approve and moderate self-serve ad campaigns.",
+      "tabs": {
+        "pending": "Pending review",
+        "all": "All campaigns"
+      },
+      "empty": "No campaigns match this filter.",
+      "actions": {
+        "approve": "Approve",
+        "reject": "Reject",
+        "pause": "Pause",
+        "resume": "Resume",
+        "confirmReject": "Reject this campaign?"
+      },
+      "rejectReasonLabel": "Reason (shown to advertiser)",
+      "approvedBy": "Approved by admin on {at}",
+      "rejectedReason": "Rejected: {reason}"
+    },
+    "generatedAt": "Généré le",
+    "common": {
+      "verified": "Verified",
+      "unverified": "Unverified"
+    },
+    "nav": {
+      "title": "Admin panel",
+      "overview": "Overview",
+      "users": "Users",
+      "companies": "Companies",
+      "trainers": "Trainers",
+      "verification": "Verification",
+      "requests": "Requests",
+      "tests": "Tests",
+      "attempts": "Attempts",
+      "conversations": "Chat moderation",
+      "reports": "Reports",
+      "analytics": "Analytics",
+      "cmsPages": "CMS pages",
+      "cmsArticles": "Articles",
+      "cmsCategories": "Categories",
+      "cmsFaqs": "FAQ",
+      "featureFlags": "Feature flags",
+      "finance": "Finance",
+      "settings": "Settings"
+    },
+    "userRole": {
+      "SUPER_ADMIN": "Super admin",
+      "ADMIN": "Admin",
+      "COMPANY_OWNER": "Company owner",
+      "COMPANY_MEMBER": "Company member",
+      "TRAINER": "Trainer"
+    },
+    "userStatus": {
+      "ACTIVE": "Active",
+      "SUSPENDED": "Suspended",
+      "PENDING": "Pending"
+    },
+    "trainers": "Formateurs",
+    "verification": {
+      "title": "Vérification",
+      "subtitle": "Review identity and legitimacy submissions from companies and trainers.",
+      "empty": "Nothing to review right now.",
+      "noDocuments": "No documents were attached to this request.",
+      "approveHint": "Approving marks the target profile as verified.",
+      "rejectionReasonLabel": "Reason shown to the submitter",
+      "viewTarget": "Open target profile",
+      "targetDeleted": "Target profile no longer exists",
+      "status": {
+        "PENDING": "Pending",
+        "APPROVED": "Approved",
+        "REJECTED": "Rejected"
+      },
+      "targetType": {
+        "ALL": "All target types",
+        "COMPANY": "Company",
+        "TRAINER": "Trainer"
+      },
+      "col": {
+        "documents": "Documents",
+        "reviewer": "Reviewer",
+        "reviewedAt": "Reviewed"
+      },
+      "section": {
+        "submitter": "Submitter",
+        "documents": "Supporting documents",
+        "notes": "Submitter notes",
+        "rejectionReason": "Rejection reason",
+        "review": "Review"
+      },
+      "action": {
+        "approve": "Approve",
+        "reject": "Reject"
+      },
+      "confirm": {
+        "approve": "Approve this verification request? The target profile will be marked as verified.",
+        "reject": "Reject this verification request? The submitter will see the reason."
+      }
+    },
+    "tests": {
+      "title": "Tests",
+      "subtitle": "Admin view of every test across the platform.",
+      "searchPlaceholder": "Search title or description…",
+      "filter": {
+        "allScoringModes": "All scoring modes",
+        "apply": "Apply"
+      },
+      "scoringMode": {
+        "AUTO": "Auto",
+        "MANUAL": "Manual",
+        "HYBRID": "Hybrid"
+      },
+      "col": {
+        "title": "Title",
+        "request": "Request",
+        "company": "Company",
+        "scoringMode": "Scoring",
+        "passingScore": "Passing",
+        "tasks": "Tasks",
+        "attempts": "Attempts",
+        "createdAt": "Created"
+      },
+      "empty": "No tests match the current filters.",
+      "section": {
+        "meta": "Metadata",
+        "tasks": "Tasks",
+        "attempts": "Attempts",
+        "breakdown": "Status breakdown"
+      },
+      "task": {
+        "header": "#{order} · {type}",
+        "weight": "Weight: {weight}"
+      },
+      "loadMore": "Load more"
+    },
+    "attempts": {
+      "title": "Attempt",
+      "subtitle": "Full attempt detail across test, trainer and responses.",
+      "status": {
+        "IN_PROGRESS": "In progress",
+        "SUBMITTED": "Submitted",
+        "GRADED": "Graded",
+        "EXPIRED": "Expired"
+      },
+      "col": {
+        "test": "Test",
+        "trainer": "Trainer",
+        "status": "Status",
+        "score": "Score",
+        "submittedAt": "Submitted",
+        "duration": "Duration"
+      },
+      "section": {
+        "meta": "Metadata",
+        "responses": "Responses",
+        "application": "Application"
+      },
+      "noResponses": "No responses recorded yet.",
+      "durationSec": "{sec}s",
+      "empty": "No attempts match the current filters.",
+      "scoreOf": "{score}/{max}"
+    },
+    "conversations": {
+      "title": "Chat moderation",
+      "subtitle": "Inspect conversations, lock threads and redact messages.",
+      "searchPlaceholder": "Search by participant name or email…",
+      "filter": {
+        "lockedAll": "All conversations",
+        "lockedOnly": "Locked only",
+        "apply": "Apply"
+      },
+      "col": {
+        "participants": "Participants",
+        "request": "Request",
+        "messages": "Messages",
+        "locked": "Locked",
+        "updatedAt": "Updated"
+      },
+      "empty": "No conversations match the current filters.",
+      "section": {
+        "meta": "Metadata",
+        "participants": "Participants",
+        "messages": "Messages",
+        "actions": "Moderation actions"
+      },
+      "action": {
+        "lock": "Lock conversation",
+        "unlock": "Unlock conversation",
+        "redact": "Redact",
+        "reasonLabel": "Reason",
+        "reasonPlaceholder": "Reason shown in audit log (required to redact)",
+        "lockReasonPlaceholder": "Optional reason for the lock"
+      },
+      "confirm": {
+        "lock": "Lock this conversation? Participants will see a notice.",
+        "unlock": "Unlock this conversation?",
+        "redact": "Redact this message? Body will be replaced with '[redacted by admin]'."
+      },
+      "lockedBadge": "Locked",
+      "redactedBadge": "Redacted",
+      "redactedBody": "[redacted by admin]",
+      "noMessages": "No messages in this conversation yet.",
+      "loadMore": "Load more"
+    },
+    "reports": {
+      "title": "Reports",
+      "subtitle": "User-submitted moderation reports across the platform.",
+      "col": {
+        "target": "Target",
+        "category": "Category",
+        "reporter": "Reporter",
+        "status": "Status",
+        "resolution": "Resolution",
+        "createdAt": "Created"
+      },
+      "filter": {
+        "allStatuses": "All statuses",
+        "allTargets": "All targets",
+        "allCategories": "All categories",
+        "apply": "Apply"
+      },
+      "status": {
+        "OPEN": "Open",
+        "INVESTIGATING": "Investigating",
+        "RESOLVED": "Resolved",
+        "DISMISSED": "Dismissed"
+      },
+      "category": {
+        "SPAM": "Spam",
+        "HARASSMENT": "Harassment",
+        "INAPPROPRIATE": "Inappropriate",
+        "FRAUD": "Fraud",
+        "IMPERSONATION": "Impersonation",
+        "COPYRIGHT": "Copyright",
+        "SAFETY": "Safety",
+        "OTHER": "Other"
+      },
+      "targetType": {
+        "USER": "User",
+        "COMPANY": "Company",
+        "TRAINER": "Trainer",
+        "REQUEST": "Request",
+        "APPLICATION": "Application",
+        "MESSAGE": "Message",
+        "CONVERSATION": "Conversation",
+        "REVIEW": "Review",
+        "TEST": "Test",
+        "OTHER": "Other"
+      },
+      "resolution": {
+        "NO_ACTION": "No action",
+        "WARNING_ISSUED": "Warning issued",
+        "CONTENT_REMOVED": "Content removed",
+        "USER_SUSPENDED": "User suspended",
+        "USER_BANNED": "User banned",
+        "ESCALATED": "Escalated"
+      },
+      "empty": "No reports match the current filters.",
+      "section": {
+        "meta": "Metadata",
+        "target": "Target",
+        "reporter": "Reporter",
+        "evidence": "Evidence",
+        "reason": "Reason",
+        "review": "Review",
+        "details": "Report",
+        "closed": "This report is closed ({status})."
+      },
+      "noEvidence": "No evidence provided.",
+      "action": {
+        "review": "Submit review",
+        "statusLabel": "New status",
+        "resolutionLabel": "Resolution (required when closing)",
+        "notesLabel": "Internal notes (optional)",
+        "notesPlaceholder": "Visible only to admins — stored in audit log",
+        "submit": "Submit review",
+        "noResolution": "Select a resolution"
+      },
+      "confirm": {
+        "review": "Submit this review decision?",
+        "submit": "Submit this review decision?"
+      },
+      "loadMore": "Load more"
+    },
+    "analytics": {
+      "title": "Analytics",
+      "subtitle": "Platform activity time-series over the selected window.",
+      "window": "Last {days} days",
+      "series": {
+        "signups": "Signups",
+        "requests": "Requests",
+        "applications": "Applications",
+        "attempts": "Test attempts",
+        "messages": "Messages",
+        "reports": "Reports"
+      },
+      "breakdown": {
+        "signupsByRole": "Signups by role",
+        "requestsByStatus": "Requests by status",
+        "reportsByStatus": "Reports by status",
+        "total": "Total: {n}"
+      },
+      "empty": "No activity in the selected window."
+    },
+    "jsonAccordion": "Raw row JSON",
+    "cms": {
+      "save": "Save",
+      "edit": "Edit",
+      "delete": "Delete",
+      "empty": "Nothing yet. Create the first entry to get started.",
+      "loadMore": "Load more",
+      "filter": {
+        "searchPlaceholder": "Search…",
+        "allLocales": "All locales",
+        "allStatuses": "All statuses",
+        "allKinds": "All kinds",
+        "apply": "Apply"
+      },
+      "pageStatus": {
+        "DRAFT": "Draft",
+        "PUBLISHED": "Published"
+      },
+      "pageKind": {
+        "PAGE": "Page",
+        "LEGAL": "Legal"
+      },
+      "articleStatus": {
+        "DRAFT": "Draft",
+        "PUBLISHED": "Published",
+        "ARCHIVED": "Archived"
+      },
+      "pages": {
+        "title": "Pages",
+        "subtitle": "Public pages, legal notices and static content.",
+        "new": "New page",
+        "edit": "Edit page",
+        "col": {
+          "title": "Title",
+          "slug": "Slug",
+          "locale": "Locale",
+          "kind": "Kind",
+          "status": "Status",
+          "updated": "Updated",
+          "actions": "Actions"
+        },
+        "field": {
+          "title": "Title",
+          "slug": "Slug",
+          "locale": "Locale",
+          "kind": "Kind",
+          "status": "Status",
+          "metaTitle": "SEO title",
+          "metaDescription": "SEO description",
+          "content": "Content (markdown / HTML)",
+          "contentHint": "Supports markdown and raw HTML."
+        }
+      },
+      "articles": {
+        "title": "Blog & articles",
+        "subtitle": "Editorial content surfaced on the public blog and SEO sitemap.",
+        "new": "New article",
+        "edit": "Edit article",
+        "noCategory": "— no category —",
+        "filter": {
+          "allCategories": "All categories"
+        },
+        "col": {
+          "title": "Title",
+          "slug": "Slug",
+          "locale": "Locale",
+          "status": "Status",
+          "category": "Category",
+          "published": "Published",
+          "updated": "Updated",
+          "actions": "Actions"
+        },
+        "field": {
+          "title": "Title",
+          "slug": "Slug",
+          "locale": "Locale",
+          "status": "Status",
+          "category": "Category",
+          "coverUrl": "Cover image URL",
+          "excerpt": "Excerpt",
+          "metaTitle": "SEO title",
+          "metaDescription": "SEO description",
+          "content": "Content (markdown / HTML)",
+          "contentHint": "Long-form body. Supports markdown and raw HTML."
+        }
+      },
+      "categories": {
+        "title": "Categories",
+        "subtitle": "Taxonomy used by articles and public listings.",
+        "new": "New category",
+        "edit": "Edit category",
+        "col": {
+          "nameEn": "Name (EN)",
+          "nameAr": "Name (AR)",
+          "slug": "Slug",
+          "order": "Order",
+          "articles": "Articles"
+        },
+        "field": {
+          "slug": "Slug",
+          "order": "Order",
+          "nameEn": "Name (EN)",
+          "nameAr": "Name (AR)",
+          "descriptionEn": "Description (EN)",
+          "descriptionAr": "Description (AR)"
+        }
+      },
+      "faqs": {
+        "title": "FAQ",
+        "subtitle": "Frequently asked questions grouped by section and locale.",
+        "new": "New FAQ entry",
+        "edit": "Edit FAQ entry",
+        "col": {
+          "question": "Question",
+          "section": "Section",
+          "locale": "Locale",
+          "order": "Order",
+          "published": "State"
+        },
+        "field": {
+          "locale": "Locale",
+          "section": "Section",
+          "order": "Order",
+          "question": "Question",
+          "answer": "Answer",
+          "published": "Published"
+        },
+        "filter": {
+          "allSections": "All sections",
+          "anyPublished": "Any state",
+          "published": "Published",
+          "unpublished": "Hidden"
+        },
+        "section": {
+          "GENERAL": "General",
+          "COMPANIES": "Companies",
+          "TRAINERS": "Trainers",
+          "PAYMENTS": "Payments",
+          "TESTS": "Tests",
+          "MODELS": "Models",
+          "ACCOUNT": "Account"
+        }
+      },
+      "featureFlags": {
+        "title": "Feature flags",
+        "subtitle": "Toggle platform features and roll out experiments.",
+        "new": "New flag",
+        "edit": "Edit flag",
+        "on": "On",
+        "off": "Off",
+        "col": {
+          "key": "Key",
+          "enabled": "State",
+          "description": "Description",
+          "updated": "Updated"
+        },
+        "field": {
+          "key": "Key",
+          "description": "Description",
+          "enabled": "Enabled",
+          "payload": "Payload (JSON)",
+          "payloadHint": "Optional JSON object passed to the client (e.g. rollout %, variant)."
+        }
+      }
+    },
+    "finance": {
+      "title": "Finance",
+      "subtitle": "Escrow contracts, milestone refunds, trainer payouts, subscriptions, and pricing plans — every change audit-logged.",
+      "empty": "Nothing here yet.",
+      "viewAll": "View all",
+      "next": "Next",
+      "filter": {
+        "allStatuses": "All statuses",
+        "apply": "Apply"
+      },
+      "tabs": {
+        "contracts": "Contracts",
+        "payouts": "Payouts",
+        "subscriptions": "Subscriptions",
+        "plans": "Plans"
+      },
+      "overview": {
+        "escrowHeld": "Escrow held",
+        "released": "Released",
+        "platformFee": "Platform fees",
+        "refunded": "Refunded",
+        "payoutsPaid": "Payouts paid",
+        "payoutsPending": "Payouts pending",
+        "payoutsFailed": "Payouts failed",
+        "activeSubscriptions": "Active subscriptions",
+        "monthlyRevenue": "Monthly revenue (last 12 months)",
+        "gross": "Gross",
+        "fee": "Fee",
+        "refunds": "Refunds",
+        "recentContracts": "Recent contracts",
+        "recentPayouts": "Recent payouts"
+      },
+      "contractStatus": {
+        "PENDING": "Pending",
+        "ACTIVE": "Active",
+        "COMPLETED": "Completed",
+        "CANCELLED": "Cancelled",
+        "DISPUTED": "Disputed"
+      },
+      "milestoneStatus": {
+        "PENDING": "Pending",
+        "FUNDED": "Funded",
+        "RELEASED": "Released",
+        "REFUNDED": "Refunded",
+        "CANCELLED": "Cancelled"
+      },
+      "payoutStatus": {
+        "PENDING": "Pending",
+        "PAID": "Paid",
+        "FAILED": "Failed",
+        "CANCELLED": "Cancelled"
+      },
+      "contracts": {
+        "title": "Contracts",
+        "subtitle": "Browse every escrow contract. Drill in to refund individual milestones.",
+        "searchPlaceholder": "Search by contract title, company, trainer…",
+        "milestones": "Milestones",
+        "due": "Due",
+        "paymentIntents": "Payment intents",
+        "payouts": "Payouts",
+        "refundReason": "Refund reason",
+        "refundReasonPlaceholder": "Why is this milestone being refunded?",
+        "refundButton": "Refund milestone",
+        "refundConfirm": "Refund {amount} to the company? This calls Stripe and is logged to the audit trail.",
+        "col": {
+          "title": "Title",
+          "company": "Company",
+          "trainer": "Trainer",
+          "amount": "Amount",
+          "status": "Status",
+          "milestones": "Milestones",
+          "actions": "Actions",
+          "open": "Open"
+        }
+      },
+      "payouts": {
+        "title": "Payouts",
+        "subtitle": "Trainer transfers via Stripe Connect. Retry failed transfers or cancel pending ones.",
+        "searchPlaceholder": "Search by trainer name or email…",
+        "retry": "Retry",
+        "retryConfirm": "Retry this payout? Stripe will create a new transfer.",
+        "cancel": "Cancel",
+        "cancelConfirm": "Cancel this pending payout?",
+        "col": {
+          "trainer": "Trainer",
+          "contract": "Contract",
+          "amount": "Amount",
+          "status": "Status",
+          "created": "Created",
+          "actions": "Actions"
+        }
+      },
+      "subscriptions": {
+        "title": "Subscriptions",
+        "subtitle": "Active recurring billing across companies and trainers.",
+        "searchPlaceholder": "Search by user name or email…",
+        "cancel": "Cancel",
+        "confirm": "Confirm",
+        "dismiss": "Dismiss",
+        "cancelConfirm": "Cancel this subscription? The user will lose access according to your selection.",
+        "cancelAtPeriodEnd": "Cancels at period end",
+        "immediate": "Immediate (skip period end)",
+        "reasonPlaceholder": "Reason (optional)",
+        "col": {
+          "user": "User",
+          "plan": "Plan",
+          "status": "Status",
+          "period": "Current period",
+          "actions": "Actions"
+        }
+      },
+      "plans": {
+        "title": "Plans",
+        "subtitle": "Manage company and trainer pricing plans. Plans with active subscriptions cannot be deleted.",
+        "create": "Create plan",
+        "edit": "Edit",
+        "remove": "Delete",
+        "save": "Save",
+        "createTitle": "New plan",
+        "editTitle": "Edit plan",
+        "deleteConfirm": "Delete this plan? This cannot be undone.",
+        "companyHeader": "Company plans",
+        "trainerHeader": "Trainer plans",
+        "col": {
+          "audience": "Audience",
+          "tier": "Tier",
+          "monthly": "Monthly",
+          "yearly": "Yearly",
+          "subs": "Subscribers",
+          "actions": "Actions",
+          "stripePriceId": "Stripe price ID",
+          "features": "Features"
+        }
+      }
+    },
+    "emailTemplates": {
+      "title": "Email templates",
+      "subtitle": "Admin-edited copy overrides the built-in templates. If a row is missing or disabled, the platform falls back to the bundled template so every flow keeps sending.",
+      "new": "New template",
+      "newTitle": "New email template",
+      "edit": "Edit template",
+      "empty": "No templates yet. Built-in copy is used until you override it here.",
+      "enabled": "Enabled",
+      "disabled": "Disabled",
+      "saved": "Saved",
+      "saveFailed": "Save failed",
+      "createFailed": "Create failed",
+      "deleteFailed": "Delete failed",
+      "confirmDelete": "Delete this template? The built-in fallback will be used instead.",
+      "editedAt": "Last edited {when}",
+      "by": "by {name}",
+      "unknownKey": "Unknown template key: {key}. Remove the row or add the spec in shared package.",
+      "filter": {
+        "key": "Key",
+        "locale": "Language",
+        "enabled": "Status",
+        "search": "Search",
+        "searchPlaceholder": "Subject or description…",
+        "all": "All",
+        "apply": "Apply"
+      },
+      "missing": {
+        "title": "Missing translations",
+        "subtitle": "These (key, locale) pairs have no override row. The platform will use the built-in template until you create one."
+      },
+      "col": {
+        "key": "Key",
+        "locale": "Locale",
+        "subject": "Subject",
+        "status": "Status",
+        "updated": "Updated"
+      },
+      "editor": {
+        "meta": "Metadata",
+        "key": "Key",
+        "locale": "Locale",
+        "description": "Description",
+        "subject": "Subject",
+        "bodyHtml": "HTML body",
+        "bodyText": "Plain-text body",
+        "selectKey": "Select a template key",
+        "variables": {
+          "title": "Variables",
+          "help": "Use {{name}} inside subject or body. Fill sample values here to preview."
+        },
+        "preview": "Preview",
+        "previewing": "Rendering…",
+        "previewSubject": "Subject",
+        "previewHtml": "HTML preview",
+        "unresolved": "Unresolved variables",
+        "save": "Save changes",
+        "saving": "Saving…",
+        "create": "Create template",
+        "creating": "Creating…",
+        "delete": "Delete template",
+        "deleting": "Deleting…"
+      }
+    }
+  },
+  "ads": {
+    "title": "Publicités",
+    "subtitle": "Promote your company and open roles across Trainova. Set a budget, pick placements, and Trainova only charges per real impression or click.",
+    "badge": "Monetisation",
+    "disclosure": "All sponsored placements carry a visible 'Sponsored' label and link only to https:// destinations after review.",
+    "empty": {
+      "title": "No campaigns yet",
+      "body": "Create your first campaign to reach trainers and companies actively searching Trainova.",
+      "cta": "Create a campaign"
+    },
+    "status": {
+      "DRAFT": "Draft",
+      "PENDING_REVIEW": "Pending review",
+      "APPROVED": "Approved",
+      "ACTIVE": "Active",
+      "PAUSED": "Paused",
+      "REJECTED": "Rejected",
+      "ENDED": "Ended"
+    },
+    "pricing": {
+      "CPM": "Cost per 1 000 impressions (CPM)",
+      "CPC": "Cost per click (CPC)",
+      "FLAT": "Flat sponsorship fee"
+    },
+    "placement": {
+      "HOMEPAGE_HERO": "Homepage hero",
+      "SIDEBAR_SEARCH": "Search sidebar",
+      "FEATURED_TRAINER": "Featured trainer",
+      "FEATURED_COMPANY": "Featured company",
+      "SEARCH_RESULT": "Promoted search result",
+      "CATEGORY_SPONSOR": "Category sponsor",
+      "NEWSLETTER": "Newsletter",
+      "NATIVE_LISTING": "Native listing"
+    },
+    "creativeType": {
+      "BANNER": "Banner",
+      "SPONSORED_LISTING": "Sponsored listing",
+      "FEATURED_TRAINER": "Featured trainer",
+      "CATEGORY_SPONSOR": "Category sponsor",
+      "NATIVE": "Native"
+    },
+    "list": {
+      "header": "Your campaigns",
+      "create": "New campaign",
+      "spentOf": "{spent} spent of {budget}",
+      "impressionsLabel": "Impressions",
+      "clicksLabel": "Clicks",
+      "ctrLabel": "CTR",
+      "creatives": "Creatives ({count})"
+    },
+    "detail": {
+      "backToList": "Back to campaigns",
+      "performanceTitle": "Performance",
+      "budgetTitle": "Budget & top-up",
+      "creativesTitle": "Creatives",
+      "addCreative": "Add creative",
+      "submitForReview": "Submit for review",
+      "pause": "Pause",
+      "resume": "Resume",
+      "delete": "Delete campaign",
+      "confirmDelete": "Delete this campaign? Any remaining budget is forfeit.",
+      "topupCta": "Top up budget",
+      "rejectionReason": "Rejection reason",
+      "noCreatives": "No creatives yet — add one before submitting for review.",
+      "remainingBudget": "Remaining budget"
+    },
+    "campaign": {
+      "name": "Campaign name",
+      "pricingModel": "Pricing model",
+      "cpm": "CPM (cents per 1 000 impressions)",
+      "cpc": "CPC (cents per click)",
+      "flat": "Flat fee (cents)",
+      "frequencyCap": "Frequency cap per visitor per day",
+      "targetingCountries": "Target countries (ISO-2)",
+      "targetingLocales": "Target locales",
+      "targetingSkills": "Target skill ids",
+      "startDate": "Start date",
+      "endDate": "End date",
+      "commaHint": "Comma-separated"
+    },
+    "creative": {
+      "headline": "Headline",
+      "body": "Body (optional)",
+      "ctaLabel": "CTA label (optional)",
+      "ctaUrl": "Destination URL",
+      "assetUrl": "Image URL (https, optional)",
+      "placements": "Placements",
+      "weight": "Weight (1 – 10)",
+      "active": "Active",
+      "save": "Save creative",
+      "remove": "Remove"
+    },
+    "topup": {
+      "title": "Top up campaign budget",
+      "amount": "Amount (cents)",
+      "paymentMethodId": "Saved payment method id",
+      "hint": "Use your billing page to add a card first — the saved pm_… id goes here.",
+      "submit": "Charge & credit budget",
+      "success": "Top up in progress. Your budget updates as soon as Stripe confirms."
+    },
+    "errors": {
+      "createFailed": "We couldn't create the campaign.",
+      "updateFailed": "We couldn't update the campaign.",
+      "submitFailed": "We couldn't submit the campaign.",
+      "topupFailed": "We couldn't start the top up.",
+      "creativeFailed": "We couldn't save the creative."
+    }
+  },
+  "chat": {
+    "nav": "Messages",
+    "startChat": "Démarrer une conversation",
+    "messageTrainer": "Message trainer",
+    "messageCompany": "Message company",
+    "starting": "Opening…",
+    "startFailed": "Couldn't start conversation",
+    "hub": {
+      "title": "Messages",
+      "subtitle": "Private threads with companies and trainers you're working with.",
+      "emptyTitle": "No conversations yet",
+      "emptyBody": "Once an application is shortlisted or accepted, you can message the other side from its detail page.",
+      "browseCta": "Browse open requests",
+      "unknownUser": "Unknown user",
+      "attachment": "📎 Attachment",
+      "noMessagesYet": "No messages yet"
+    },
+    "room": {
+      "back": "Back to messages",
+      "placeholder": "Write a message…",
+      "send": "Send",
+      "sending": "Sending…",
+      "sendFailed": "Failed to send. Try again.",
+      "live": "Live",
+      "offline": "Offline",
+      "typing": "{name} is typing",
+      "emptyHint": "This is the beginning of your conversation. Messages are private to participants.",
+      "notFound": "Conversation unavailable."
+    },
+    "role": {
+      "COMPANY_OWNER": "Company",
+      "TRAINER": "Trainer",
+      "ADMIN": "Admin",
+      "SUPER_ADMIN": "Admin"
+    }
+  },
+  "matching": {
+    "trainer": {
+      "title": "Recommended for you",
+      "subtitle": "Open job requests scored against your skills, languages, rate range, and history. We surface the strongest fits first.",
+      "empty": "No open requests match your profile yet. Add more skills or expand your languages to see more results.",
+      "viewCta": "View and apply",
+      "dashboardHeading": "Top matches for you",
+      "seeAll": "See all matches"
+    },
+    "company": {
+      "title": "Suggested trainers",
+      "subtitle": "Top trainer matches for {title} based on shared skills, languages, rate fit, trust signals, and platform history.",
+      "empty": "No trainers match this request yet. Try broadening the required skills or languages.",
+      "backToApplications": "Back to applications",
+      "openCta": "View profile"
+    },
+    "admin": {
+      "title": "Trainer matches",
+      "subtitle": "{title} — {company}",
+      "backToRequest": "Back to request",
+      "empty": "No trainers match this request with the current filter.",
+      "filterMinScore": "Min score",
+      "filterLimit": "Limit",
+      "applyFilter": "Apply",
+      "statTotal": "Matches shown",
+      "statAvgScore": "Average score",
+      "statVerified": "Verified / required-OK"
+    },
+    "breakdown": {
+      "skills": "Skills",
+      "languages": "Languages",
+      "rate": "Rate fit",
+      "trust": "Trust",
+      "history": "History",
+      "skillsRequiredOk": "Required skills matched",
+      "skillsRequiredMissing": "Some required skills are missing",
+      "skillsSummary": "{matched} matched · {missing} missing",
+      "languagesSummary": "{count} matching languages",
+      "portfolioSummary": "{count} portfolio items",
+      "historySummary": "{accepted} accepted of {total} applications"
+    },
+    "workType": {
+      "remote": "Remote",
+      "onsite": "On-site",
+      "hybrid": "Hybrid"
+    }
+  },
+  "preferences": {
+    "title": "Préférences",
+    "subtitle": "Choisissez comment les montants, dates et l'interface sont affichés sur Trainova.",
+    "localeLabel": "Langue de l'interface",
+    "timezoneLabel": "Fuseau horaire",
+    "timezonePlaceholder": "ex. Europe/Paris",
+    "timezoneHint": "Utilisez un identifiant IANA comme Europe/Paris, Asia/Riyadh ou America/Los_Angeles. Laissez vide pour suivre votre navigateur.",
+    "currencyLabel": "Devise d'affichage",
+    "currencyHint": "Les montants de paiement restent toujours dans la devise du contrat ; ce paramètre ne change que l'affichage.",
+    "localeOptions": {
+      "en": "English",
+      "ar": "العربية",
+      "fr": "Français",
+      "es": "Español"
+    },
+    "currencyOptionFormat": "{code} — {name}",
+    "currencyNames": {
+      "USD": "Dollar américain",
+      "EUR": "Euro",
+      "GBP": "Livre sterling",
+      "SAR": "Riyal saoudien",
+      "AED": "Dirham émirati",
+      "EGP": "Livre égyptienne",
+      "JPY": "Yen japonais",
+      "CAD": "Dollar canadien",
+      "AUD": "Dollar australien",
+      "CHF": "Franc suisse",
+      "INR": "Roupie indienne",
+      "TRY": "Livre turque"
+    },
+    "systemDefault": "Par défaut du système",
+    "submit": "Enregistrer les préférences",
+    "saving": "Enregistrement…",
+    "saved": "Préférences enregistrées.",
+    "errorGeneric": "Impossible d'enregistrer les préférences. Réessayez.",
+    "fxStaleWarning": "Les taux de conversion sont temporairement indisponibles ; les montants sont affichés dans leur devise d'origine."
+  }
+}
