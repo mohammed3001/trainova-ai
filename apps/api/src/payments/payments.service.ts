@@ -289,31 +289,50 @@ export class PaymentsService {
       });
     }
 
-    // T7.E — apply the coupon redemption *before* charging Stripe so a
-    // failed redemption never leaves a discounted Stripe charge with no
-    // matching DB record. The unique constraint on
-    // CouponRedemption.milestoneId + the idempotent reconciliation
-    // inside applyToMilestone() make this safe under retries (the
-    // Stripe call itself is idempotent via `fund-${milestone.id}`).
+    // T7.E — coupon flow is a strict three-phase pipeline:
+    //   1. preview()      — read-only validation: audience/scope/expiry,
+    //                       per-user + global redemption caps, currency
+    //                       match, Stripe-min-charge gate, discount math.
+    //                       Throws *before* anything irreversible runs.
+    //   2. Stripe call    — idempotent via `fund-${milestone.id}`. If
+    //                       this throws, no DB row has been written yet,
+    //                       so the coupon is preserved. If it returns a
+    //                       PI in `requires_payment_method` (e.g. card
+    //                       decline), that's a normal flow — the caller
+    //                       retries with the client_secret and the
+    //                       coupon stays applied.
+    //   3. One Prisma tx  — upsert PaymentIntent + applyToMilestone
+    //                       *atomically*. If applyToMilestone throws
+    //                       inside the tx (true race on perUserLimit /
+    //                       maxRedemptions), the PaymentIntent upsert
+    //                       rolls back too. The Stripe PI is then
+    //                       orphaned, but the user's coupon slot is
+    //                       preserved; on retry the idempotency key
+    //                       returns the same PI and the tx re-runs.
+    // This matches the contract documented on
+    // {@link CouponsService.applyToMilestone}.
     const ownerRole = await this.getUserRole(userId);
     let chargeAmountCents = milestone.amountCents;
-    let couponPlan: {
-      couponId: string;
-      discountMinor: number;
-      finalMinor: number;
-    } | null = null;
+    let plannedCoupon: { code: string; couponId: string } | null = null;
     if (input.couponCode) {
-      couponPlan = await this.prisma.$transaction((tx) =>
-        this.coupons.applyToMilestone(tx, {
-          code: input.couponCode!,
-          userId,
-          userRole: ownerRole,
-          milestoneId: milestone.id,
-          originalMinor: milestone.amountCents,
-          currency: milestone.contract.currency,
-        }),
-      );
-      chargeAmountCents = couponPlan.finalMinor;
+      const preview = await this.coupons.preview(userId, ownerRole, {
+        code: input.couponCode,
+        scope: 'MILESTONE',
+        amountMinor: milestone.amountCents,
+        currency: milestone.contract.currency,
+      });
+      const couponRow = await this.prisma.coupon.findUnique({
+        where: { code: input.couponCode.trim().toUpperCase() },
+        select: { id: true },
+      });
+      if (!couponRow) {
+        // Should never happen — preview() just resolved the same code —
+        // but surfacing this explicitly keeps the type narrow and avoids
+        // a non-null assertion below.
+        throw new NotFoundException('Coupon not found');
+      }
+      chargeAmountCents = preview.finalMinor;
+      plannedCoupon = { code: input.couponCode, couponId: couponRow.id };
     }
 
     const pi = await this.stripe.createEscrowPaymentIntent({
@@ -328,29 +347,42 @@ export class PaymentsService {
         trainovaMilestoneId: milestone.id,
         trainovaCompanyId: milestone.contract.companyId,
         trainovaTrainerId: milestone.contract.trainerId,
-        ...(couponPlan ? { trainovaCouponId: couponPlan.couponId } : {}),
+        ...(plannedCoupon ? { trainovaCouponId: plannedCoupon.couponId } : {}),
       },
       idempotencyKey: `fund-${milestone.id}`,
     });
 
     const mapped = this.mapStripePiStatus(pi.status);
-    await this.prisma.paymentIntent.upsert({
-      where: { stripePaymentIntentId: pi.id },
-      create: {
-        milestoneId: milestone.id,
-        stripePaymentIntentId: pi.id,
-        clientSecret: pi.client_secret,
-        amountCents: chargeAmountCents,
-        currency: milestone.contract.currency,
-        status: mapped,
-        receiptUrl: pi.latest_charge
-          ? await this.tryGetChargeReceipt(pi.latest_charge as string)
-          : null,
-      },
-      update: {
-        status: mapped,
-        clientSecret: pi.client_secret ?? null,
-      },
+    const receiptUrl = pi.latest_charge
+      ? await this.tryGetChargeReceipt(pi.latest_charge as string)
+      : null;
+    await this.prisma.$transaction(async (tx) => {
+      await tx.paymentIntent.upsert({
+        where: { stripePaymentIntentId: pi.id },
+        create: {
+          milestoneId: milestone.id,
+          stripePaymentIntentId: pi.id,
+          clientSecret: pi.client_secret,
+          amountCents: chargeAmountCents,
+          currency: milestone.contract.currency,
+          status: mapped,
+          receiptUrl,
+        },
+        update: {
+          status: mapped,
+          clientSecret: pi.client_secret ?? null,
+        },
+      });
+      if (plannedCoupon) {
+        await this.coupons.applyToMilestone(tx, {
+          code: plannedCoupon.code,
+          userId,
+          userRole: ownerRole,
+          milestoneId: milestone.id,
+          originalMinor: milestone.amountCents,
+          currency: milestone.contract.currency,
+        });
+      }
     });
 
     if (mapped === 'SUCCEEDED') {
