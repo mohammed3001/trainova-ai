@@ -58,6 +58,34 @@ export type SupportedCurrency = (typeof SUPPORTED_CURRENCIES)[number];
 const MIN_MILESTONE_CENTS = 100; // $1 minimum (Stripe will reject lower)
 const MAX_MILESTONE_CENTS = 50_000_000; // $500,000 hard cap per milestone
 
+/**
+ * Stripe's published minimum charge amounts per ISO-4217 code, in
+ * minor units. Used to guard coupon math: a 100% PERCENT or large
+ * FIXED coupon could otherwise drop the post-discount charge to zero
+ * (or below the minimum), which Stripe will reject after the coupon
+ * redemption row has already been written — leaving the user's
+ * single-use coupon permanently consumed with no payment. Source:
+ * https://stripe.com/docs/currencies#minimum-and-maximum-charge-amounts
+ */
+export const STRIPE_MIN_CHARGE_MINOR: Record<SupportedCurrency, number> = {
+  USD: 50,
+  EUR: 50,
+  GBP: 30,
+  SAR: 200, // SAR not officially listed; use a conservative 2 SAR floor
+  AED: 200, // AED not officially listed; use a conservative 2 AED floor
+};
+
+/**
+ * Returns the Stripe minimum charge amount in minor units for a given
+ * ISO-4217 currency, falling back to 50 (≈ USD) for codes outside the
+ * platform's `SUPPORTED_CURRENCIES` set so an unknown currency never
+ * silently bypasses the floor.
+ */
+export function getStripeMinChargeMinor(currency: string): number {
+  const upper = currency.toUpperCase() as SupportedCurrency;
+  return STRIPE_MIN_CHARGE_MINOR[upper] ?? 50;
+}
+
 export const milestoneInputSchema = z.object({
   title: z.string().trim().min(2).max(160),
   description: z.string().trim().max(2000).optional(),

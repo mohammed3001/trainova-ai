@@ -9,6 +9,7 @@ import {
 import { Prisma, type PrismaClient } from '@trainova/db';
 import {
   computeCouponDiscount,
+  getStripeMinChargeMinor,
   type CouponPreviewResult,
   type CouponScope,
   type CreateCouponInput,
@@ -232,6 +233,21 @@ export class CouponsService {
     if (!compute.applicable) {
       throw new BadRequestException(compute.reason ?? 'Coupon cannot be applied');
     }
+    // Stripe minimum charge gate. A 100% PERCENT or large FIXED coupon
+    // could otherwise drop `finalMinor` to zero (or below the per-currency
+    // floor) — Stripe would then reject the PaymentIntent *after* the
+    // CouponRedemption row has been written, permanently consuming the
+    // user's single-use slot with no payment. Guard at preview *and* at
+    // apply time so neither path can commit a redemption that's
+    // guaranteed to fail at the gateway.
+    if (input.scope === 'MILESTONE' || input.scope === 'SUBSCRIPTION') {
+      const min = getStripeMinChargeMinor(input.currency);
+      if (compute.finalMinor < min) {
+        throw new BadRequestException(
+          'Coupon discount reduces the charge below the minimum payment amount',
+        );
+      }
+    }
     // Global redemption cap — surface the failure at preview time so
     // the buyer sees "Coupon redemption limit reached" up front instead
     // of being held until the apply step at payment time. The
@@ -326,6 +342,15 @@ export class CouponsService {
     );
     if (!compute.applicable) {
       throw new BadRequestException(compute.reason ?? 'Coupon cannot be applied');
+    }
+    // Stripe minimum charge gate (see preview() for rationale).
+    // Inside the redemption transaction so a sub-floor amount never
+    // commits a redemption row that the Stripe call would later reject.
+    const minCharge = getStripeMinChargeMinor(args.currency);
+    if (compute.finalMinor < minCharge) {
+      throw new BadRequestException(
+        'Coupon discount reduces the charge below the minimum payment amount',
+      );
     }
     if (coupon.perUserLimit > 0) {
       const used = await tx.couponRedemption.count({
