@@ -41,6 +41,16 @@ export class ContractDocumentsService {
       },
     });
     if (!contract) throw new NotFoundException('Contract not found');
+    if (contract.status === 'CANCELLED') {
+      throw new BadRequestException(
+        'Cannot generate documents on a cancelled contract',
+      );
+    }
+    if (contract.status === 'COMPLETED') {
+      throw new BadRequestException(
+        'Cannot generate documents on a completed contract',
+      );
+    }
     const companyOwnerId = contract.company.ownerId;
     await this.assertActorCanAuthorOnContract(actorId, companyOwnerId);
 
@@ -247,6 +257,13 @@ export class ContractDocumentsService {
       if (!document) throw new NotFoundException('Document not found');
       if (document.status === 'CANCELLED' || document.status === 'EXPIRED') {
         throw new BadRequestException('Document is no longer signable');
+      }
+      if (document.expiresAt && document.expiresAt.getTime() < Date.now()) {
+        await tx.contractDocument.update({
+          where: { id: documentId },
+          data: { status: 'EXPIRED' },
+        });
+        throw new BadRequestException('Document has expired');
       }
       const role = this.resolveSignerRole(actorId, document);
       const row = document.signatures.find((s) => s.role === role);
