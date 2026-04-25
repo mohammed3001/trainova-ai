@@ -39,31 +39,38 @@ export function DisputeResolveForm({ disputeId, currentStatus }: Props) {
   const [status, setStatus] = useState<DisputeAdminTransition>(allowed[0] ?? 'UNDER_REVIEW');
   const [resolution, setResolution] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
   const [pending, startTransition] = useTransition();
 
   if (allowed.length === 0) return null;
 
   async function submit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    if (busy) return;
     setError(null);
-    const res = await fetch(
-      `/api/proxy/admin/disputes/${encodeURIComponent(disputeId)}`,
-      {
-        method: 'PATCH',
-        credentials: 'same-origin',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          status,
-          ...(resolution.trim() ? { resolution: resolution.trim() } : {}),
-        }),
-      },
-    );
-    if (!res.ok) {
-      const body = (await res.json().catch(() => null)) as { message?: string } | null;
-      setError(body?.message ?? t('errorGeneric'));
-      return;
+    setBusy(true);
+    try {
+      const res = await fetch(
+        `/api/proxy/admin/disputes/${encodeURIComponent(disputeId)}`,
+        {
+          method: 'PATCH',
+          credentials: 'same-origin',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            status,
+            ...(resolution.trim() ? { resolution: resolution.trim() } : {}),
+          }),
+        },
+      );
+      if (!res.ok) {
+        const body = (await res.json().catch(() => null)) as { message?: string } | null;
+        setError(body?.message ?? t('errorGeneric'));
+        return;
+      }
+      startTransition(() => router.refresh());
+    } finally {
+      setBusy(false);
     }
-    startTransition(() => router.refresh());
   }
 
   return (
@@ -108,7 +115,7 @@ export function DisputeResolveForm({ disputeId, currentStatus }: Props) {
         </p>
       ) : null}
       <div className="flex items-center justify-end gap-2">
-        <button type="submit" disabled={pending} className="btn-primary">
+        <button type="submit" disabled={busy || pending} className="btn-primary">
           {t('submit')}
         </button>
       </div>

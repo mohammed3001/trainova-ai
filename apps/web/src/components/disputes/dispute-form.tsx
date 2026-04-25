@@ -25,41 +25,48 @@ export function DisputeForm({ contractId, locale, onCancelHref }: Props) {
   const [description, setDescription] = useState('');
   const [evidenceText, setEvidenceText] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
   const [pending, startTransition] = useTransition();
 
   async function submit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    if (busy) return;
     setError(null);
-    const links = evidenceText
-      .split('\n')
-      .map((l) => l.trim())
-      .filter(Boolean);
-    const res = await fetch('/api/proxy/disputes', {
-      method: 'POST',
-      credentials: 'same-origin',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contractId,
-        reason,
-        description: description.trim(),
-        ...(links.length ? { evidence: { links } } : {}),
-      }),
-    });
-    if (!res.ok) {
-      const body = (await res.json().catch(() => null)) as { message?: string; statusCode?: number } | null;
-      if (res.status === 409) {
-        setError(t('errorActiveExists'));
-      } else {
-        setError(body?.message ?? t('errorGeneric'));
+    setBusy(true);
+    try {
+      const links = evidenceText
+        .split('\n')
+        .map((l) => l.trim())
+        .filter(Boolean);
+      const res = await fetch('/api/proxy/disputes', {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contractId,
+          reason,
+          description: description.trim(),
+          ...(links.length ? { evidence: { links } } : {}),
+        }),
+      });
+      if (!res.ok) {
+        const body = (await res.json().catch(() => null)) as { message?: string; statusCode?: number } | null;
+        if (res.status === 409) {
+          setError(t('errorActiveExists'));
+        } else {
+          setError(body?.message ?? t('errorGeneric'));
+        }
+        return;
       }
-      return;
+      const created = (await res.json().catch(() => null)) as { id?: string } | null;
+      startTransition(() => {
+        if (created?.id) router.push(`/${locale}/disputes/${created.id}`);
+        else router.push(`/${locale}/disputes`);
+        router.refresh();
+      });
+    } finally {
+      setBusy(false);
     }
-    const created = (await res.json().catch(() => null)) as { id?: string } | null;
-    startTransition(() => {
-      if (created?.id) router.push(`/${locale}/disputes/${created.id}`);
-      else router.push(`/${locale}/disputes`);
-      router.refresh();
-    });
   }
 
   return (
@@ -130,7 +137,7 @@ export function DisputeForm({ contractId, locale, onCancelHref }: Props) {
         <a href={onCancelHref} className="btn-ghost">
           {t('cancel')}
         </a>
-        <button type="submit" disabled={pending} className="btn-primary">
+        <button type="submit" disabled={busy || pending} className="btn-primary">
           {t('submit')}
         </button>
       </div>

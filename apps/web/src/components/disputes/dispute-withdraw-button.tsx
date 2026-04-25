@@ -13,26 +13,33 @@ export function DisputeWithdrawButton({ disputeId }: Props) {
   const tCommon = useTranslations('common');
   const router = useRouter();
   const [pending, startTransition] = useTransition();
+  const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   async function withdraw() {
+    if (busy) return;
     if (!window.confirm(t('withdrawConfirm'))) return;
     setError(null);
-    const res = await fetch(
-      `/api/proxy/disputes/${encodeURIComponent(disputeId)}/withdraw`,
-      { method: 'PATCH', credentials: 'same-origin' },
-    );
-    if (!res.ok) {
-      const body = (await res.json().catch(() => null)) as { message?: string } | null;
-      setError(body?.message ?? tCommon('error'));
-      return;
+    setBusy(true);
+    try {
+      const res = await fetch(
+        `/api/proxy/disputes/${encodeURIComponent(disputeId)}/withdraw`,
+        { method: 'PATCH', credentials: 'same-origin' },
+      );
+      if (!res.ok) {
+        const body = (await res.json().catch(() => null)) as { message?: string } | null;
+        setError(body?.message ?? tCommon('error'));
+        return;
+      }
+      startTransition(() => router.refresh());
+    } finally {
+      setBusy(false);
     }
-    startTransition(() => router.refresh());
   }
 
   return (
     <div className="flex flex-col items-end gap-1">
-      <button type="button" onClick={withdraw} disabled={pending} className="btn-ghost text-rose-600">
+      <button type="button" onClick={withdraw} disabled={busy || pending} className="btn-ghost text-rose-600">
         {t('withdraw')}
       </button>
       {error ? (

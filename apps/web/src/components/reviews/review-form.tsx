@@ -23,28 +23,35 @@ export function ReviewForm({ contractId, contractTitle, counterpartyName }: Prop
   const [comment, setComment] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState(false);
+  const [busy, setBusy] = useState(false);
   const [pending, startTransition] = useTransition();
 
   async function submit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    if (busy) return;
     setError(null);
-    const res = await fetch('/api/proxy/reviews', {
-      method: 'POST',
-      credentials: 'same-origin',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contractId,
-        rating,
-        comment: comment.trim() ? comment.trim() : undefined,
-      }),
-    });
-    if (!res.ok) {
-      const body = (await res.json().catch(() => null)) as { message?: string } | null;
-      setError(body?.message ?? t('errorGeneric'));
-      return;
+    setBusy(true);
+    try {
+      const res = await fetch('/api/proxy/reviews', {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contractId,
+          rating,
+          comment: comment.trim() ? comment.trim() : undefined,
+        }),
+      });
+      if (!res.ok) {
+        const body = (await res.json().catch(() => null)) as { message?: string } | null;
+        setError(body?.message ?? t('errorGeneric'));
+        return;
+      }
+      setDone(true);
+      startTransition(() => router.refresh());
+    } finally {
+      setBusy(false);
     }
-    setDone(true);
-    startTransition(() => router.refresh());
   }
 
   if (done) {
@@ -101,7 +108,7 @@ export function ReviewForm({ contractId, contractTitle, counterpartyName }: Prop
       <div className="flex items-center justify-end gap-2">
         <button
           type="submit"
-          disabled={pending}
+          disabled={busy || pending}
           className="btn-primary"
           data-testid="review-form-submit"
         >

@@ -146,22 +146,39 @@ export class DisputesService {
       );
     }
 
-    await this.prisma.$transaction(async (tx) => {
-      await tx.dispute.update({
-        where: { id: dispute.id },
-        data: { status: 'WITHDRAWN', resolvedAt: new Date() },
+    // Re-assert the status inside the atomic update (compound `where`) so a
+    // concurrent admin promotion to UNDER_REVIEW between the read above and
+    // the write below cannot land an illegal WITHDRAWN. Prisma raises P2025
+    // when the row exists but the predicate misses; we surface that as the
+    // same 400 the pre-check would.
+    try {
+      await this.prisma.$transaction(async (tx) => {
+        await tx.dispute.update({
+          where: { id: dispute.id, status: 'OPEN' },
+          data: { status: 'WITHDRAWN', resolvedAt: new Date() },
+        });
+        await this.maybeRestoreContractStatus(tx, dispute.contractId);
+        await tx.auditLog.create({
+          data: {
+            actorId,
+            action: AUDIT_ACTIONS.DISPUTE_WITHDRAWN,
+            entityType: 'Dispute',
+            entityId: dispute.id,
+            diff: { from: dispute.status, to: 'WITHDRAWN' } as Prisma.JsonObject,
+          },
+        });
       });
-      await this.maybeRestoreContractStatus(tx, dispute.contractId);
-      await tx.auditLog.create({
-        data: {
-          actorId,
-          action: AUDIT_ACTIONS.DISPUTE_WITHDRAWN,
-          entityType: 'Dispute',
-          entityId: dispute.id,
-          diff: { from: dispute.status, to: 'WITHDRAWN' } as Prisma.JsonObject,
-        },
-      });
-    });
+    } catch (err) {
+      if (
+        err instanceof Prisma.PrismaClientKnownRequestError &&
+        err.code === 'P2025'
+      ) {
+        throw new BadRequestException(
+          'Dispute is no longer in OPEN status and cannot be withdrawn',
+        );
+      }
+      throw err;
+    }
   }
 
   // -------------------------------------------------------------------
@@ -235,37 +252,54 @@ export class DisputesService {
       );
     }
 
-    const result = await this.prisma.$transaction(async (tx) => {
-      const updated = await tx.dispute.update({
-        where: { id: dispute.id },
-        data: {
-          status: next,
-          resolverId: actorId,
-          resolution: input.resolution ?? null,
-          resolvedAt: isTerminal ? new Date() : null,
-        },
-        select: { id: true, status: true },
-      });
-      if (isTerminal) {
-        await this.maybeRestoreContractStatus(tx, dispute.contractId);
-      }
-      await tx.auditLog.create({
-        data: {
-          actorId,
-          action: isTerminal
-            ? AUDIT_ACTIONS.ADMIN_DISPUTE_RESOLVED
-            : AUDIT_ACTIONS.ADMIN_DISPUTE_STATUS_CHANGED,
-          entityType: 'Dispute',
-          entityId: dispute.id,
-          diff: {
-            from: dispute.status,
-            to: next,
+    let result: { id: string; status: string };
+    try {
+      // Compound `where` re-asserts the source status atomically so two
+      // concurrent admins (or an admin racing a raiser-side withdraw) can't
+      // land conflicting transitions; Prisma raises P2025 when the predicate
+      // misses, which we map back to a 400.
+      result = await this.prisma.$transaction(async (tx) => {
+        const updated = await tx.dispute.update({
+          where: { id: dispute.id, status: dispute.status },
+          data: {
+            status: next,
+            resolverId: actorId,
             resolution: input.resolution ?? null,
-          } as Prisma.JsonObject,
-        },
+            resolvedAt: isTerminal ? new Date() : null,
+          },
+          select: { id: true, status: true },
+        });
+        if (isTerminal) {
+          await this.maybeRestoreContractStatus(tx, dispute.contractId);
+        }
+        await tx.auditLog.create({
+          data: {
+            actorId,
+            action: isTerminal
+              ? AUDIT_ACTIONS.ADMIN_DISPUTE_RESOLVED
+              : AUDIT_ACTIONS.ADMIN_DISPUTE_STATUS_CHANGED,
+            entityType: 'Dispute',
+            entityId: dispute.id,
+            diff: {
+              from: dispute.status,
+              to: next,
+              resolution: input.resolution ?? null,
+            } as Prisma.JsonObject,
+          },
+        });
+        return updated;
       });
-      return updated;
-    });
+    } catch (err) {
+      if (
+        err instanceof Prisma.PrismaClientKnownRequestError &&
+        err.code === 'P2025'
+      ) {
+        throw new BadRequestException(
+          'Dispute status changed concurrently; reload and try again',
+        );
+      }
+      throw err;
+    }
 
     return { id: result.id, status: result.status as DisputeStatus };
   }
