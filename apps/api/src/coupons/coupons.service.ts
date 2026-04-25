@@ -129,6 +129,15 @@ export class CouponsService {
   }
 
   async update(id: string, input: UpdateCouponInput): Promise<PublicCoupon> {
+    // Read existing row first so we can cross-validate the validity
+    // window against stored values when the patch only touches one of
+    // the two date fields (otherwise an admin could set validFrom past
+    // an existing validUntil — or vice versa — and silently brick the
+    // coupon since assertEligible would never find a window where both
+    // checks pass).
+    const existing = await this.prisma.coupon.findUnique({ where: { id } });
+    if (!existing) throw new NotFoundException('Coupon not found');
+
     const data: Prisma.CouponUpdateInput = {};
     if (input.description !== undefined) data.description = input.description;
     if (input.audience !== undefined) data.audience = input.audience;
@@ -146,10 +155,21 @@ export class CouponsService {
     if (input.perUserLimit !== undefined) data.perUserLimit = input.perUserLimit;
     if (input.status !== undefined) data.status = input.status;
     if (input.stripeCouponId !== undefined) data.stripeCouponId = input.stripeCouponId;
-    if (input.validFrom != null && input.validUntil != null) {
-      if (new Date(input.validFrom) >= new Date(input.validUntil)) {
-        throw new BadRequestException('validUntil must be after validFrom');
-      }
+
+    const effectiveFrom =
+      input.validFrom !== undefined
+        ? input.validFrom
+          ? new Date(input.validFrom)
+          : null
+        : existing.validFrom;
+    const effectiveUntil =
+      input.validUntil !== undefined
+        ? input.validUntil
+          ? new Date(input.validUntil)
+          : null
+        : existing.validUntil;
+    if (effectiveFrom && effectiveUntil && effectiveFrom >= effectiveUntil) {
+      throw new BadRequestException('validUntil must be after validFrom');
     }
     const row = await this.prisma.coupon
       .update({ where: { id }, data })

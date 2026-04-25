@@ -764,7 +764,13 @@ export class PaymentsService {
         planId: plan.id,
       });
       stripeCouponId = resolved.stripeCouponId;
-      const planCurrency = (resolved.coupon.currency ?? 'USD').toUpperCase();
+      // Subscription plans are denominated in USD on this platform
+      // (Plan has no per-row currency column; the web layer formats
+      // plan prices with `Intl.NumberFormat('USD')`). Pass that as the
+      // *order* currency so `computeCouponDiscount` can reject FIXED
+      // coupons whose own currency doesn't match — otherwise the
+      // mismatch check is a no-op (coupon.currency vs coupon.currency).
+      const planCurrency = 'USD';
       const compute = computeCouponDiscount(
         resolved.coupon,
         plan.priceMonthly,
