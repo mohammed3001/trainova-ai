@@ -2125,6 +2125,21 @@
       "delivered": "Delivered",
       "seen": "Seen"
     },
+    "ai": {
+      "title": "AI co-pilot",
+      "summaryTitle": "Summary",
+      "tasksTitle": "Action items",
+      "summarize": "Summarize",
+      "extract": "Extract tasks",
+      "regenerate": "Regenerate",
+      "working": "Working…",
+      "summaryHint": "Get a one-paragraph recap of this conversation plus the key decisions.",
+      "tasksHint": "Pull every action item — with owner and due-date hints — out of the conversation.",
+      "tasksEmpty": "No action items detected yet.",
+      "owner": "Owner",
+      "due": "Due",
+      "errorGeneric": "Couldn't generate. Try again."
+    },
     "templates": {
       "toggle": "Templates",
       "create": "Save current draft",

@@ -2105,6 +2105,21 @@
       "delivered": "Entregado",
       "seen": "Visto"
     },
+    "ai": {
+      "title": "Copiloto IA",
+      "summaryTitle": "Resumen",
+      "tasksTitle": "Acciones",
+      "summarize": "Resumir",
+      "extract": "Extraer tareas",
+      "regenerate": "Regenerar",
+      "working": "Procesando…",
+      "summaryHint": "Obtén un resumen de un párrafo y las decisiones clave de la conversación.",
+      "tasksHint": "Extrae cada tarea — con responsable y fecha límite sugeridos.",
+      "tasksEmpty": "Aún no se han detectado tareas.",
+      "owner": "Responsable",
+      "due": "Vencimiento",
+      "errorGeneric": "No se pudo generar. Inténtalo de nuevo."
+    },
     "templates": {
       "toggle": "Plantillas",
       "create": "Guardar borrador actual",

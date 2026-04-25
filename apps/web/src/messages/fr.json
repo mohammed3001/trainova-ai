@@ -2105,6 +2105,21 @@
       "delivered": "Distribué",
       "seen": "Vu"
     },
+    "ai": {
+      "title": "Co-pilote IA",
+      "summaryTitle": "Résumé",
+      "tasksTitle": "Actions à mener",
+      "summarize": "Résumer",
+      "extract": "Extraire les tâches",
+      "regenerate": "Régénérer",
+      "working": "En cours…",
+      "summaryHint": "Obtenez un résumé d'un paragraphe et les décisions clés de cette conversation.",
+      "tasksHint": "Extraire chaque action — avec son responsable et son échéance suggérés.",
+      "tasksEmpty": "Aucune action détectée pour l'instant.",
+      "owner": "Responsable",
+      "due": "Échéance",
+      "errorGeneric": "Échec de la génération. Réessayez."
+    },
     "templates": {
       "toggle": "Modèles",
       "create": "Enregistrer le brouillon actuel",

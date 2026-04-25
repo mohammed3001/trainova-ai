@@ -6,6 +6,7 @@ import type { Socket } from 'socket.io-client';
 import { getChatSocket } from '@/lib/chat-socket';
 import type { ChatMessage } from '@/lib/chat-api';
 import { TemplatesPicker } from './templates-picker';
+import { AiPanel } from './ai-panel';
 
 interface Props {
   conversationId: string;
@@ -229,6 +230,9 @@ export function ChatRoom({
           {connected ? t('room.live') : t('room.offline')}
         </span>
       </div>
+
+      {/* AI panel — collapsed by default; opt-in summary + task extraction. */}
+      <AiPanel conversationId={conversationId} />
 
       {/* Messages */}
       <div
