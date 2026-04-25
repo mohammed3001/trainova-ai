@@ -512,7 +512,11 @@ export class MatchingService {
         ...(orConditions.length ? { OR: orConditions } : {}),
       },
       take: cap,
-      orderBy: [{ featured: 'desc' }, { publishedAt: 'desc' }],
+      orderBy: [
+        { sponsoredUntil: { sort: 'desc', nulls: 'last' } },
+        { featured: 'desc' },
+        { publishedAt: 'desc' },
+      ],
       select: {
         id: true,
         slug: true,
