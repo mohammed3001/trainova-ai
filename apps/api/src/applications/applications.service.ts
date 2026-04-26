@@ -27,6 +27,27 @@ interface StatusUpdateContext {
   locale?: string | null;
 }
 
+// Internal fraud-assessment fields belong to the moderation surface only.
+// They must never reach the trainer (lets them game the heuristic + reveals
+// admin review notes) and the company-owner has no business seeing them
+// either (it would leak our internal risk reasoning into hiring decisions).
+// Project the safe scalar set on every Application read that returns to a
+// non-admin caller; the dedicated `/admin/fraud/*` endpoints in `FraudService`
+// are where the risk* columns are intentionally surfaced.
+const APPLICATION_SAFE_SCALARS = {
+  id: true,
+  requestId: true,
+  trainerId: true,
+  status: true,
+  coverLetter: true,
+  proposedRate: true,
+  proposedTimelineDays: true,
+  matchScore: true,
+  answers: true,
+  createdAt: true,
+  updatedAt: true,
+} satisfies Prisma.ApplicationSelect;
+
 @Injectable()
 export class ApplicationsService {
   constructor(
@@ -40,7 +61,8 @@ export class ApplicationsService {
     return this.prisma.application.findMany({
       where: { trainerId },
       orderBy: { createdAt: 'desc' },
-      include: {
+      select: {
+        ...APPLICATION_SAFE_SCALARS,
         request: {
           select: {
             id: true,
@@ -97,6 +119,7 @@ export class ApplicationsService {
         proposedTimelineDays: input.proposedTimelineDays,
         answers: validated.answers as Prisma.InputJsonValue,
       },
+      select: APPLICATION_SAFE_SCALARS,
     });
 
     // Best-effort notify the company owner. Must include the supporting
@@ -212,7 +235,10 @@ export class ApplicationsService {
         },
       });
 
-      return tx.application.findUniqueOrThrow({ where: { id: applicationId } });
+      return tx.application.findUniqueOrThrow({
+        where: { id: applicationId },
+        select: APPLICATION_SAFE_SCALARS,
+      });
     }).then(async (updated) => {
       try {
         await this.notifyTrainerOfStatus(
@@ -367,7 +393,10 @@ export class ApplicationsService {
       /* swallow — status change is authoritative */
     }
 
-    return this.prisma.application.findUniqueOrThrow({ where: { id: applicationId } });
+    return this.prisma.application.findUniqueOrThrow({
+      where: { id: applicationId },
+      select: APPLICATION_SAFE_SCALARS,
+    });
   }
 
   async history(userId: string, applicationId: string) {
