@@ -96,6 +96,9 @@ model User {
   interviewsScheduledByMe       InterviewMeeting[]        @relation("InterviewScheduler")
   interviewsAsTrainer           InterviewMeeting[]        @relation("InterviewTrainer")
   interviewsCancelledByMe       InterviewMeeting[]        @relation("InterviewCanceller")
+  callsInitiated                Call[]                    @relation("CallInitiator")
+  callsEnded                    Call[]                    @relation("CallEnder")
+  callParticipations            CallParticipant[]
 
   @@index([role, status])
 }
@@ -622,6 +625,7 @@ model Conversation {
   participants ConversationParticipant[]
   messages     Message[]
   interviews   InterviewMeeting[]
+  calls        Call[]
 
   @@index([lockedAt])
 }
@@ -2222,4 +2226,83 @@ model InterviewMeeting {
   @@index([trainerId, status, scheduledAt])
   @@index([scheduledById, status, scheduledAt])
   @@index([status, scheduledAt])
+}
+
+// =========================
+// Voice / Video calls (T8.B)
+// =========================
+
+enum CallType {
+  AUDIO
+  VIDEO
+}
+
+enum CallStatus {
+  /// Call has been created and the callee(s) have been notified, but
+  /// nobody has accepted yet.
+  RINGING
+  /// At least one callee accepted; media session is live.
+  ACTIVE
+  /// Call ended cleanly by either side after being ACTIVE.
+  ENDED
+  /// Caller hung up before any callee accepted.
+  MISSED
+  /// Callee explicitly rejected before accepting.
+  REJECTED
+}
+
+/// A peer-to-peer voice/video call anchored to an existing chat
+/// conversation. Authorization is anchored to `ConversationParticipant`,
+/// matching the chat / interview pattern (`InterviewMeeting`). The
+/// actual media is brokered by an external provider (Cloudflare Calls
+/// by default; pluggable via `CallsProvider`); we only persist
+/// signaling state + per-user join tokens.
+model Call {
+  id                String     @id @default(cuid())
+  conversationId    String
+  initiatorId       String
+  type              CallType   @default(VIDEO)
+  status            CallStatus @default(RINGING)
+  /// Provider key — `cloudflare` for Cloudflare Calls, `stub` for the
+  /// in-process developer provider. Stored on the row so a future
+  /// provider swap doesn't break historical call records.
+  provider          String     @default("stub")
+  /// Provider-side session/room identifier. Opaque to us.
+  providerSessionId String?
+  startedAt         DateTime?
+  endedAt           DateTime?
+  endedById         String?
+  endReason         String?
+  /// Computed once on END from `endedAt - startedAt` so call-history
+  /// queries don't have to recompute on every read.
+  durationSec       Int?
+  createdAt         DateTime   @default(now())
+  updatedAt         DateTime   @updatedAt
+
+  conversation Conversation      @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  initiator    User              @relation("CallInitiator", fields: [initiatorId], references: [id], onDelete: Cascade)
+  endedBy      User?             @relation("CallEnder", fields: [endedById], references: [id])
+  participants CallParticipant[]
+
+  @@index([conversationId, createdAt])
+  @@index([status, createdAt])
+}
+
+model CallParticipant {
+  id                 String    @id @default(cuid())
+  callId             String
+  userId             String
+  joinedAt           DateTime?
+  leftAt             DateTime?
+  /// Per-user provider join token. Minted lazily on first join and
+  /// rotated if the user re-joins after a transient disconnect, so a
+  /// leaked token from an earlier session can't be reused.
+  joinToken          String?
+  joinTokenExpiresAt DateTime?
+
+  call Call @relation(fields: [callId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([callId, userId])
+  @@index([userId])
 }
