@@ -467,6 +467,7 @@ function CampaignEditor({
                 targetingCountries: splitCsv(targetingCountries).map((x) => x.toUpperCase()),
                 targetingLocales: splitCsv(targetingLocales),
                 targetingSkillIds: splitCsv(targetingSkillIds),
+                targetingAudienceSegmentIds: [],
                 startDate: startDate ? new Date(startDate) : undefined,
                 endDate: endDate ? new Date(endDate) : undefined,
               };

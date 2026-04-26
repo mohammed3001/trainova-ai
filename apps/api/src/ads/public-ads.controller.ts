@@ -15,6 +15,7 @@ import type { Request, Response } from 'express';
 import {
   AD_PLACEMENTS,
   impressionInputSchema,
+  RETARGETING_COOKIE_NAME,
   serveAdsInputSchema,
   type AdPlacement,
   type ImpressionInput,
@@ -23,6 +24,7 @@ import {
 } from '@trainova/shared';
 import { ZodValidationPipe } from '../common/zod-validation.pipe';
 import { CurrentUserOptional } from '../auth/optional-user.decorator';
+import { RetargetingService } from '../retargeting/retargeting.service';
 import { AdsService } from './ads.service';
 
 /**
@@ -33,7 +35,10 @@ import { AdsService } from './ads.service';
 @ApiTags('ads')
 @Controller('ads')
 export class PublicAdsController {
-  constructor(private readonly ads: AdsService) {}
+  constructor(
+    private readonly ads: AdsService,
+    private readonly retargeting: RetargetingService,
+  ) {}
 
   @Get('serve')
   async serve(
@@ -55,12 +60,29 @@ export class PublicAdsController {
       skillIds: skillsQ ? skillsQ.split(',').filter(Boolean).slice(0, 8) : undefined,
       limit: limitQ ? Number.parseInt(limitQ, 10) : undefined,
     });
+    // T9.G — resolve audience segments for the visitor before serving so
+    // `AdsService.serveAds` can intersect each campaign's targeted set
+    // with the visitor's membership set. Resolution is best-effort: a
+    // failure here must not break ad serving.
+    const cookieId = readRetargetingCookie(req);
+    let audienceSegmentIds: string[] = [];
+    if (cookieId || userId) {
+      try {
+        audienceSegmentIds = await this.retargeting.getSegmentIdsForSession(
+          cookieId,
+          userId,
+        );
+      } catch {
+        audienceSegmentIds = [];
+      }
+    }
     const creatives = await this.ads.serveAds(parsed, {
       sessionHash: AdsService.hashSession(
         extractClientIp(req),
         String(req.headers['user-agent'] ?? ''),
       ),
       userId,
+      audienceSegmentIds,
     });
     return { creatives };
   }
@@ -118,6 +140,26 @@ export class PublicAdsController {
     res.setHeader('Cache-Control', 'no-store');
     res.redirect(302, ctaUrl);
   }
+}
+
+function readRetargetingCookie(req: Request): string | null {
+  const header = req.headers.cookie;
+  if (!header) return null;
+  for (const raw of header.split(';')) {
+    const [k, ...v] = raw.trim().split('=');
+    if (k === RETARGETING_COOKIE_NAME) {
+      // `decodeURIComponent` throws `URIError` on malformed percent-
+      // encoding. Ad serving must not 500 because of a corrupted/tampered
+      // tracking cookie — treat a bad value as "no cookie" so retargeting
+      // gracefully falls back to an empty audience set.
+      try {
+        return decodeURIComponent(v.join('='));
+      } catch {
+        return null;
+      }
+    }
+  }
+  return null;
 }
 
 function extractClientIp(req: Request): string {

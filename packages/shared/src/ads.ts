@@ -89,6 +89,16 @@ export const createCampaignInputSchema = z
     targetingCountries: z.array(z.string().length(2)).max(50).default([]),
     targetingLocales: z.array(z.string().min(2).max(8)).max(16).default([]),
     targetingSkillIds: z.array(z.string().cuid()).max(32).default([]),
+    /**
+     * Audience segment IDs (T9.G). When non-empty, the campaign only
+     * serves to visitors that are members of at least one listed
+     * segment. Empty (the default) leaves audience targeting off and
+     * makes the creative eligible for any visitor.
+     */
+    targetingAudienceSegmentIds: z
+      .array(z.string().cuid())
+      .max(20)
+      .default([]),
     frequencyCapPerDay: z.number().int().min(1).max(100).optional(),
     startDate: z.coerce.date().optional(),
     endDate: z.coerce.date().optional(),
@@ -134,6 +144,10 @@ export const updateCampaignInputSchema = z
     targetingCountries: z.array(z.string().length(2)).max(50).optional(),
     targetingLocales: z.array(z.string().min(2).max(8)).max(16).optional(),
     targetingSkillIds: z.array(z.string().cuid()).max(32).optional(),
+    targetingAudienceSegmentIds: z
+      .array(z.string().cuid())
+      .max(20)
+      .optional(),
     frequencyCapPerDay: z.number().int().min(1).max(100).nullable().optional(),
     startDate: z.coerce.date().nullable().optional(),
     endDate: z.coerce.date().nullable().optional(),
@@ -238,6 +252,7 @@ export interface PublicAdCampaign {
   targetingCountries: string[];
   targetingLocales: string[];
   targetingSkillIds: string[];
+  targetingAudienceSegmentIds: string[];
   frequencyCapPerDay: number | null;
   startDate: string | null;
   endDate: string | null;

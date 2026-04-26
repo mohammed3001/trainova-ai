@@ -78,6 +78,7 @@ export class AdsService {
         targetingCountries: input.targetingCountries,
         targetingLocales: input.targetingLocales,
         targetingSkillIds: input.targetingSkillIds,
+        targetingAudienceSegmentIds: input.targetingAudienceSegmentIds,
         frequencyCapPerDay: input.frequencyCapPerDay ?? null,
         startDate: input.startDate ?? null,
         endDate: input.endDate ?? null,
@@ -113,6 +114,8 @@ export class AdsService {
         targetingCountries: input.targetingCountries ?? undefined,
         targetingLocales: input.targetingLocales ?? undefined,
         targetingSkillIds: input.targetingSkillIds ?? undefined,
+        targetingAudienceSegmentIds:
+          input.targetingAudienceSegmentIds ?? undefined,
         frequencyCapPerDay:
           input.frequencyCapPerDay === null
             ? null
@@ -514,9 +517,24 @@ export class AdsService {
 
   async serveAds(
     input: ServeAdsInput,
-    _session: { sessionHash: string; userId?: string | null },
+    _session: {
+      sessionHash: string;
+      userId?: string | null;
+      /**
+       * Audience segment IDs the visitor currently belongs to (T9.G).
+       * Resolved by `RetargetingService.getSegmentIdsForSession()` at the
+       * controller level so this service stays free of a hard
+       * dependency on the retargeting module. An empty / undefined
+       * value disables retargeted-campaign matching for the request —
+       * only campaigns with `targetingAudienceSegmentIds = []` are
+       * eligible, which is the right behaviour for anonymous traffic
+       * that has no behavioural footprint yet.
+       */
+      audienceSegmentIds?: string[];
+    },
   ): Promise<PublicAdCreative[]> {
     const now = new Date();
+    const visitorSegmentIds = _session.audienceSegmentIds ?? [];
     const candidateCreatives = await this.prisma.adCreative.findMany({
       where: {
         isActive: true,
@@ -556,6 +574,25 @@ export class AdsService {
                   },
                 ]
               : []),
+            // Audience-segment targeting (T9.G). Campaigns with an empty
+            // `targetingAudienceSegmentIds` are unrestricted and always
+            // eligible. Campaigns with a non-empty list match only when
+            // the visitor is in at least one of the listed segments.
+            // When the visitor has no segments, `hasSome: []` is never
+            // true in Postgres array semantics, so retargeted campaigns
+            // are correctly filtered out.
+            visitorSegmentIds.length > 0
+              ? {
+                  OR: [
+                    { targetingAudienceSegmentIds: { isEmpty: true } },
+                    {
+                      targetingAudienceSegmentIds: {
+                        hasSome: visitorSegmentIds,
+                      },
+                    },
+                  ],
+                }
+              : { targetingAudienceSegmentIds: { isEmpty: true } },
           ],
         },
       },
@@ -872,6 +909,7 @@ function toPublicCampaign(
     targetingCountries: row.targetingCountries,
     targetingLocales: row.targetingLocales,
     targetingSkillIds: row.targetingSkillIds,
+    targetingAudienceSegmentIds: row.targetingAudienceSegmentIds,
     frequencyCapPerDay: row.frequencyCapPerDay,
     startDate: row.startDate?.toISOString() ?? null,
     endDate: row.endDate?.toISOString() ?? null,
