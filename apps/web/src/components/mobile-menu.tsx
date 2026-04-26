@@ -56,6 +56,30 @@ export function MobileMenu({
       if (e.key === 'Escape') {
         e.preventDefault();
         setOpen(false);
+        return;
+      }
+      if (e.key === 'Tab' && drawerEl) {
+        // Wrap focus inside the drawer so screen-reader / keyboard
+        // users can't tab into the still-rendered page behind. The
+        // selector matches what we let the user reach: links, the
+        // close button, and any future focusable controls. Disabled
+        // and tabindex=-1 nodes are excluded.
+        const focusables = drawerEl.querySelectorAll<HTMLElement>(
+          'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])',
+        );
+        if (focusables.length === 0) return;
+        const first = focusables[0];
+        const last = focusables[focusables.length - 1];
+        const active = document.activeElement as HTMLElement | null;
+        if (e.shiftKey) {
+          if (active === first || !drawerEl.contains(active)) {
+            e.preventDefault();
+            last.focus();
+          }
+        } else if (active === last) {
+          e.preventDefault();
+          first.focus();
+        }
       }
     };
     window.addEventListener('keydown', onKey);
