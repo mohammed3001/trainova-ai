@@ -204,9 +204,16 @@ export function applyNewsletterAd<T extends string | null>(
 ): { bodyHtml: string; bodyText: T } {
   const htmlReplacement = ad?.html ?? '';
   const textReplacement = ad?.text ?? '';
-  const html = bodyHtml.replace(NEWSLETTER_AD_TOKEN_REGEX, htmlReplacement);
+  // Use a function replacer (not a string) so `$&`, `` $` ``, `$'`, `$$`, `$N`
+  // patterns inside advertiser-controlled `htmlReplacement` / `textReplacement`
+  // are inserted literally instead of being interpreted by String.replace's
+  // special replacement syntax. Mirrors the same approach taken by
+  // `interpolateEmailTemplate` in packages/shared/src/email-templates.ts.
+  const html = bodyHtml.replace(NEWSLETTER_AD_TOKEN_REGEX, () => htmlReplacement);
   const text = (
-    bodyText ? (bodyText as string).replace(NEWSLETTER_AD_TOKEN_REGEX, textReplacement) : bodyText
+    bodyText
+      ? (bodyText as string).replace(NEWSLETTER_AD_TOKEN_REGEX, () => textReplacement)
+      : bodyText
   ) as T;
   return { bodyHtml: html, bodyText: text };
 }
