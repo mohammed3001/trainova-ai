@@ -297,9 +297,23 @@ export class LearningPathsService {
           `Drop a path before enrolling in a new one.`,
       );
     }
-    return this.prisma.learningEnrollment.create({
-      data: { userId, pathId: path.id },
-    });
+    // Two concurrent POSTs (rapid double-click on the enroll button)
+    // can both pass the findUnique above. The second create() then
+    // hits the @@unique([userId, pathId]) constraint with P2002.
+    // Match the established pattern in tests.service / reviews.service:
+    // catch P2002 and return the row the winner created.
+    try {
+      return await this.prisma.learningEnrollment.create({
+        data: { userId, pathId: path.id },
+      });
+    } catch (err) {
+      if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2002') {
+        return this.prisma.learningEnrollment.findUniqueOrThrow({
+          where: { userId_pathId: { userId, pathId: path.id } },
+        });
+      }
+      throw err;
+    }
   }
 
   /**
@@ -347,20 +361,26 @@ export class LearningPathsService {
     slug: string,
     body: CompleteLearningStepInput,
   ) {
-    const path = await this.prisma.learningPath.findUnique({
-      where: { slug },
-      include: { steps: { orderBy: { position: 'asc' } } },
-    });
-    if (!path || !path.isPublished) {
-      throw new NotFoundException('Learning path not found');
-    }
-    if (path.steps.length === 0) {
-      throw new BadRequestException('Path has no steps');
-    }
     return this.prisma.$transaction(async (tx) => {
+      // Read path + steps inside the transaction so an interleaved
+      // adminReplaceSteps cannot leave us pointing at a deleted step
+      // (FK violation on the progress insert below).
+      const path = await tx.learningPath.findUnique({
+        where: { slug },
+        include: { steps: { orderBy: { position: 'asc' } } },
+      });
+      if (!path || !path.isPublished) {
+        throw new NotFoundException('Learning path not found');
+      }
+      if (path.steps.length === 0) {
+        throw new BadRequestException('Path has no steps');
+      }
       const enrollment = await tx.learningEnrollment.findUnique({
         where: { userId_pathId: { userId, pathId: path.id } },
-        include: { progress: { select: { stepId: true } } },
+        include: {
+          progress: { select: { stepId: true } },
+          certificate: { select: { serial: true, issuedAt: true } },
+        },
       });
       if (!enrollment) {
         throw new NotFoundException('You are not enrolled in this path');
@@ -379,14 +399,34 @@ export class LearningPathsService {
           `Only REFLECTION steps accept a reflection body (got ${nextStep.kind})`,
         );
       }
-      await tx.learningStepProgress.create({
-        data: {
-          enrollmentId: enrollment.id,
-          stepId: nextStep.id,
-          reflection:
-            nextStep.kind === 'REFLECTION' ? body.reflection ?? null : null,
-        },
-      });
+      // Two concurrent POSTs racing on the same step both compute
+      // the same `nextStep.id`. The unique (enrollmentId, stepId)
+      // constraint guarantees only one create succeeds; the second
+      // gets P2002. The doc above promises this returns the same
+      // shape without re-running side effects, so map P2002 to a
+      // no-op response — the winner already ran the side effects.
+      try {
+        await tx.learningStepProgress.create({
+          data: {
+            enrollmentId: enrollment.id,
+            stepId: nextStep.id,
+            reflection:
+              nextStep.kind === 'REFLECTION' ? body.reflection ?? null : null,
+          },
+        });
+      } catch (err) {
+        if (
+          err instanceof Prisma.PrismaClientKnownRequestError &&
+          err.code === 'P2002'
+        ) {
+          return {
+            completedStepId: nextStep.id,
+            isPathCompleted: false,
+            certificate: enrollment.certificate ?? null,
+          };
+        }
+        throw err;
+      }
       const lastStep = path.steps[path.steps.length - 1];
       const isFinal = !!lastStep && lastStep.id === nextStep.id;
       let certificate: { serial: string; issuedAt: Date } | null = null;
