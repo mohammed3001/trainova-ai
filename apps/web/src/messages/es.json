@@ -1002,6 +1002,7 @@
       "emailTemplates": "Plantillas de correo",
       "coupons": "Cupones",
       "disputes": "Disputas",
+      "fraud": "Revisión de fraude",
       "ads": "Anuncios",
       "finance": "Finance",
       "settings": "Settings",
@@ -1746,6 +1747,43 @@
         "stripeCouponId": "ID de cupón Stripe",
         "stripeCouponIdHint": "Obligatorio para cupones de suscripción. Crea el cupón en Stripe primero.",
         "status": "Estado"
+      }
+    },
+    "fraud": {
+      "title": "Revisión de fraude",
+      "subtitle": "Clasifica las solicitudes marcadas por el motor de puntuación de riesgo.",
+      "empty": "Ninguna solicitud marcada coincide con los filtros actuales.",
+      "appliedAt": "Aplicado",
+      "open": "Abrir solicitud",
+      "loadMore": "Cargar más",
+      "reviewedAt": "Revisado el {at}",
+      "filters": {
+        "level": "Nivel de riesgo",
+        "all": "Todos",
+        "reviewed": "Estado",
+        "openOnly": "Solo abiertos",
+        "includeReviewed": "Incluir revisados"
+      },
+      "level": {
+        "low": "Bajo",
+        "medium": "Medio",
+        "high": "Alto",
+        "critical": "Crítico"
+      },
+      "signal": {
+        "DISPOSABLE_EMAIL": "Correo desechable",
+        "HIGH_VELOCITY": "Alta velocidad",
+        "EMPTY_PROFILE": "Perfil vacío",
+        "NEW_ACCOUNT": "Cuenta nueva",
+        "TEMPLATE_ANSWERS": "Respuestas duplicadas",
+        "OVER_BUDGET": "Sobre el presupuesto",
+        "UNVERIFIED_EMAIL": "Correo sin verificar"
+      },
+      "actions": {
+        "markReviewed": "Marcar como revisado",
+        "rescore": "Recalcular",
+        "clearReview": "Borrar revisión",
+        "notePlaceholder": "Nota de revisión opcional"
       }
     },
     "sponsored": {

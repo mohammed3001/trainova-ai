@@ -8,6 +8,7 @@ import {
 import { PrismaService } from '../prisma/prisma.service';
 import { TestsService } from '../tests/tests.service';
 import { NotificationsService } from '../notifications/notifications.service';
+import { FraudService } from '../fraud/fraud.service';
 import {
   APPLICATION_STATUS_TRANSITIONS,
   AUDIT_ACTIONS,
@@ -32,6 +33,7 @@ export class ApplicationsService {
     private readonly prisma: PrismaService,
     private readonly tests: TestsService,
     private readonly notifications: NotificationsService,
+    private readonly fraud: FraudService,
   ) {}
 
   async listMine(trainerId: string) {
@@ -131,6 +133,13 @@ export class ApplicationsService {
     } catch {
       /* swallow — application already persisted, notification is best-effort */
     }
+
+    // Best-effort fraud scoring. Done after the row commits so the trainer
+    // never sees a delay on apply, and FraudService swallows errors so a
+    // transient DB hiccup never tanks the response. The admin review page
+    // re-runs scoring on demand if a row is missing a score.
+    void this.fraud.scoreApplication(created.id);
+
     return created;
   }
 
