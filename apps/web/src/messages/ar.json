@@ -2089,6 +2089,18 @@
       "submitFailed": "تعذّر إرسال الحملة.",
       "topupFailed": "تعذّر بدء عملية الشحن.",
       "creativeFailed": "تعذّر حفظ التصميم."
+    },
+    "analytics": {
+      "toggle": "الإحصاءات",
+      "title": "الأداء",
+      "days": "آخر {days} يوم",
+      "loading": "جارٍ تحميل الإحصاءات…",
+      "impressions": "مرات الظهور",
+      "clicks": "النقرات",
+      "ctr": "معدّل النقر",
+      "spent": "المنفَق",
+      "dailyImpressions": "مرات الظهور اليومية",
+      "creative": "التصميم"
     }
   },
   "chat": {

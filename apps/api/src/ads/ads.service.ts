@@ -13,8 +13,11 @@ import {
   type AdCampaignStatus,
   type AdPlacement,
   type AdPricingModel,
+  type CampaignAnalytics,
   type CreateCampaignInput,
   type CreateCreativeInput,
+  type CreativeAnalyticsRow,
+  type DailyAdSeriesPoint,
   type ImpressionInput,
   type AdminAdCampaign,
   type OwnerAdCampaign,
@@ -165,6 +168,173 @@ export class AdsService {
   async getCampaign(userId: string, campaignId: string): Promise<OwnerAdCampaign> {
     const campaign = await this.loadOwnedWithInclude(userId, campaignId);
     return toOwnerCampaign(campaign);
+  }
+
+  /**
+   * Self-serve daily analytics for one campaign, plus a per-creative
+   * roll-up. Two `DATE_TRUNC('day', ...)` aggregations on `AdImpression`
+   * and `AdClick` (one round-trip each) plus one `findMany` on the
+   * creative list — bounded work even for high-volume campaigns since
+   * `windowDays` is hard-capped at 90 by the controller.
+   *
+   * The series is dense — empty days are filled with zero-rows so the
+   * client can render a contiguous bar chart without re-bucketing.
+   */
+  async getCampaignAnalytics(
+    userId: string,
+    campaignId: string,
+    days: number,
+  ): Promise<CampaignAnalytics> {
+    // Ownership check + creative list (used for the per-creative table).
+    const campaign = await this.loadOwnedWithInclude(userId, campaignId);
+
+    // Window covers `days` calendar days *including today* — i.e. today and
+    // the prior `days - 1` days. We snap to the UTC day boundary so the SQL
+    // bucket math (DATE_TRUNC('day', ...)) lines up with the JS day-fill
+    // below, and we offset by `days - 1` (not `days`) so the day-fill loop
+    // (`i < days`) ends on today's bucket. This keeps the perCreative
+    // aggregation consistent with `daily.reduce(...)` totals — both include
+    // today's events.
+    const since = new Date();
+    since.setUTCHours(0, 0, 0, 0);
+    since.setTime(since.getTime() - (days - 1) * 24 * 60 * 60 * 1000);
+
+    type AggRow = {
+      day: Date;
+      total: bigint;
+      cents: bigint;
+    };
+    const [impAgg, clickAgg] = await Promise.all([
+      this.prisma.$queryRaw<AggRow[]>`
+        SELECT
+          DATE_TRUNC('day', "createdAt") AS day,
+          COUNT(*)::bigint               AS total,
+          COALESCE(SUM("chargedCents"), 0)::bigint AS cents
+        FROM "AdImpression"
+        WHERE "campaignId" = ${campaignId}
+          AND "createdAt" >= ${since}
+        GROUP BY day
+        ORDER BY day ASC
+      `,
+      this.prisma.$queryRaw<AggRow[]>`
+        SELECT
+          DATE_TRUNC('day', "createdAt") AS day,
+          COUNT(*)::bigint               AS total,
+          COALESCE(SUM("chargedCents"), 0)::bigint AS cents
+        FROM "AdClick"
+        WHERE "campaignId" = ${campaignId}
+          AND "createdAt" >= ${since}
+        GROUP BY day
+        ORDER BY day ASC
+      `,
+    ]);
+
+    const impByDay = new Map<string, { count: number; cents: number }>();
+    for (const r of impAgg) {
+      impByDay.set(toDayKey(r.day), {
+        count: Number(r.total),
+        cents: Number(r.cents),
+      });
+    }
+    const clkByDay = new Map<string, { count: number; cents: number }>();
+    for (const r of clickAgg) {
+      clkByDay.set(toDayKey(r.day), {
+        count: Number(r.total),
+        cents: Number(r.cents),
+      });
+    }
+
+    const daily: DailyAdSeriesPoint[] = [];
+    for (let i = 0; i < days; i += 1) {
+      const day = new Date(since.getTime() + i * 24 * 60 * 60 * 1000);
+      const key = toDayKey(day);
+      const imp = impByDay.get(key);
+      const clk = clkByDay.get(key);
+      daily.push({
+        date: key,
+        impressions: imp?.count ?? 0,
+        clicks: clk?.count ?? 0,
+        spentCents: (imp?.cents ?? 0) + (clk?.cents ?? 0),
+      });
+    }
+
+    type CreativeAggRow = {
+      creativeId: string;
+      total: bigint;
+      cents: bigint;
+    };
+    const [impPerCreative, clkPerCreative] = await Promise.all([
+      this.prisma.$queryRaw<CreativeAggRow[]>`
+        SELECT
+          "creativeId",
+          COUNT(*)::bigint                       AS total,
+          COALESCE(SUM("chargedCents"), 0)::bigint AS cents
+        FROM "AdImpression"
+        WHERE "campaignId" = ${campaignId}
+          AND "createdAt" >= ${since}
+        GROUP BY "creativeId"
+      `,
+      this.prisma.$queryRaw<CreativeAggRow[]>`
+        SELECT
+          "creativeId",
+          COUNT(*)::bigint                       AS total,
+          COALESCE(SUM("chargedCents"), 0)::bigint AS cents
+        FROM "AdClick"
+        WHERE "campaignId" = ${campaignId}
+          AND "createdAt" >= ${since}
+        GROUP BY "creativeId"
+      `,
+    ]);
+    const impByCreative = new Map<string, { count: number; cents: number }>();
+    for (const r of impPerCreative) {
+      impByCreative.set(r.creativeId, {
+        count: Number(r.total),
+        cents: Number(r.cents),
+      });
+    }
+    const clkByCreative = new Map<string, { count: number; cents: number }>();
+    for (const r of clkPerCreative) {
+      clkByCreative.set(r.creativeId, {
+        count: Number(r.total),
+        cents: Number(r.cents),
+      });
+    }
+
+    const perCreative: CreativeAnalyticsRow[] = campaign.creatives.map((c) => {
+      const imp = impByCreative.get(c.id);
+      const clk = clkByCreative.get(c.id);
+      const impressions = imp?.count ?? 0;
+      const clicks = clk?.count ?? 0;
+      return {
+        creativeId: c.id,
+        headline: c.headline,
+        isActive: c.isActive,
+        impressions,
+        clicks,
+        ctr: impressions > 0 ? clicks / impressions : 0,
+        spentCents: (imp?.cents ?? 0) + (clk?.cents ?? 0),
+      };
+    });
+
+    const totals = daily.reduce(
+      (acc, p) => ({
+        impressions: acc.impressions + p.impressions,
+        clicks: acc.clicks + p.clicks,
+        spentCents: acc.spentCents + p.spentCents,
+      }),
+      { impressions: 0, clicks: 0, spentCents: 0 },
+    );
+
+    return {
+      campaignId,
+      windowDays: days,
+      totals: {
+        ...totals,
+        ctr: totals.impressions > 0 ? totals.clicks / totals.impressions : 0,
+      },
+      daily,
+      perCreative,
+    };
   }
 
   // ===================================================================
@@ -932,6 +1102,17 @@ function computeClickChargeMicro(
 ): bigint {
   if (pricingModel === 'CPC' && prices.cpc) return BigInt(prices.cpc) * 1000n;
   return 0n;
+}
+
+/**
+ * Format a `DATE_TRUNC('day', ...)` Date as the matching `YYYY-MM-DD`
+ * UTC key so SQL day buckets and JS day-fill agree byte-for-byte.
+ */
+function toDayKey(d: Date): string {
+  const yyyy = d.getUTCFullYear();
+  const mm = String(d.getUTCMonth() + 1).padStart(2, '0');
+  const dd = String(d.getUTCDate()).padStart(2, '0');
+  return `${yyyy}-${mm}-${dd}`;
 }
 
 /**

@@ -6,16 +6,19 @@ import {
   Param,
   Patch,
   Post,
+  Query,
   UseGuards,
   UsePipes,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import {
+  campaignAnalyticsQuerySchema,
   createCampaignInputSchema,
   createCreativeInputSchema,
   topupCampaignInputSchema,
   updateCampaignInputSchema,
   updateCreativeInputSchema,
+  type CampaignAnalyticsQuery,
   type CreateCampaignInput,
   type CreateCreativeInput,
   type TopupCampaignInput,
@@ -61,6 +64,17 @@ export class AdvertiserAdsController {
   @Roles('COMPANY_OWNER', 'ADMIN', 'SUPER_ADMIN')
   getCampaign(@CurrentUser() user: AuthUser, @Param('id') id: string) {
     return this.ads.getCampaign(user.id, id);
+  }
+
+  @Get('campaigns/:id/analytics')
+  @Roles('COMPANY_OWNER', 'ADMIN', 'SUPER_ADMIN')
+  getCampaignAnalytics(
+    @CurrentUser() user: AuthUser,
+    @Param('id') id: string,
+    @Query(new ZodValidationPipe(campaignAnalyticsQuerySchema))
+    query: CampaignAnalyticsQuery,
+  ) {
+    return this.ads.getCampaignAnalytics(user.id, id, query.days ?? 30);
   }
 
   @Patch('campaigns/:id')

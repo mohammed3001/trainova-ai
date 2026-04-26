@@ -2089,6 +2089,18 @@
       "submitFailed": "We couldn't submit the campaign.",
       "topupFailed": "We couldn't start the top up.",
       "creativeFailed": "We couldn't save the creative."
+    },
+    "analytics": {
+      "toggle": "Analytics",
+      "title": "Performance",
+      "days": "Last {days}d",
+      "loading": "Loading analytics…",
+      "impressions": "Impressions",
+      "clicks": "Clicks",
+      "ctr": "CTR",
+      "spent": "Spent",
+      "dailyImpressions": "Daily impressions",
+      "creative": "Creative"
     }
   },
   "chat": {
