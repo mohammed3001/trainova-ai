@@ -112,12 +112,16 @@ export class LeadScoringService {
       this.responsivenessFactor(view),
     ];
     // Weighted linear combination — weights sum to 1 by construction.
-    const score = Math.round(
+    const raw = Math.round(
       factors.reduce((acc, f) => acc + f.score * f.weight, 0),
     );
+    // Clamp once and derive `level` from the same value so a future weights
+    // change (or float drift on the boundary) can't produce a row whose
+    // `score` says 100 but whose `level` was computed from 105.
+    const score = clamp(raw, 0, 100);
     return {
       applicationId: view.application.id,
-      score: clamp(score, 0, 100),
+      score,
       level: levelForScore(score),
       factors,
       computedAt: new Date().toISOString(),
@@ -190,10 +194,12 @@ export class LeadScoringService {
   }
 
   private historyFactor(view: ApplicationView): LeadScoreFactor {
-    // Past acceptance rate over completed applications (anything not still
-    // APPLIED / SHORTLISTED / TEST_ASSIGNED / TEST_SUBMITTED / INTERVIEW).
-    // ACCEPTED counts as a positive outcome; everything else (REJECTED,
-    // WITHDRAWN, OFFERED-but-not-accepted) counts as 0.
+    // Past acceptance rate over completed applications — i.e. applications
+    // whose status has reached a terminal outcome (ACCEPTED, REJECTED,
+    // WITHDRAWN, or OFFERED-but-not-accepted). In-flight statuses (APPLIED,
+    // SHORTLISTED, TEST_ASSIGNED, TEST_SUBMITTED, INTERVIEW) are excluded so
+    // an active applicant doesn't pollute their own historical signal.
+    // ACCEPTED counts as a positive outcome; the other terminals count as 0.
     const total = view.history.completed;
     const accepted = view.history.accepted;
     if (total === 0) {
@@ -412,7 +418,7 @@ export class LeadScoringService {
       this.prisma.application.count({
         where: {
           trainerId: application.trainerId,
-          status: { in: ['ACCEPTED', 'REJECTED', 'WITHDRAWN'] },
+          status: { in: ['ACCEPTED', 'REJECTED', 'WITHDRAWN', 'OFFERED'] },
           NOT: { id: application.id },
         },
       }),
