@@ -188,11 +188,16 @@ export class AdsService {
     // Ownership check + creative list (used for the per-creative table).
     const campaign = await this.loadOwnedWithInclude(userId, campaignId);
 
-    const now = new Date();
-    const since = new Date(now.getTime() - days * 24 * 60 * 60 * 1000);
-    // Snap `since` to the UTC day boundary so the SQL bucket math lines
-    // up with the JS day-fill below.
+    // Window covers `days` calendar days *including today* — i.e. today and
+    // the prior `days - 1` days. We snap to the UTC day boundary so the SQL
+    // bucket math (DATE_TRUNC('day', ...)) lines up with the JS day-fill
+    // below, and we offset by `days - 1` (not `days`) so the day-fill loop
+    // (`i < days`) ends on today's bucket. This keeps the perCreative
+    // aggregation consistent with `daily.reduce(...)` totals — both include
+    // today's events.
+    const since = new Date();
     since.setUTCHours(0, 0, 0, 0);
+    since.setTime(since.getTime() - (days - 1) * 24 * 60 * 60 * 1000);
 
     type AggRow = {
       day: Date;
