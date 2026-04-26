@@ -197,9 +197,15 @@ export class WebhooksService {
     return rows;
   }
 
-  /** Reset an ABANDONED/FAILED delivery back to PENDING so the cron
-   *  worker picks it up immediately. Used by the company-side
-   *  "Redeliver" button. */
+  /** Reset a SUCCEEDED/ABANDONED delivery back to PENDING so the cron
+   *  worker picks it up on the next tick. Used by the company-side
+   *  "Redeliver" button. We refuse to reset PENDING (already queued)
+   *  or IN_FLIGHT (cron worker is in the middle of the HTTP POST
+   *  *right now*) — resetting an IN_FLIGHT row to PENDING with
+   *  `attempts: 0` would let the next tick fire a second concurrent
+   *  POST to the subscriber, and the original `processOne` would still
+   *  write its terminal status via a plain `update()` and clobber the
+   *  retry. */
   async redeliver(companyId: string, webhookId: string, deliveryId: string) {
     const existing = await this.prisma.webhook.findUnique({
       where: { id: webhookId },
@@ -208,18 +214,32 @@ export class WebhooksService {
     if (existing.companyId !== companyId) throw new ForbiddenException();
     const delivery = await this.prisma.webhookDelivery.findUnique({
       where: { id: deliveryId },
+      select: { id: true, status: true, webhookId: true },
     });
     if (!delivery || delivery.webhookId !== webhookId) {
       throw new NotFoundException('Delivery not found');
     }
-    await this.prisma.webhookDelivery.update({
-      where: { id: deliveryId },
+    // Atomic reset: the where-clause guards against a worker that is
+    // about to claim this row racing with the redeliver. updateMany
+    // returns count=0 if the status changed under us between the
+    // findUnique() above and the update — we surface that as 409 so
+    // the company owner retries instead of silently dropping the click.
+    const reset = await this.prisma.webhookDelivery.updateMany({
+      where: {
+        id: deliveryId,
+        status: { in: ['SUCCEEDED', 'ABANDONED'] },
+      },
       data: {
         status: 'PENDING',
         attempts: 0,
         nextAttemptAt: new Date(),
       },
     });
+    if (reset.count === 0) {
+      throw new BadRequestException(
+        `Cannot redeliver a ${delivery.status} delivery — wait for it to complete`,
+      );
+    }
   }
 
   // -------------------------------------------------------------
