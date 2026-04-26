@@ -44,11 +44,16 @@ export class KycService {
    * Start a fresh session, or return the existing active one. Idempotent on
    * the (userId, ACTIVE) tuple so a double-click in the UI doesn't open two
    * provider sessions and burn quota.
+   *
+   * Concurrency: the entire (re-check active + provider createSession + insert)
+   * sequence runs inside a single transaction guarded by a per-user advisory
+   * lock. Two concurrent requests for the same user serialize on the lock; the
+   * second one observes the active session created by the first and returns it
+   * without calling the provider.
    */
   async startOrResume(userId: string, input: StartKycInput, ip: string | null): Promise<KycSession> {
-    // Already verified? Refuse to open a new session — the admin must revoke
-    // first. This keeps the UI from offering a "re-verify" button that
-    // silently overwrites a passing identity.
+    // Cheap pre-check outside the transaction so the common already-verified
+    // case doesn't grab the advisory lock at all.
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
       select: { kycVerifiedAt: true },
@@ -58,15 +63,30 @@ export class KycService {
       throw new BadRequestException('Identity already verified');
     }
 
-    const active = await this.prisma.kycSession.findFirst({
-      where: { userId, status: { in: ACTIVE_STATUSES } },
-      orderBy: { createdAt: 'desc' },
-    });
-    if (active) return active;
-
-    const remote = await this.provider.createSession({ ...input, userId });
-
     return this.prisma.$transaction(async (tx) => {
+      // pg_advisory_xact_lock takes a bigint key and is released automatically
+      // on transaction commit/rollback. hashtextextended is a stable 64-bit
+      // hash of the userId so two concurrent requests for the same user
+      // serialize, while different users never block each other.
+      await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtextextended(${userId}, 0))`;
+
+      // Re-read inside the lock so we don't act on stale data.
+      const verified = await tx.user.findUnique({
+        where: { id: userId },
+        select: { kycVerifiedAt: true },
+      });
+      if (verified?.kycVerifiedAt) {
+        throw new BadRequestException('Identity already verified');
+      }
+
+      const active = await tx.kycSession.findFirst({
+        where: { userId, status: { in: ACTIVE_STATUSES } },
+        orderBy: { createdAt: 'desc' },
+      });
+      if (active) return active;
+
+      // Only one tx per user reaches the provider — no quota burn under contention.
+      const remote = await this.provider.createSession({ ...input, userId });
       const session = await tx.kycSession.create({
         data: {
           userId,
