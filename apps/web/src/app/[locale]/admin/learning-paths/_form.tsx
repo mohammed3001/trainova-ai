@@ -80,7 +80,7 @@ export function LearningPathForm({
       summary,
       description,
       level,
-      industry: industry.trim() || undefined,
+      industry: industry.trim() || null,
       estimatedHours: Number(estimatedHours),
       ...(editing ? {} : { steps: payloadSteps }),
     };

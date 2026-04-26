@@ -361,111 +361,141 @@ export class LearningPathsService {
     slug: string,
     body: CompleteLearningStepInput,
   ) {
-    return this.prisma.$transaction(async (tx) => {
-      // Read path + steps inside the transaction so an interleaved
-      // adminReplaceSteps cannot leave us pointing at a deleted step
-      // (FK violation on the progress insert below).
-      const path = await tx.learningPath.findUnique({
-        where: { slug },
-        include: { steps: { orderBy: { position: 'asc' } } },
-      });
-      if (!path || !path.isPublished) {
-        throw new NotFoundException('Learning path not found');
-      }
-      if (path.steps.length === 0) {
-        throw new BadRequestException('Path has no steps');
-      }
-      const enrollment = await tx.learningEnrollment.findUnique({
-        where: { userId_pathId: { userId, pathId: path.id } },
-        include: {
-          progress: { select: { stepId: true } },
-          certificate: { select: { serial: true, issuedAt: true } },
-        },
-      });
-      if (!enrollment) {
-        throw new NotFoundException('You are not enrolled in this path');
-      }
-      if (enrollment.completedAt) {
-        throw new BadRequestException('Path already completed');
-      }
-      const completedIds = new Set(enrollment.progress.map((p) => p.stepId));
-      const nextStep = path.steps.find((s) => !completedIds.has(s.id));
-      if (!nextStep) {
-        // Defensive: shouldn't happen because completedAt would be set.
-        throw new BadRequestException('Path already completed');
-      }
-      if (nextStep.kind !== 'REFLECTION' && body.reflection) {
-        throw new BadRequestException(
-          `Only REFLECTION steps accept a reflection body (got ${nextStep.kind})`,
-        );
-      }
-      const lastStep = path.steps[path.steps.length - 1];
-      const isFinal = !!lastStep && lastStep.id === nextStep.id;
-      // Two concurrent POSTs racing on the same step both compute
-      // the same `nextStep.id`. The unique (enrollmentId, stepId)
-      // constraint guarantees only one create succeeds; the second
-      // gets P2002. The doc above promises this returns the same
-      // shape without re-running side effects, so map P2002 to a
-      // no-op response — the winner already ran the side effects.
-      try {
-        await tx.learningStepProgress.create({
-          data: {
-            enrollmentId: enrollment.id,
-            stepId: nextStep.id,
-            reflection:
-              nextStep.kind === 'REFLECTION' ? body.reflection ?? null : null,
+    type RaceMeta = {
+      stepId: string;
+      isFinal: boolean;
+      enrollmentId: string;
+      existingCert: { serial: string; issuedAt: Date } | null;
+    };
+    try {
+      return await this.prisma.$transaction(async (tx) => {
+        // Read path + steps inside the transaction so an interleaved
+        // adminReplaceSteps cannot leave us pointing at a deleted
+        // step (FK violation on the progress insert below).
+        const path = await tx.learningPath.findUnique({
+          where: { slug },
+          include: { steps: { orderBy: { position: 'asc' } } },
+        });
+        if (!path || !path.isPublished) {
+          throw new NotFoundException('Learning path not found');
+        }
+        if (path.steps.length === 0) {
+          throw new BadRequestException('Path has no steps');
+        }
+        const enrollment = await tx.learningEnrollment.findUnique({
+          where: { userId_pathId: { userId, pathId: path.id } },
+          include: {
+            progress: { select: { stepId: true } },
+            certificate: { select: { serial: true, issuedAt: true } },
           },
         });
-      } catch (err) {
-        if (
-          err instanceof Prisma.PrismaClientKnownRequestError &&
-          err.code === 'P2002'
-        ) {
-          // If the race was on the final step the winner has already
-          // issued the certificate and set completedAt. The enrollment
-          // we read at the top of this tx pre-dates the winner's
-          // commit, so re-read the certificate via the base client
-          // (separate connection — `tx` is aborted at this point).
-          let certificate: { serial: string; issuedAt: Date } | null =
-            enrollment.certificate ?? null;
-          if (isFinal && !certificate) {
-            const fresh = await this.prisma.learningCertificate.findUnique({
-              where: { enrollmentId: enrollment.id },
-              select: { serial: true, issuedAt: true },
-            });
-            certificate = fresh ?? null;
-          }
-          return {
-            completedStepId: nextStep.id,
-            isPathCompleted: isFinal,
-            certificate,
-          };
+        if (!enrollment) {
+          throw new NotFoundException('You are not enrolled in this path');
         }
-        throw err;
+        if (enrollment.completedAt) {
+          throw new BadRequestException('Path already completed');
+        }
+        const completedIds = new Set(
+          enrollment.progress.map((p) => p.stepId),
+        );
+        const nextStep = path.steps.find((s) => !completedIds.has(s.id));
+        if (!nextStep) {
+          // Defensive: shouldn't happen because completedAt would be set.
+          throw new BadRequestException('Path already completed');
+        }
+        if (nextStep.kind !== 'REFLECTION' && body.reflection) {
+          throw new BadRequestException(
+            `Only REFLECTION steps accept a reflection body (got ${nextStep.kind})`,
+          );
+        }
+        const lastStep = path.steps[path.steps.length - 1];
+        const isFinal = !!lastStep && lastStep.id === nextStep.id;
+        // Two concurrent POSTs racing on the same step both compute
+        // the same `nextStep.id`. The unique (enrollmentId, stepId)
+        // constraint guarantees only one create succeeds; the second
+        // gets P2002.
+        //
+        // We can't catch P2002 *inside* the tx callback and return,
+        // because Postgres puts the tx in `25P02 in_failed_sql_transaction`
+        // after the failed statement, and Prisma's COMMIT then fails
+        // with a 500. Instead we annotate the error with the metadata
+        // we'd need to build the graceful response and let it
+        // propagate out — Prisma will issue ROLLBACK, and the outer
+        // catch (after `$transaction`) builds the no-op response
+        // using the base client.
+        try {
+          await tx.learningStepProgress.create({
+            data: {
+              enrollmentId: enrollment.id,
+              stepId: nextStep.id,
+              reflection:
+                nextStep.kind === 'REFLECTION' ? body.reflection ?? null : null,
+            },
+          });
+        } catch (err) {
+          if (
+            err instanceof Prisma.PrismaClientKnownRequestError &&
+            err.code === 'P2002'
+          ) {
+            const meta: RaceMeta = {
+              stepId: nextStep.id,
+              isFinal,
+              enrollmentId: enrollment.id,
+              existingCert: enrollment.certificate ?? null,
+            };
+            (err as Error & { raceMeta?: RaceMeta }).raceMeta = meta;
+          }
+          throw err;
+        }
+        let certificate: { serial: string; issuedAt: Date } | null = null;
+        if (isFinal) {
+          const issuedAt = new Date();
+          const serial = crypto.randomUUID();
+          const hashSha256 = crypto
+            .createHash('sha256')
+            .update(`${serial}|${enrollment.id}|${issuedAt.toISOString()}`)
+            .digest('hex');
+          const cert = await tx.learningCertificate.create({
+            data: { enrollmentId: enrollment.id, serial, hashSha256, issuedAt },
+          });
+          await tx.learningEnrollment.update({
+            where: { id: enrollment.id },
+            data: { completedAt: issuedAt },
+          });
+          certificate = { serial: cert.serial, issuedAt: cert.issuedAt };
+        }
+        return {
+          completedStepId: nextStep.id,
+          isPathCompleted: isFinal,
+          certificate,
+        };
+      });
+    } catch (err) {
+      const meta = (err as Error & { raceMeta?: RaceMeta }).raceMeta;
+      if (
+        err instanceof Prisma.PrismaClientKnownRequestError &&
+        err.code === 'P2002' &&
+        meta
+      ) {
+        // The winner committed before us. If the race was on the final
+        // step, the cert exists now even though our pre-tx read showed
+        // null — re-fetch via base client.
+        let certificate = meta.existingCert;
+        if (meta.isFinal && !certificate) {
+          const fresh = await this.prisma.learningCertificate.findUnique({
+            where: { enrollmentId: meta.enrollmentId },
+            select: { serial: true, issuedAt: true },
+          });
+          certificate = fresh ?? null;
+        }
+        return {
+          completedStepId: meta.stepId,
+          isPathCompleted: meta.isFinal,
+          certificate,
+        };
       }
-      let certificate: { serial: string; issuedAt: Date } | null = null;
-      if (isFinal) {
-        const issuedAt = new Date();
-        const serial = crypto.randomUUID();
-        const hashSha256 = crypto
-          .createHash('sha256')
-          .update(`${serial}|${enrollment.id}|${issuedAt.toISOString()}`)
-          .digest('hex');
-        const cert = await tx.learningCertificate.create({
-          data: { enrollmentId: enrollment.id, serial, hashSha256, issuedAt },
-        });
-        await tx.learningEnrollment.update({
-          where: { id: enrollment.id },
-          data: { completedAt: issuedAt },
-        });
-        certificate = { serial: cert.serial, issuedAt: cert.issuedAt };
-      }
-      return {
-        completedStepId: nextStep.id,
-        isPathCompleted: isFinal,
-        certificate,
-      };
-    });
+      throw err;
+    }
   }
 
   // -------------------------------------------------------------------
