@@ -1002,6 +1002,7 @@
       "emailTemplates": "Modèles d'e-mails",
       "coupons": "Coupons",
       "disputes": "Litiges",
+      "fraud": "Revue de fraude",
       "ads": "Publicités",
       "finance": "Finance",
       "settings": "Settings",
@@ -1746,6 +1747,75 @@
         "stripeCouponId": "ID coupon Stripe",
         "stripeCouponIdHint": "Requis pour les coupons d'abonnement. Créez le coupon correspondant dans Stripe d'abord.",
         "status": "Statut"
+      }
+    },
+    "fraud": {
+      "title": "Revue de fraude",
+      "subtitle": "Trier les candidatures signalées par le moteur de scoring de risque.",
+      "empty": "Aucune candidature signalée ne correspond aux filtres actuels.",
+      "appliedAt": "Postulé",
+      "open": "Ouvrir la candidature",
+      "loadMore": "Charger plus",
+      "reviewedAt": "Revu à {at}",
+      "filters": {
+        "level": "Niveau de risque",
+        "all": "Tous",
+        "reviewed": "Statut",
+        "openOnly": "Ouverts uniquement",
+        "includeReviewed": "Inclure les revus"
+      },
+      "level": {
+        "low": "Faible",
+        "medium": "Moyen",
+        "high": "Élevé",
+        "critical": "Critique"
+      },
+      "signal": {
+        "DISPOSABLE_EMAIL": "E-mail jetable",
+        "HIGH_VELOCITY": "Vélocité élevée",
+        "EMPTY_PROFILE": "Profil vide",
+        "NEW_ACCOUNT": "Compte récent",
+        "TEMPLATE_ANSWERS": "Réponses copiées",
+        "OVER_BUDGET": "Au-dessus du budget",
+        "UNVERIFIED_EMAIL": "E-mail non vérifié"
+      },
+      "actions": {
+        "markReviewed": "Marquer comme revu",
+        "rescore": "Recalculer",
+        "clearReview": "Effacer la revue",
+        "notePlaceholder": "Note de revue facultative"
+      },
+      "detail": {
+        "back": "Retour à la file de fraude",
+        "notFound": "Candidature introuvable.",
+        "request": "Demande d'emploi",
+        "company": "Entreprise",
+        "trainer": "Formateur",
+        "verifiedEmail": "E-mail vérifié",
+        "unverifiedEmail": "E-mail non vérifié",
+        "accountAge": "Ancienneté du compte",
+        "ageDays": "{days, plural, one {# jour} other {# jours}}",
+        "ageHours": "{hours, plural, one {# heure} other {# heures}}",
+        "trainerProfile": "Profil du formateur",
+        "scoring": "Score de risque",
+        "score": "Score",
+        "level": "Niveau",
+        "computedAt": "Calculé le {at}",
+        "neverComputed": "Pas encore calculé",
+        "flags": "Indicateurs de risque",
+        "noFlags": "Aucun indicateur de risque.",
+        "applicationDetails": "Détails de la candidature",
+        "coverLetter": "Lettre de motivation",
+        "noCoverLetter": "Pas de lettre de motivation.",
+        "proposedRate": "Tarif proposé",
+        "proposedTimeline": "Calendrier proposé",
+        "days": "{days, plural, one {# jour} other {# jours}}",
+        "answers": "Réponses personnalisées",
+        "noAnswers": "Pas de réponses personnalisées.",
+        "budget": "Budget",
+        "review": "Revue administrative",
+        "reviewBy": "Examiné par",
+        "reviewNote": "Note de l'examinateur"
       }
     },
     "sponsored": {

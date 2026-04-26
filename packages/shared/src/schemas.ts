@@ -662,3 +662,21 @@ export const upsertFeatureFlagSchema = z.object({
   payload: z.record(z.unknown()).nullable().optional(),
 });
 export type UpsertFeatureFlagInput = z.infer<typeof upsertFeatureFlagSchema>;
+
+// -- Fraud / risk review (T9.D) ------------------------------------------
+
+export const RiskLevels = ['LOW', 'MEDIUM', 'HIGH', 'CRITICAL'] as const;
+export type RiskLevelLiteral = (typeof RiskLevels)[number];
+
+export const fraudListQuerySchema = z.object({
+  level: z.enum(RiskLevels).optional(),
+  onlyUnreviewed: stringBoolean.optional(),
+  limit: z.coerce.number().int().min(1).max(100).optional(),
+  cursor: z.string().max(64).optional(),
+});
+export type FraudListQuery = z.infer<typeof fraudListQuerySchema>;
+
+export const fraudReviewSchema = z.object({
+  note: z.string().max(2000).optional().nullable(),
+});
+export type FraudReviewInput = z.infer<typeof fraudReviewSchema>;

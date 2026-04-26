@@ -1022,6 +1022,7 @@
       "emailTemplates": "Email templates",
       "coupons": "Coupons",
       "disputes": "Disputes",
+      "fraud": "Fraud review",
       "ads": "Ads",
       "finance": "Finance",
       "settings": "Settings",
@@ -1766,6 +1767,75 @@
         "stripeCouponId": "Stripe coupon ID",
         "stripeCouponIdHint": "Required for SUBSCRIPTION coupons. Create the matching coupon in Stripe first.",
         "status": "Status"
+      }
+    },
+    "fraud": {
+      "title": "Fraud review",
+      "subtitle": "Triage applications flagged by the risk-scoring engine.",
+      "empty": "No flagged applications match the current filters.",
+      "appliedAt": "Applied",
+      "open": "Open application",
+      "loadMore": "Load more",
+      "reviewedAt": "Reviewed at {at}",
+      "filters": {
+        "level": "Risk level",
+        "all": "All",
+        "reviewed": "Status",
+        "openOnly": "Open only",
+        "includeReviewed": "Include reviewed"
+      },
+      "level": {
+        "low": "Low",
+        "medium": "Medium",
+        "high": "High",
+        "critical": "Critical"
+      },
+      "signal": {
+        "DISPOSABLE_EMAIL": "Disposable email",
+        "HIGH_VELOCITY": "High velocity",
+        "EMPTY_PROFILE": "Empty profile",
+        "NEW_ACCOUNT": "New account",
+        "TEMPLATE_ANSWERS": "Template answers",
+        "OVER_BUDGET": "Over budget",
+        "UNVERIFIED_EMAIL": "Unverified email"
+      },
+      "actions": {
+        "markReviewed": "Mark reviewed",
+        "rescore": "Re-score",
+        "clearReview": "Clear review",
+        "notePlaceholder": "Optional review note"
+      },
+      "detail": {
+        "back": "Back to fraud queue",
+        "notFound": "Application not found.",
+        "request": "Job request",
+        "company": "Company",
+        "trainer": "Trainer",
+        "verifiedEmail": "Verified email",
+        "unverifiedEmail": "Unverified email",
+        "accountAge": "Account age",
+        "ageDays": "{days, plural, one {# day} other {# days}}",
+        "ageHours": "{hours, plural, one {# hour} other {# hours}}",
+        "trainerProfile": "Trainer profile",
+        "scoring": "Risk scoring",
+        "score": "Score",
+        "level": "Level",
+        "computedAt": "Computed at {at}",
+        "neverComputed": "Not yet computed",
+        "flags": "Risk flags",
+        "noFlags": "No risk flags raised.",
+        "applicationDetails": "Application details",
+        "coverLetter": "Cover letter",
+        "noCoverLetter": "No cover letter submitted.",
+        "proposedRate": "Proposed rate",
+        "proposedTimeline": "Proposed timeline",
+        "days": "{days, plural, one {# day} other {# days}}",
+        "answers": "Custom answers",
+        "noAnswers": "No custom answers recorded.",
+        "budget": "Budget",
+        "review": "Admin review",
+        "reviewBy": "Reviewed by",
+        "reviewNote": "Reviewer note"
       }
     },
     "sponsored": {

@@ -302,6 +302,7 @@ test.describe('Golden E2E flow — 11 steps', () => {
       'admin',
       'admin-cms',
       'admin-finance',
+      'admin-fraud',
       'admin-settings',
       'admin-sponsored',
       'ads',

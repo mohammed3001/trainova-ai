@@ -173,7 +173,21 @@ export class JobRequestsService {
     return this.prisma.application.findMany({
       where: { requestId },
       orderBy: { createdAt: 'desc' },
-      include: {
+      // Project the safe scalar set — the company-owner has no business
+      // seeing the internal fraud heuristic; risk review lives on the
+      // dedicated `/admin/fraud/*` surface in `FraudService`.
+      select: {
+        id: true,
+        requestId: true,
+        trainerId: true,
+        status: true,
+        coverLetter: true,
+        proposedRate: true,
+        proposedTimelineDays: true,
+        matchScore: true,
+        answers: true,
+        createdAt: true,
+        updatedAt: true,
         trainer: {
           select: {
             id: true,

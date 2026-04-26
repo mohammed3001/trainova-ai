@@ -8,6 +8,7 @@ import {
 import { PrismaService } from '../prisma/prisma.service';
 import { TestsService } from '../tests/tests.service';
 import { NotificationsService } from '../notifications/notifications.service';
+import { FraudService } from '../fraud/fraud.service';
 import {
   APPLICATION_STATUS_TRANSITIONS,
   AUDIT_ACTIONS,
@@ -26,19 +27,42 @@ interface StatusUpdateContext {
   locale?: string | null;
 }
 
+// Internal fraud-assessment fields belong to the moderation surface only.
+// They must never reach the trainer (lets them game the heuristic + reveals
+// admin review notes) and the company-owner has no business seeing them
+// either (it would leak our internal risk reasoning into hiring decisions).
+// Project the safe scalar set on every Application read that returns to a
+// non-admin caller; the dedicated `/admin/fraud/*` endpoints in `FraudService`
+// are where the risk* columns are intentionally surfaced.
+const APPLICATION_SAFE_SCALARS = {
+  id: true,
+  requestId: true,
+  trainerId: true,
+  status: true,
+  coverLetter: true,
+  proposedRate: true,
+  proposedTimelineDays: true,
+  matchScore: true,
+  answers: true,
+  createdAt: true,
+  updatedAt: true,
+} satisfies Prisma.ApplicationSelect;
+
 @Injectable()
 export class ApplicationsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly tests: TestsService,
     private readonly notifications: NotificationsService,
+    private readonly fraud: FraudService,
   ) {}
 
   async listMine(trainerId: string) {
     return this.prisma.application.findMany({
       where: { trainerId },
       orderBy: { createdAt: 'desc' },
-      include: {
+      select: {
+        ...APPLICATION_SAFE_SCALARS,
         request: {
           select: {
             id: true,
@@ -95,6 +119,7 @@ export class ApplicationsService {
         proposedTimelineDays: input.proposedTimelineDays,
         answers: validated.answers as Prisma.InputJsonValue,
       },
+      select: APPLICATION_SAFE_SCALARS,
     });
 
     // Best-effort notify the company owner. Must include the supporting
@@ -131,6 +156,13 @@ export class ApplicationsService {
     } catch {
       /* swallow — application already persisted, notification is best-effort */
     }
+
+    // Best-effort fraud scoring. Done after the row commits so the trainer
+    // never sees a delay on apply, and FraudService swallows errors so a
+    // transient DB hiccup never tanks the response. The admin review page
+    // re-runs scoring on demand if a row is missing a score.
+    void this.fraud.scoreApplication(created.id);
+
     return created;
   }
 
@@ -203,7 +235,10 @@ export class ApplicationsService {
         },
       });
 
-      return tx.application.findUniqueOrThrow({ where: { id: applicationId } });
+      return tx.application.findUniqueOrThrow({
+        where: { id: applicationId },
+        select: APPLICATION_SAFE_SCALARS,
+      });
     }).then(async (updated) => {
       try {
         await this.notifyTrainerOfStatus(
@@ -358,7 +393,10 @@ export class ApplicationsService {
       /* swallow — status change is authoritative */
     }
 
-    return this.prisma.application.findUniqueOrThrow({ where: { id: applicationId } });
+    return this.prisma.application.findUniqueOrThrow({
+      where: { id: applicationId },
+      select: APPLICATION_SAFE_SCALARS,
+    });
   }
 
   async history(userId: string, applicationId: string) {

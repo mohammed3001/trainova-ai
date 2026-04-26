@@ -478,6 +478,13 @@ enum ApplicationStatus {
   WITHDRAWN
 }
 
+enum RiskLevel {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
 model Application {
   id                   String            @id @default(cuid())
   requestId            String
@@ -488,6 +495,18 @@ model Application {
   proposedTimelineDays Int?
   matchScore           Float?
   answers              Json              @default("{}")
+  /// 0–100 heuristic risk score from the fraud service. Higher = riskier.
+  /// Null means the row has not yet been scored (legacy data + transient
+  /// failures). riskLevel is derived from this at write time.
+  riskScore            Int?
+  riskLevel            RiskLevel?
+  riskFlags            String[]          @default([])
+  riskComputedAt       DateTime?
+  /// Stamped by an admin from the fraud review page. When set, the row is
+  /// considered triaged and disappears from the default inbox view.
+  riskReviewedAt       DateTime?
+  riskReviewedBy       String?
+  riskReviewNote       String?
   createdAt            DateTime          @default(now())
   updatedAt            DateTime          @updatedAt
 
@@ -501,6 +520,7 @@ model Application {
 
   @@unique([requestId, trainerId])
   @@index([trainerId])
+  @@index([riskLevel, riskReviewedAt])
 }
 
 model ApplicationAttachment {

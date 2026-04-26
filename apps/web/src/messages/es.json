@@ -1002,6 +1002,7 @@
       "emailTemplates": "Plantillas de correo",
       "coupons": "Cupones",
       "disputes": "Disputas",
+      "fraud": "Revisión de fraude",
       "ads": "Anuncios",
       "finance": "Finance",
       "settings": "Settings",
@@ -1746,6 +1747,75 @@
         "stripeCouponId": "ID de cupón Stripe",
         "stripeCouponIdHint": "Obligatorio para cupones de suscripción. Crea el cupón en Stripe primero.",
         "status": "Estado"
+      }
+    },
+    "fraud": {
+      "title": "Revisión de fraude",
+      "subtitle": "Clasifica las solicitudes marcadas por el motor de puntuación de riesgo.",
+      "empty": "Ninguna solicitud marcada coincide con los filtros actuales.",
+      "appliedAt": "Aplicado",
+      "open": "Abrir solicitud",
+      "loadMore": "Cargar más",
+      "reviewedAt": "Revisado el {at}",
+      "filters": {
+        "level": "Nivel de riesgo",
+        "all": "Todos",
+        "reviewed": "Estado",
+        "openOnly": "Solo abiertos",
+        "includeReviewed": "Incluir revisados"
+      },
+      "level": {
+        "low": "Bajo",
+        "medium": "Medio",
+        "high": "Alto",
+        "critical": "Crítico"
+      },
+      "signal": {
+        "DISPOSABLE_EMAIL": "Correo desechable",
+        "HIGH_VELOCITY": "Alta velocidad",
+        "EMPTY_PROFILE": "Perfil vacío",
+        "NEW_ACCOUNT": "Cuenta nueva",
+        "TEMPLATE_ANSWERS": "Respuestas duplicadas",
+        "OVER_BUDGET": "Sobre el presupuesto",
+        "UNVERIFIED_EMAIL": "Correo sin verificar"
+      },
+      "actions": {
+        "markReviewed": "Marcar como revisado",
+        "rescore": "Recalcular",
+        "clearReview": "Borrar revisión",
+        "notePlaceholder": "Nota de revisión opcional"
+      },
+      "detail": {
+        "back": "Volver a la cola de fraude",
+        "notFound": "Solicitud no encontrada.",
+        "request": "Solicitud de empleo",
+        "company": "Empresa",
+        "trainer": "Formador",
+        "verifiedEmail": "Correo verificado",
+        "unverifiedEmail": "Correo no verificado",
+        "accountAge": "Antigüedad de la cuenta",
+        "ageDays": "{days, plural, one {# día} other {# días}}",
+        "ageHours": "{hours, plural, one {# hora} other {# horas}}",
+        "trainerProfile": "Perfil del formador",
+        "scoring": "Puntuación de riesgo",
+        "score": "Puntuación",
+        "level": "Nivel",
+        "computedAt": "Calculado el {at}",
+        "neverComputed": "Aún no calculado",
+        "flags": "Indicadores de riesgo",
+        "noFlags": "Sin indicadores de riesgo.",
+        "applicationDetails": "Detalles de la solicitud",
+        "coverLetter": "Carta de presentación",
+        "noCoverLetter": "Sin carta de presentación.",
+        "proposedRate": "Tarifa propuesta",
+        "proposedTimeline": "Plazo propuesto",
+        "days": "{days, plural, one {# día} other {# días}}",
+        "answers": "Respuestas personalizadas",
+        "noAnswers": "Sin respuestas personalizadas.",
+        "budget": "Presupuesto",
+        "review": "Revisión administrativa",
+        "reviewBy": "Revisado por",
+        "reviewNote": "Nota del revisor"
       }
     },
     "sponsored": {

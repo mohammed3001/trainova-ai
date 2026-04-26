@@ -1022,6 +1022,7 @@
       "emailTemplates": "قوالب البريد",
       "coupons": "الكوبونات",
       "disputes": "النزاعات",
+      "fraud": "مراجعة الاحتيال",
       "ads": "الإعلانات",
       "finance": "المالية",
       "settings": "الإعدادات",
@@ -1766,6 +1767,75 @@
         "stripeCouponId": "معرف كوبون Stripe",
         "stripeCouponIdHint": "مطلوب لكوبونات الاشتراك. أنشئ الكوبون المماثل في Stripe أولًا.",
         "status": "الحالة"
+      }
+    },
+    "fraud": {
+      "title": "مراجعة الاحتيال",
+      "subtitle": "فرز الطلبات المعلَّمة بواسطة محرِّك تقدير المخاطر.",
+      "empty": "لا توجد طلبات معلَّمة تطابق الفلاتر الحالية.",
+      "appliedAt": "تاريخ التقديم",
+      "open": "فتح الطلب",
+      "loadMore": "تحميل المزيد",
+      "reviewedAt": "تمت المراجعة في {at}",
+      "filters": {
+        "level": "درجة المخاطرة",
+        "all": "الكل",
+        "reviewed": "الحالة",
+        "openOnly": "المفتوحة فقط",
+        "includeReviewed": "تضمين المراجعة"
+      },
+      "level": {
+        "low": "منخفضة",
+        "medium": "متوسطة",
+        "high": "عالية",
+        "critical": "حرجة"
+      },
+      "signal": {
+        "DISPOSABLE_EMAIL": "بريد مؤقت",
+        "HIGH_VELOCITY": "وتيرة عالية",
+        "EMPTY_PROFILE": "ملف فارغ",
+        "NEW_ACCOUNT": "حساب جديد",
+        "TEMPLATE_ANSWERS": "إجابات مكررة",
+        "OVER_BUDGET": "تجاوز الميزانية",
+        "UNVERIFIED_EMAIL": "بريد غير موثَّق"
+      },
+      "actions": {
+        "markReviewed": "وضع علامة مراجع",
+        "rescore": "إعادة التقييم",
+        "clearReview": "إلغاء المراجعة",
+        "notePlaceholder": "ملاحظة اختيارية"
+      },
+      "detail": {
+        "back": "العودة إلى قائمة الاحتيال",
+        "notFound": "الطلب غير موجود.",
+        "request": "طلب الوظيفة",
+        "company": "الشركة",
+        "trainer": "المدرّب",
+        "verifiedEmail": "بريد موثّق",
+        "unverifiedEmail": "بريد غير موثّق",
+        "accountAge": "عمر الحساب",
+        "ageDays": "{days, plural, one {يوم} two {يومان} few {# أيام} many {# يوماً} other {# يوم}}",
+        "ageHours": "{hours, plural, one {ساعة} two {ساعتان} few {# ساعات} many {# ساعة} other {# ساعة}}",
+        "trainerProfile": "ملف المدرّب",
+        "scoring": "تقييم المخاطر",
+        "score": "النتيجة",
+        "level": "المستوى",
+        "computedAt": "تم الحساب في {at}",
+        "neverComputed": "لم يُحسب بعد",
+        "flags": "إشارات المخاطر",
+        "noFlags": "لا توجد إشارات مخاطر.",
+        "applicationDetails": "تفاصيل الطلب",
+        "coverLetter": "خطاب التقديم",
+        "noCoverLetter": "لا يوجد خطاب تقديم.",
+        "proposedRate": "السعر المقترح",
+        "proposedTimeline": "الجدول الزمني المقترح",
+        "days": "{days, plural, one {يوم} two {يومان} few {# أيام} many {# يوماً} other {# يوم}}",
+        "answers": "إجابات مخصّصة",
+        "noAnswers": "لا توجد إجابات مخصّصة.",
+        "budget": "الميزانية",
+        "review": "مراجعة الإدارة",
+        "reviewBy": "المراجِع",
+        "reviewNote": "ملاحظة المراجِع"
       }
     },
     "sponsored": {
