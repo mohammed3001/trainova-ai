@@ -413,15 +413,21 @@ export class WebhooksService {
     }
 
     if (attempts >= MAX_ATTEMPTS) {
-      // Increment company-level failure count and possibly auto-disable.
-      const next = await this.prisma.webhook.update({
-        where: { id: delivery.webhookId },
-        data: { failureCount: { increment: 1 } },
-        select: { failureCount: true },
-      });
-      const shouldDisable = next.failureCount >= AUTO_DISABLE_THRESHOLD;
-      await this.prisma.$transaction([
-        this.prisma.webhookDelivery.update({
+      // Increment failureCount and decide auto-disable inside the same
+      // interactive transaction as the ABANDONED write — otherwise a
+      // concurrent successful delivery (which resets failureCount=0) or
+      // a company owner re-enabling the webhook (also resets to 0) can
+      // slip in between the increment and the disable, and we'd disable
+      // a webhook that just had a success or was just re-enabled. The
+      // `await` between the two ops yields the event loop, so this race
+      // happens even on a single Node instance.
+      await this.prisma.$transaction(async (tx) => {
+        const next = await tx.webhook.update({
+          where: { id: delivery.webhookId },
+          data: { failureCount: { increment: 1 } },
+          select: { failureCount: true },
+        });
+        await tx.webhookDelivery.update({
           where: { id: deliveryId },
           data: {
             status: 'ABANDONED',
@@ -429,16 +435,14 @@ export class WebhooksService {
             lastStatus: status,
             lastResponse: respBody,
           },
-        }),
-        ...(shouldDisable
-          ? [
-              this.prisma.webhook.update({
-                where: { id: delivery.webhookId },
-                data: { enabled: false, disabledAt: new Date() },
-              }),
-            ]
-          : []),
-      ]);
+        });
+        if (next.failureCount >= AUTO_DISABLE_THRESHOLD) {
+          await tx.webhook.update({
+            where: { id: delivery.webhookId },
+            data: { enabled: false, disabledAt: new Date() },
+          });
+        }
+      });
       return;
     }
 
