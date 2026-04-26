@@ -1005,7 +1005,8 @@
       "ads": "Anuncios",
       "finance": "Finance",
       "settings": "Settings",
-      "sponsored": "Colocaciones patrocinadas"
+      "sponsored": "Colocaciones patrocinadas",
+      "learningPaths": "Rutas"
     },
     "userRole": {
       "SUPER_ADMIN": "Super administrador",
@@ -2726,6 +2727,104 @@
       "cancel": "Cancelar",
       "paymentError": "El pago falló. No se realizó ningún cargo.",
       "requirePaymentMethod": "Agrega un método de pago antes de impulsar."
+    }
+  },
+  "learning": {
+    "title": "Rutas de aprendizaje",
+    "subtitle": "Rutas curadas de varias etapas. Obtén un certificado verificable.",
+    "level": {
+      "BEGINNER": "Principiante",
+      "INTERMEDIATE": "Intermedio",
+      "ADVANCED": "Avanzado"
+    },
+    "kind": {
+      "ARTICLE": "Artículo",
+      "LINK": "Enlace externo",
+      "VIDEO": "Vídeo",
+      "REFLECTION": "Reflexión"
+    },
+    "filter": {
+      "all": "Todos los niveles",
+      "search": "Buscar",
+      "apply": "Aplicar",
+      "industry": "Sector"
+    },
+    "list": {
+      "empty": "Aún no hay rutas publicadas.",
+      "steps": "{count} pasos",
+      "enrolled": "{count} alumnos",
+      "hours": "~{hours}h",
+      "open": "Abrir"
+    },
+    "detail": {
+      "aboutTitle": "Sobre la ruta",
+      "stepsTitle": "Pasos",
+      "enroll": "Inscribirme",
+      "enrolled": "Estás inscrito",
+      "enrollAgain": "Continuar",
+      "progressLabel": "Progreso: {done}/{total}",
+      "completed": "Ruta completada",
+      "viewCertificate": "Ver certificado",
+      "completeNext": "Completar el siguiente paso",
+      "reflectionPrompt": "Tu reflexión (opcional)",
+      "reflectionPlaceholder": "Escribe unas líneas sobre lo aprendido…",
+      "loginToEnroll": "Inicia sesión para inscribirte"
+    },
+    "me": {
+      "title": "Mis rutas",
+      "subtitle": "Sigue tu progreso y descarga certificados.",
+      "empty": "Aún no te has inscrito en ninguna ruta.",
+      "progress": "{done}/{total} pasos"
+    },
+    "certificate": {
+      "title": "Certificado de finalización",
+      "verifyTitle": "Verificar certificado",
+      "serial": "Número de serie",
+      "issued": "Emitido",
+      "learner": "Otorgado a",
+      "path": "Ruta",
+      "valid": "Verificado — este certificado es auténtico.",
+      "invalid": "No se pudo verificar la integridad."
+    },
+    "admin": {
+      "title": "Rutas (admin)",
+      "subtitle": "Crea y publica rutas.",
+      "new": "Nueva ruta",
+      "col": {
+        "title": "Título",
+        "level": "Nivel",
+        "steps": "Pasos",
+        "status": "Estado",
+        "updated": "Actualizado",
+        "enrollments": "Inscripciones"
+      },
+      "status": {
+        "draft": "Borrador",
+        "published": "Publicado"
+      },
+      "actions": {
+        "open": "Abrir",
+        "publish": "Publicar",
+        "unpublish": "Despublicar",
+        "delete": "Eliminar",
+        "save": "Guardar",
+        "create": "Crear"
+      },
+      "form": {
+        "slug": "Slug",
+        "title": "Título",
+        "summary": "Resumen",
+        "description": "Descripción (markdown)",
+        "level": "Nivel",
+        "industry": "Sector (opcional)",
+        "estimatedHours": "Horas estimadas",
+        "steps": "Pasos",
+        "addStep": "Añadir paso",
+        "stepKind": "Tipo",
+        "stepTitle": "Título",
+        "stepBody": "Contenido",
+        "stepUrl": "URL"
+      }
     }
   }
 }

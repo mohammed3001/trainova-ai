@@ -1025,7 +1025,8 @@
       "ads": "Ads",
       "finance": "Finance",
       "settings": "Settings",
-      "sponsored": "Sponsored placements"
+      "sponsored": "Sponsored placements",
+      "learningPaths": "Learning paths"
     },
     "userRole": {
       "SUPER_ADMIN": "Super admin",
@@ -2860,6 +2861,104 @@
       "cancel": "Cancel",
       "paymentError": "Payment failed. No charge was made.",
       "requirePaymentMethod": "Add a payment method on file before boosting."
+    }
+  },
+  "learning": {
+    "title": "Learning paths",
+    "subtitle": "Curated multi-step training tracks. Earn a verifiable certificate on completion.",
+    "level": {
+      "BEGINNER": "Beginner",
+      "INTERMEDIATE": "Intermediate",
+      "ADVANCED": "Advanced"
+    },
+    "kind": {
+      "ARTICLE": "Article",
+      "LINK": "External link",
+      "VIDEO": "Video",
+      "REFLECTION": "Reflection"
+    },
+    "filter": {
+      "all": "All levels",
+      "search": "Search paths",
+      "apply": "Apply",
+      "industry": "Industry"
+    },
+    "list": {
+      "empty": "No learning paths published yet.",
+      "steps": "{count} steps",
+      "enrolled": "{count} learners",
+      "hours": "~{hours}h",
+      "open": "Open"
+    },
+    "detail": {
+      "aboutTitle": "About this path",
+      "stepsTitle": "Steps",
+      "enroll": "Enroll",
+      "enrolled": "You are enrolled",
+      "enrollAgain": "Continue",
+      "progressLabel": "Progress: {done}/{total}",
+      "completed": "Path completed",
+      "viewCertificate": "View certificate",
+      "completeNext": "Complete next step",
+      "reflectionPrompt": "Your reflection (optional)",
+      "reflectionPlaceholder": "Write a few sentences about what you learned…",
+      "loginToEnroll": "Log in to enroll"
+    },
+    "me": {
+      "title": "My learning paths",
+      "subtitle": "Track your progress and download certificates.",
+      "empty": "You have not enrolled in any path yet.",
+      "progress": "{done}/{total} steps"
+    },
+    "certificate": {
+      "title": "Certificate of completion",
+      "verifyTitle": "Verify certificate",
+      "serial": "Serial",
+      "issued": "Issued",
+      "learner": "Awarded to",
+      "path": "Learning path",
+      "valid": "Verified — this certificate is authentic.",
+      "invalid": "This certificate failed integrity check."
+    },
+    "admin": {
+      "title": "Learning paths (admin)",
+      "subtitle": "Author curated tracks, manage publish state.",
+      "new": "New path",
+      "col": {
+        "title": "Title",
+        "level": "Level",
+        "steps": "Steps",
+        "status": "Status",
+        "updated": "Updated",
+        "enrollments": "Enrollments"
+      },
+      "status": {
+        "draft": "Draft",
+        "published": "Published"
+      },
+      "actions": {
+        "open": "Open",
+        "publish": "Publish",
+        "unpublish": "Unpublish",
+        "delete": "Delete",
+        "save": "Save",
+        "create": "Create"
+      },
+      "form": {
+        "slug": "Slug",
+        "title": "Title",
+        "summary": "Summary",
+        "description": "Description (markdown)",
+        "level": "Level",
+        "industry": "Industry (optional)",
+        "estimatedHours": "Estimated hours",
+        "steps": "Steps",
+        "addStep": "Add step",
+        "stepKind": "Kind",
+        "stepTitle": "Step title",
+        "stepBody": "Body",
+        "stepUrl": "URL"
+      }
     }
   }
 }

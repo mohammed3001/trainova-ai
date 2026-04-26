@@ -1025,7 +1025,8 @@
       "ads": "الإعلانات",
       "finance": "المالية",
       "settings": "الإعدادات",
-      "sponsored": "الظهور المميَّز"
+      "sponsored": "الظهور المميَّز",
+      "learningPaths": "مسارات التعلّم"
     },
     "userRole": {
       "SUPER_ADMIN": "أدمن أعلى",
@@ -2860,6 +2861,104 @@
       "cancel": "إلغاء",
       "paymentError": "فشل الدفع. لم يتم خصم أي مبلغ.",
       "requirePaymentMethod": "أضف طريقة دفع قبل التعزيز."
+    }
+  },
+  "learning": {
+    "title": "مسارات التعلّم",
+    "subtitle": "مسارات تدريبية مُنظَّمة متعددة الخطوات. احصل على شهادة موثَّقة بعد إتمام المسار.",
+    "level": {
+      "BEGINNER": "مبتدئ",
+      "INTERMEDIATE": "متوسط",
+      "ADVANCED": "متقدم"
+    },
+    "kind": {
+      "ARTICLE": "مقال",
+      "LINK": "رابط خارجي",
+      "VIDEO": "فيديو",
+      "REFLECTION": "تأمل"
+    },
+    "filter": {
+      "all": "كل المستويات",
+      "search": "بحث في المسارات",
+      "apply": "تطبيق",
+      "industry": "القطاع"
+    },
+    "list": {
+      "empty": "لا توجد مسارات منشورة بعد.",
+      "steps": "{count} خطوات",
+      "enrolled": "{count} متعلِّم",
+      "hours": "~{hours} س",
+      "open": "فتح"
+    },
+    "detail": {
+      "aboutTitle": "عن المسار",
+      "stepsTitle": "الخطوات",
+      "enroll": "تسجيل",
+      "enrolled": "أنت مُسجَّل",
+      "enrollAgain": "متابعة",
+      "progressLabel": "التقدم: {done}/{total}",
+      "completed": "تم إتمام المسار",
+      "viewCertificate": "عرض الشهادة",
+      "completeNext": "إكمال الخطوة التالية",
+      "reflectionPrompt": "تأملك (اختياري)",
+      "reflectionPlaceholder": "اكتب جملاً قصيرة عما تعلمته…",
+      "loginToEnroll": "سجّل دخول للتسجيل"
+    },
+    "me": {
+      "title": "مساراتي التعليمية",
+      "subtitle": "تابع تقدّمك وحمّل شهاداتك.",
+      "empty": "لم تسجّل في أي مسار بعد.",
+      "progress": "{done}/{total} خطوات"
+    },
+    "certificate": {
+      "title": "شهادة إتمام",
+      "verifyTitle": "تحقّق من الشهادة",
+      "serial": "الرقم التسلسلي",
+      "issued": "تاريخ الإصدار",
+      "learner": "مَنحت إلى",
+      "path": "المسار",
+      "valid": "موثَّقة — الشهادة أصلية.",
+      "invalid": "فشل التحقق من سلامة الشهادة."
+    },
+    "admin": {
+      "title": "مسارات التعلّم (الإدارة)",
+      "subtitle": "إدارة المسارات وحالة النشر.",
+      "new": "مسار جديد",
+      "col": {
+        "title": "العنوان",
+        "level": "المستوى",
+        "steps": "الخطوات",
+        "status": "الحالة",
+        "updated": "آخر تحديث",
+        "enrollments": "التسجيلات"
+      },
+      "status": {
+        "draft": "مسودّة",
+        "published": "منشور"
+      },
+      "actions": {
+        "open": "فتح",
+        "publish": "نشر",
+        "unpublish": "إلغاء النشر",
+        "delete": "حذف",
+        "save": "حفظ",
+        "create": "إنشاء"
+      },
+      "form": {
+        "slug": "المُعرِّف (slug)",
+        "title": "العنوان",
+        "summary": "الملخص",
+        "description": "الوصف (Markdown)",
+        "level": "المستوى",
+        "industry": "القطاع (اختياري)",
+        "estimatedHours": "الساعات المقدّرة",
+        "steps": "الخطوات",
+        "addStep": "إضافة خطوة",
+        "stepKind": "النوع",
+        "stepTitle": "عنوان الخطوة",
+        "stepBody": "المحتوى",
+        "stepUrl": "الرابط"
+      }
     }
   }
 }

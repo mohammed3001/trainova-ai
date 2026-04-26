@@ -55,6 +55,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     { href: `/${locale}/admin/cms/faqs`, label: t('admin.nav.cmsFaqs'), group: content },
     { href: `/${locale}/admin/cms/feature-flags`, label: t('admin.nav.featureFlags'), group: superOnly },
     { href: `/${locale}/admin/email-templates`, label: t('admin.nav.emailTemplates'), group: content },
+    { href: `/${locale}/admin/learning-paths`, label: t('admin.nav.learningPaths'), group: content },
     { href: `/${locale}/admin/disputes`, label: t('admin.nav.disputes'), group: moderation },
     { href: `/${locale}/admin/ads`, label: t('admin.nav.ads'), group: ads },
     { href: `/${locale}/admin/sponsored`, label: t('admin.nav.sponsored'), group: ads },
