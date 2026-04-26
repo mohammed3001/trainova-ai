@@ -20,8 +20,8 @@ import { PrismaService } from '../prisma/prisma.service';
 import { EmailService } from '../email/email.service';
 import { AdsService } from '../ads/ads.service';
 import {
-  NEWSLETTER_AD_TOKEN,
   applyNewsletterAd,
+  hasNewsletterAdToken,
   pickAndRecordNewsletterAd,
 } from '../ads/newsletter-ad.util';
 
@@ -590,8 +590,8 @@ export class EmailMarketingService {
           // block. If no eligible creative exists, the token is stripped
           // and the email reads as if the slot wasn't there. T9.F.
           const wantsAd =
-            campaign.bodyHtml.includes(NEWSLETTER_AD_TOKEN) ||
-            (campaign.bodyText?.includes(NEWSLETTER_AD_TOKEN) ?? false);
+            hasNewsletterAdToken(campaign.bodyHtml) ||
+            hasNewsletterAdToken(campaign.bodyText);
           const ad = wantsAd
             ? await pickAndRecordNewsletterAd(this.ads, this.resolveApiBaseUrl(), {
                 campaignId: id,
@@ -718,8 +718,7 @@ export class EmailMarketingService {
         // alone gives a stable hash for frequency-cap accounting across
         // re-enrollments. T9.F.
         const wantsAd =
-          step.bodyHtml.includes(NEWSLETTER_AD_TOKEN) ||
-          (step.bodyText?.includes(NEWSLETTER_AD_TOKEN) ?? false);
+          hasNewsletterAdToken(step.bodyHtml) || hasNewsletterAdToken(step.bodyText);
         const ad = wantsAd
           ? await pickAndRecordNewsletterAd(this.ads, this.resolveApiBaseUrl(), {
               campaignId: e.sequenceId,

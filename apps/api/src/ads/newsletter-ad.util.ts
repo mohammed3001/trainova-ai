@@ -10,6 +10,24 @@ import type { AdsService } from './ads.service';
  */
 export const NEWSLETTER_AD_TOKEN = '{{AD_SLOT}}';
 
+/**
+ * Whitespace-tolerant token regex matching the same shape as the email
+ * template interpolator (`/\{\{\s*AD_SLOT\s*\}\}/g`). Authors writing
+ * `{{ AD_SLOT }}` with surrounding spaces are treated identically to the
+ * canonical `{{AD_SLOT}}`. Used for both the opt-in detection and the
+ * substitution / strip pass so a normalised token can never leak into the
+ * final email.
+ */
+export const NEWSLETTER_AD_TOKEN_REGEX = /\{\{\s*AD_SLOT\s*\}\}/g;
+
+/** Cheap detection helper that accepts the same whitespace tolerance. */
+export function hasNewsletterAdToken(s: string | null | undefined): boolean {
+  if (!s) return false;
+  // Reset lastIndex because the exported regex has the `g` flag.
+  NEWSLETTER_AD_TOKEN_REGEX.lastIndex = 0;
+  return NEWSLETTER_AD_TOKEN_REGEX.test(s);
+}
+
 interface RecipientCtx {
   campaignId: string;
   recipientId: string;
@@ -184,12 +202,11 @@ export function applyNewsletterAd<T extends string | null>(
   bodyText: T,
   ad: RenderedAd | null,
 ): { bodyHtml: string; bodyText: T } {
-  const html = bodyHtml.includes(NEWSLETTER_AD_TOKEN)
-    ? bodyHtml.split(NEWSLETTER_AD_TOKEN).join(ad?.html ?? '')
-    : bodyHtml;
-  const text =
-    bodyText && bodyText.includes(NEWSLETTER_AD_TOKEN)
-      ? (bodyText.split(NEWSLETTER_AD_TOKEN).join(ad?.text ?? '') as T)
-      : bodyText;
+  const htmlReplacement = ad?.html ?? '';
+  const textReplacement = ad?.text ?? '';
+  const html = bodyHtml.replace(NEWSLETTER_AD_TOKEN_REGEX, htmlReplacement);
+  const text = (
+    bodyText ? (bodyText as string).replace(NEWSLETTER_AD_TOKEN_REGEX, textReplacement) : bodyText
+  ) as T;
   return { bodyHtml: html, bodyText: text };
 }
