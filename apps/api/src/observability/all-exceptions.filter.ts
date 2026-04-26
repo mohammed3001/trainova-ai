@@ -42,6 +42,26 @@ export class AllExceptionsFilter implements ExceptionFilter {
   ) {}
 
   catch(exception: unknown, host: ArgumentsHost): void {
+    // Global filters fire across every execution context (HTTP,
+    // WebSocket, RPC). `switchToHttp()` returns the WS client +
+    // payload as `request`/`response` when called from a WS handler,
+    // so calling `res.status().json()` would `TypeError` on the
+    // payload object and swallow the original error. Guard on the
+    // host type and only synthesise an HTTP response for HTTP
+    // requests; for WS (and anything else) we still report the error
+    // upstream so the Sentry pipeline catches it.
+    const hostType = host.getType<'http' | 'ws' | 'rpc'>();
+    if (hostType !== 'http') {
+      this.reporter?.captureException(exception, {
+        tags: { kind: hostType },
+      });
+      if (exception instanceof Error) {
+        this.logger.error(`unhandled ${hostType}: ${exception.message}`, exception.stack);
+      } else {
+        this.logger.error(`unhandled ${hostType}: ${String(exception)}`);
+      }
+      return;
+    }
     const ctx = host.switchToHttp();
     const res = ctx.getResponse<Response>();
     const req = ctx.getRequest<AuthedRequest>();
