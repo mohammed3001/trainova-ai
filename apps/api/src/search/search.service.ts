@@ -146,8 +146,12 @@ export class SearchService {
     } else if (f.q && f.q.trim()) {
       // Short query — fall back to ILIKE on title/description to keep
       // 1-2-letter searches usable. Still uses a btree on the OPEN
-      // rows so it isn't catastrophic.
-      const like = `%${f.q.trim()}%`;
+      // rows so it isn't catastrophic. Escape LIKE-special characters
+      // (`%`, `_`, `\`) so a user query of `_a` matches a literal `_a`
+      // and not "any character followed by a", and a `%` query doesn't
+      // match every row.
+      const escaped = f.q.trim().replace(/[%_\\]/g, '\\$&');
+      const like = `%${escaped}%`;
       parts.push(Prisma.sql`(jr."title" ILIKE ${like} OR jr."description" ILIKE ${like})`);
     }
     if (f.industry) {

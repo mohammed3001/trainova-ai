@@ -200,24 +200,39 @@ export class SavedSearchesService {
       /\/$/,
       '',
     );
-    const locale = user.locale === 'ar' ? 'ar' : 'en';
+    // Two locales serve two different purposes here, and conflating them
+    // sends fr/es users to the English version of every link in the digest:
+    //   bodyLocale — the email body language. We only have ar/en email
+    //                copy today, so this collapses to ar|en.
+    //   urlLocale  — the locale segment in the link path. The web app
+    //                supports ar/en/fr/es, so this preserves the user's
+    //                actual locale (with a defensive fallback to 'en').
+    const SUPPORTED_URL_LOCALES = ['ar', 'en', 'fr', 'es'] as const;
+    type UrlLocale = (typeof SUPPORTED_URL_LOCALES)[number];
+    const urlLocale: UrlLocale = (SUPPORTED_URL_LOCALES as readonly string[]).includes(
+      user.locale,
+    )
+      ? (user.locale as UrlLocale)
+      : 'en';
+    const bodyLocale: 'ar' | 'en' = user.locale === 'ar' ? 'ar' : 'en';
+
     const subject =
-      locale === 'ar'
+      bodyLocale === 'ar'
         ? `${items.length} طلب جديد للبحث "${searchName}"`
         : `${items.length} new request${items.length === 1 ? '' : 's'} for "${searchName}"`;
     const intro =
-      locale === 'ar'
+      bodyLocale === 'ar'
         ? `وجدنا ${total} نتيجة جديدة منذ آخر تنبيه. أهم ${items.length}:`
         : `We found ${total} new result${total === 1 ? '' : 's'} since your last alert. Top ${items.length}:`;
     const cta =
-      locale === 'ar' ? 'عرض جميع النتائج' : 'View all results';
+      bodyLocale === 'ar' ? 'عرض جميع النتائج' : 'View all results';
 
     const escape = (s: string) =>
       s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
     const list = items
       .map(
         (it) =>
-          `<li><a href="${baseUrl}/${locale}/requests/${encodeURIComponent(
+          `<li><a href="${baseUrl}/${urlLocale}/requests/${encodeURIComponent(
             it.slug,
           )}">${escape(it.title)}</a> — <span>${escape(it.company.name)}</span></li>`,
       )
@@ -225,7 +240,7 @@ export class SavedSearchesService {
     const html = `
       <p>${escape(intro)}</p>
       <ul>${list}</ul>
-      <p><a href="${baseUrl}/${locale}/settings/saved-searches">${escape(cta)}</a></p>
+      <p><a href="${baseUrl}/${urlLocale}/settings/saved-searches">${escape(cta)}</a></p>
     `;
 
     await this.email.sendRaw(user.email, subject, html);
