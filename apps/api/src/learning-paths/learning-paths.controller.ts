@@ -88,6 +88,13 @@ export class LearningPathsController {
     return this.service.enroll(user.id, slug);
   }
 
+  @Delete(':slug/enroll')
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
+  unenroll(@CurrentUser() user: AuthUser, @Param('slug') slug: string) {
+    return this.service.unenroll(user.id, slug);
+  }
+
   @Post(':slug/complete-next')
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard)

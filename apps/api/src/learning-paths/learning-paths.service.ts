@@ -290,11 +290,18 @@ export class LearningPathsService {
       where: { userId_pathId: { userId, pathId: path.id } },
     });
     if (existing) return existing;
-    const count = await this.prisma.learningEnrollment.count({ where: { userId } });
-    if (count >= LEARNING_PATH_PER_USER_ENROLLMENT_LIMIT) {
+    // Only count *active* enrollments toward the cap. A learner who has
+    // already finished a path keeps the certificate but shouldn't be
+    // locked out of starting new ones, and the message below tells the
+    // user to drop a path — that's resolvable via the unenroll
+    // endpoint, which only acts on incomplete enrollments anyway.
+    const activeCount = await this.prisma.learningEnrollment.count({
+      where: { userId, completedAt: null },
+    });
+    if (activeCount >= LEARNING_PATH_PER_USER_ENROLLMENT_LIMIT) {
       throw new BadRequestException(
-        `Enrollment limit reached (${LEARNING_PATH_PER_USER_ENROLLMENT_LIMIT}). ` +
-          `Drop a path before enrolling in a new one.`,
+        `Active enrollment limit reached (${LEARNING_PATH_PER_USER_ENROLLMENT_LIMIT}). ` +
+          `Drop an in-progress path before enrolling in a new one.`,
       );
     }
     // Two concurrent POSTs (rapid double-click on the enroll button)
@@ -314,6 +321,37 @@ export class LearningPathsService {
       }
       throw err;
     }
+  }
+
+  /**
+   * Drop an in-progress enrollment so the user frees up a slot under
+   * the per-user cap. Idempotent if the row was already gone (e.g. a
+   * double-click) — returns silently rather than 404. Completed
+   * enrollments are *not* droppable: the certificate is a record of
+   * what the learner achieved and shouldn't disappear because the
+   * trainer pressed the wrong button. Completed paths also no longer
+   * count toward the cap, so there's no reason to drop one.
+   */
+  async unenroll(userId: string, slug: string) {
+    const path = await this.prisma.learningPath.findUnique({
+      where: { slug },
+      select: { id: true },
+    });
+    if (!path) throw new NotFoundException('Learning path not found');
+    const enrollment = await this.prisma.learningEnrollment.findUnique({
+      where: { userId_pathId: { userId, pathId: path.id } },
+      select: { id: true, completedAt: true },
+    });
+    if (!enrollment) return { dropped: false };
+    if (enrollment.completedAt) {
+      throw new ConflictException(
+        'Completed paths cannot be dropped — the certificate is permanent.',
+      );
+    }
+    // Cascades to LearningStepProgress (no certificate exists since
+    // completedAt is null).
+    await this.prisma.learningEnrollment.delete({ where: { id: enrollment.id } });
+    return { dropped: true };
   }
 
   /**
@@ -526,10 +564,15 @@ export class LearningPathsService {
       .createHash('sha256')
       .update(`${cert.serial}|${cert.enrollmentId}|${cert.issuedAt.toISOString()}`)
       .digest('hex');
-    const valid = crypto.timingSafeEqual(
-      Buffer.from(recomputed, 'hex'),
-      Buffer.from(cert.hashSha256, 'hex'),
-    );
+    // timingSafeEqual throws RangeError on length mismatch, which
+    // would surface as a 500 — exactly the tamper-detection scenario
+    // we want to reject as `valid:false` instead. Mirror the guard
+    // used in common/password.util.ts.
+    const recomputedBuf = Buffer.from(recomputed, 'hex');
+    const storedBuf = Buffer.from(cert.hashSha256, 'hex');
+    const valid =
+      recomputedBuf.length === storedBuf.length &&
+      crypto.timingSafeEqual(recomputedBuf, storedBuf);
     return {
       valid,
       serial: cert.serial,
