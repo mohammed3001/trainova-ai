@@ -185,53 +185,69 @@ export class WhiteLabelService {
    *     company being updated (would create a 2-cycle)
    */
   async adminSetParentAgency(companyId: string, input: LinkAgencyInput) {
-    const company = await this.prisma.company.findUnique({
-      where: { id: companyId },
-      select: {
-        id: true,
-        parentAgencyId: true,
-        _count: { select: { childCompanies: true } },
-      },
-    });
-    if (!company) throw new NotFoundException('Company not found');
-
-    if (input.parentCompanyId === null) {
-      if (company.parentAgencyId === null) {
-        return { id: company.id, parentAgencyId: null };
+    // Wrap the read-validate-write flow in a transaction with row locks
+    // so two concurrent admins can't each pass validation and produce a
+    // hierarchy cycle. Lock order is `(min(id), max(id))` so two requests
+    // touching the same pair (A→B vs B→A) deadlock on the second
+    // SELECT … FOR UPDATE rather than racing past each other; Postgres
+    // resolves the deadlock by aborting one tx, which surfaces here as
+    // a normal exception that the second admin can retry.
+    return this.prisma.$transaction(async (tx) => {
+      const lockIds: string[] =
+        input.parentCompanyId === null || input.parentCompanyId === companyId
+          ? [companyId]
+          : [companyId, input.parentCompanyId].sort();
+      for (const id of lockIds) {
+        await tx.$executeRaw`SELECT 1 FROM "Company" WHERE id = ${id} FOR UPDATE`;
       }
-      const updated = await this.prisma.company.update({
-        where: { id: company.id },
-        data: { parentAgencyId: null },
+
+      const company = await tx.company.findUnique({
+        where: { id: companyId },
+        select: {
+          id: true,
+          parentAgencyId: true,
+          _count: { select: { childCompanies: true } },
+        },
+      });
+      if (!company) throw new NotFoundException('Company not found');
+
+      if (input.parentCompanyId === null) {
+        if (company.parentAgencyId === null) {
+          return { id: company.id, parentAgencyId: null };
+        }
+        return tx.company.update({
+          where: { id: company.id },
+          data: { parentAgencyId: null },
+          select: { id: true, parentAgencyId: true },
+        });
+      }
+
+      if (input.parentCompanyId === company.id) {
+        throw new BadRequestException('A company cannot be its own parent agency');
+      }
+
+      const parent = await tx.company.findUnique({
+        where: { id: input.parentCompanyId },
         select: { id: true, parentAgencyId: true },
       });
-      return updated;
-    }
+      if (!parent) throw new NotFoundException('Parent company not found');
 
-    if (input.parentCompanyId === company.id) {
-      throw new BadRequestException('A company cannot be its own parent agency');
-    }
+      if (parent.parentAgencyId !== null) {
+        throw new ConflictException(
+          'Parent company is itself a child of another agency. Hierarchy is single-level.',
+        );
+      }
+      if (company._count.childCompanies > 0) {
+        throw new ConflictException(
+          'This company has its own child companies, so it cannot become a child agency.',
+        );
+      }
 
-    const parent = await this.prisma.company.findUnique({
-      where: { id: input.parentCompanyId },
-      select: { id: true, parentAgencyId: true },
-    });
-    if (!parent) throw new NotFoundException('Parent company not found');
-
-    if (parent.parentAgencyId !== null) {
-      throw new ConflictException(
-        'Parent company is itself a child of another agency. Hierarchy is single-level.',
-      );
-    }
-    if (company._count.childCompanies > 0) {
-      throw new ConflictException(
-        'This company has its own child companies, so it cannot become a child agency.',
-      );
-    }
-
-    return this.prisma.company.update({
-      where: { id: company.id },
-      data: { parentAgencyId: parent.id },
-      select: { id: true, parentAgencyId: true },
+      return tx.company.update({
+        where: { id: company.id },
+        data: { parentAgencyId: parent.id },
+        select: { id: true, parentAgencyId: true },
+      });
     });
   }
 
