@@ -2861,5 +2861,45 @@
       "paymentError": "Payment failed. No charge was made.",
       "requirePaymentMethod": "Add a payment method on file before boosting."
     }
+  },
+  "notifications": {
+    "nav": "Notifications",
+    "title": "Notifications",
+    "subtitle": "Activity from your account",
+    "loading": "Loading notifications…",
+    "empty": "You're all caught up.",
+    "loadFailed": "Couldn't load notifications.",
+    "retry": "Retry",
+    "markAllRead": "Mark all as read",
+    "justNow": "just now",
+    "minutesAgo": "{m}m ago",
+    "hoursAgo": "{h}h ago",
+    "daysAgo": "{d}d ago",
+    "push": {
+      "title": "Browser notifications",
+      "on": "On",
+      "off": "Off",
+      "enable": "Enable",
+      "disable": "Disable"
+    },
+    "types": {
+      "application": {
+        "received": "New application",
+        "shortlisted": "You've been shortlisted",
+        "accepted": "Application accepted",
+        "rejected": "Application rejected"
+      },
+      "test": {
+        "assigned": "New test assigned",
+        "submitted": "Test submitted",
+        "graded": "Test graded"
+      },
+      "chat": {
+        "message": "New message"
+      },
+      "system": {
+        "announcement": "System announcement"
+      }
+    }
   }
 }

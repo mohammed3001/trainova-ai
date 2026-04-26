@@ -2727,5 +2727,45 @@
       "paymentError": "Paiement échoué. Aucun montant n’a été prélevé.",
       "requirePaymentMethod": "Ajoutez un moyen de paiement avant de booster."
     }
+  },
+  "notifications": {
+    "nav": "Notifications",
+    "title": "Notifications",
+    "subtitle": "Activité de votre compte",
+    "loading": "Chargement des notifications…",
+    "empty": "Aucune nouvelle notification.",
+    "loadFailed": "Impossible de charger les notifications.",
+    "retry": "Réessayer",
+    "markAllRead": "Tout marquer comme lu",
+    "justNow": "à l'instant",
+    "minutesAgo": "il y a {m} min",
+    "hoursAgo": "il y a {h} h",
+    "daysAgo": "il y a {d} j",
+    "push": {
+      "title": "Notifications du navigateur",
+      "on": "Activées",
+      "off": "Désactivées",
+      "enable": "Activer",
+      "disable": "Désactiver"
+    },
+    "types": {
+      "application": {
+        "received": "Nouvelle candidature",
+        "shortlisted": "Vous êtes présélectionné",
+        "accepted": "Candidature acceptée",
+        "rejected": "Candidature refusée"
+      },
+      "test": {
+        "assigned": "Nouveau test attribué",
+        "submitted": "Test soumis",
+        "graded": "Test noté"
+      },
+      "chat": {
+        "message": "Nouveau message"
+      },
+      "system": {
+        "announcement": "Annonce système"
+      }
+    }
   }
 }

@@ -2727,5 +2727,45 @@
       "paymentError": "El pago falló. No se realizó ningún cargo.",
       "requirePaymentMethod": "Agrega un método de pago antes de impulsar."
     }
+  },
+  "notifications": {
+    "nav": "Notificaciones",
+    "title": "Notificaciones",
+    "subtitle": "Actividad de tu cuenta",
+    "loading": "Cargando notificaciones…",
+    "empty": "Todo al día.",
+    "loadFailed": "No se pudieron cargar las notificaciones.",
+    "retry": "Reintentar",
+    "markAllRead": "Marcar todo como leído",
+    "justNow": "ahora mismo",
+    "minutesAgo": "hace {m} min",
+    "hoursAgo": "hace {h} h",
+    "daysAgo": "hace {d} d",
+    "push": {
+      "title": "Notificaciones del navegador",
+      "on": "Activadas",
+      "off": "Desactivadas",
+      "enable": "Activar",
+      "disable": "Desactivar"
+    },
+    "types": {
+      "application": {
+        "received": "Nueva solicitud",
+        "shortlisted": "Has sido preseleccionado",
+        "accepted": "Solicitud aceptada",
+        "rejected": "Solicitud rechazada"
+      },
+      "test": {
+        "assigned": "Nueva prueba asignada",
+        "submitted": "Prueba enviada",
+        "graded": "Prueba calificada"
+      },
+      "chat": {
+        "message": "Nuevo mensaje"
+      },
+      "system": {
+        "announcement": "Anuncio del sistema"
+      }
+    }
   }
 }
