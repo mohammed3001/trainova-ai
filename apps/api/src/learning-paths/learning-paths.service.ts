@@ -399,6 +399,8 @@ export class LearningPathsService {
           `Only REFLECTION steps accept a reflection body (got ${nextStep.kind})`,
         );
       }
+      const lastStep = path.steps[path.steps.length - 1];
+      const isFinal = !!lastStep && lastStep.id === nextStep.id;
       // Two concurrent POSTs racing on the same step both compute
       // the same `nextStep.id`. The unique (enrollmentId, stepId)
       // constraint guarantees only one create succeeds; the second
@@ -419,16 +421,28 @@ export class LearningPathsService {
           err instanceof Prisma.PrismaClientKnownRequestError &&
           err.code === 'P2002'
         ) {
+          // If the race was on the final step the winner has already
+          // issued the certificate and set completedAt. The enrollment
+          // we read at the top of this tx pre-dates the winner's
+          // commit, so re-read the certificate via the base client
+          // (separate connection — `tx` is aborted at this point).
+          let certificate: { serial: string; issuedAt: Date } | null =
+            enrollment.certificate ?? null;
+          if (isFinal && !certificate) {
+            const fresh = await this.prisma.learningCertificate.findUnique({
+              where: { enrollmentId: enrollment.id },
+              select: { serial: true, issuedAt: true },
+            });
+            certificate = fresh ?? null;
+          }
           return {
             completedStepId: nextStep.id,
-            isPathCompleted: false,
-            certificate: enrollment.certificate ?? null,
+            isPathCompleted: isFinal,
+            certificate,
           };
         }
         throw err;
       }
-      const lastStep = path.steps[path.steps.length - 1];
-      const isFinal = !!lastStep && lastStep.id === nextStep.id;
       let certificate: { serial: string; issuedAt: Date } | null = null;
       if (isFinal) {
         const issuedAt = new Date();
