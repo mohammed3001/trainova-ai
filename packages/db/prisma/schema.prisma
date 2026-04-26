@@ -179,6 +179,7 @@ model Company {
   adCampaigns      AdCampaign[]
   modelConnections ModelConnection[]
   contracts        Contract[]
+  webhooks         Webhook[]
 
   @@index([slug])
 }
@@ -2222,4 +2223,105 @@ model InterviewMeeting {
   @@index([trainerId, status, scheduledAt])
   @@index([scheduledById, status, scheduledAt])
   @@index([status, scheduledAt])
+}
+
+// =========================
+// Webhooks v1 (T9.K)
+// =========================
+
+/// Outbound webhook event types. We deliberately keep this list small
+/// and high-signal — every entry here ends up with concrete subscribers
+/// (Zapier / Make / company internal automations), and growing the
+/// list is a versioning concern (we'd need to bump the payload
+/// `version` field on existing endpoints).
+enum WebhookEventType {
+  APPLICATION_CREATED
+  APPLICATION_STATUS_CHANGED
+  APPLICATION_HIRED
+  CONTRACT_CREATED
+  CONTRACT_COMPLETED
+  MILESTONE_RELEASED
+  INTERVIEW_SCHEDULED
+  INTERVIEW_CANCELLED
+}
+
+/// A company-owned outbound webhook subscription. Companies register
+/// these from `/company/webhooks`; the platform fires HMAC-signed
+/// `POST` requests to `url` whenever any of the subscribed `events`
+/// occur. Authentication of *us* to *them* is per-webhook HMAC over
+/// the request body — no api-tokens dependency.
+model Webhook {
+  id          String             @id @default(cuid())
+  companyId   String
+  url         String
+  /// HMAC-SHA256 signing secret. We never expose this back to the
+  /// client after creation; the company can rotate to invalidate
+  /// stolen secrets without re-creating the webhook.
+  secret      String
+  /// Subscribed event types. Empty array = "all events" (we still
+  /// validate the type is in the enum at dispatch time).
+  events      WebhookEventType[]
+  description String?
+  enabled     Boolean            @default(true)
+  /// Rolling counter of consecutive *attempted* deliveries that
+  /// terminally failed (after the 6 retries). At
+  /// `WEBHOOK_AUTO_DISABLE_THRESHOLD` (default 20) we flip
+  /// `enabled=false` so a permanently dead endpoint doesn't churn
+  /// deliveries forever. Reset on the first successful delivery.
+  failureCount Int               @default(0)
+  disabledAt  DateTime?
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+
+  company    Company           @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  deliveries WebhookDelivery[]
+
+  @@index([companyId])
+  @@index([enabled, companyId])
+}
+
+/// Lifecycle of a single delivery attempt for a single webhook +
+/// event tuple. We don't fan out at dispatch time and reuse one row
+/// across retries; instead we create one row per (webhook, event)
+/// and the cron worker advances it through PENDING → IN_FLIGHT →
+/// (SUCCEEDED | FAILED → PENDING with backoff | ABANDONED after 6
+/// failures).
+enum WebhookDeliveryStatus {
+  PENDING
+  IN_FLIGHT
+  SUCCEEDED
+  FAILED
+  ABANDONED
+}
+
+model WebhookDelivery {
+  id            String                @id @default(cuid())
+  webhookId     String
+  eventType     WebhookEventType
+  /// Server-canonical payload (JSON). Stored at dispatch so a manual
+  /// redeliver doesn't depend on regenerating from upstream entities
+  /// (which may since have changed). Includes the wrapping envelope
+  /// (`id`, `eventType`, `createdAt`, `version`, `data`).
+  payload       Json
+  /// Number of attempts already made. Retry schedule is exponential:
+  /// 1m, 5m, 30m, 2h, 6h, 24h — then ABANDONED.
+  attempts      Int                   @default(0)
+  status        WebhookDeliveryStatus @default(PENDING)
+  /// Earliest UTC time at which the next attempt should fire. The
+  /// cron worker picks rows where status=PENDING AND nextAttemptAt<=now.
+  nextAttemptAt DateTime              @default(now())
+  /// Last response status code (null if unreachable / DNS failure).
+  lastStatus    Int?
+  /// First 500 chars of response body (for debugging via the
+  /// `/company/webhooks/:id/deliveries` page).
+  lastResponse  String?
+  /// Timestamp of the first 2xx delivery — set once and frozen.
+  deliveredAt   DateTime?
+  createdAt     DateTime              @default(now())
+  updatedAt     DateTime              @updatedAt
+
+  webhook Webhook @relation(fields: [webhookId], references: [id], onDelete: Cascade)
+
+  @@index([status, nextAttemptAt])
+  @@index([webhookId, createdAt(sort: Desc)])
 }

@@ -8,6 +8,7 @@ import {
 import { PrismaService } from '../prisma/prisma.service';
 import { TestsService } from '../tests/tests.service';
 import { NotificationsService } from '../notifications/notifications.service';
+import { WebhooksService } from '../webhooks/webhooks.service';
 import {
   APPLICATION_STATUS_TRANSITIONS,
   AUDIT_ACTIONS,
@@ -32,6 +33,7 @@ export class ApplicationsService {
     private readonly prisma: PrismaService,
     private readonly tests: TestsService,
     private readonly notifications: NotificationsService,
+    private readonly webhooks: WebhooksService,
   ) {}
 
   async listMine(trainerId: string) {
@@ -131,6 +133,16 @@ export class ApplicationsService {
     } catch {
       /* swallow — application already persisted, notification is best-effort */
     }
+    // Resolve the company id directly off the request to avoid re-fetching
+    // through the JobRequest → company chain. Webhook dispatch is fire-and-
+    // forget; failures are swallowed inside the service.
+    void this.webhooks.dispatch(request.companyId, 'APPLICATION_CREATED', {
+      applicationId: created.id,
+      jobRequestId: request.id,
+      trainerId,
+      companyId: request.companyId,
+      status: created.status,
+    });
     return created;
   }
 
@@ -215,6 +227,40 @@ export class ApplicationsService {
         );
       } catch {
         /* swallow — status change is authoritative */
+      }
+      // Both the generic status-changed event AND the specific
+      // hired event fire on `HIRED` so subscribers can choose
+      // their granularity (a Zap that only cares about the hire
+      // event won't have to filter every status change).
+      void this.webhooks.dispatch(
+        app.request.companyId,
+        'APPLICATION_STATUS_CHANGED',
+        {
+          applicationId: updated.id,
+          jobRequestId: app.request.id,
+          trainerId: app.trainerId,
+          companyId: app.request.companyId,
+          status: toStatus,
+          previousStatus: fromStatus,
+        },
+      );
+      // We map the platform's terminal "ACCEPTED" status to the
+      // public-facing `APPLICATION_HIRED` webhook event so that
+      // subscribers can wire onto a single hire signal regardless of
+      // any future internal renames of the enum.
+      if (toStatus === 'ACCEPTED') {
+        void this.webhooks.dispatch(
+          app.request.companyId,
+          'APPLICATION_HIRED',
+          {
+            applicationId: updated.id,
+            jobRequestId: app.request.id,
+            trainerId: app.trainerId,
+            companyId: app.request.companyId,
+            status: toStatus,
+            hiredAt: new Date().toISOString(),
+          },
+        );
       }
       return updated;
     });
