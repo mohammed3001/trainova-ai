@@ -570,7 +570,7 @@ export class AdsService {
     const affordable = candidateCreatives.filter(
       (c) => c.campaign.spentCents < c.campaign.budgetCents,
     );
-    const picked = weightedPickN(affordable, input.limit);
+    const picked = thompsonPickN(affordable, input.limit);
     return picked.map((c) => toPublicCreative(c));
   }
 
@@ -935,32 +935,91 @@ function computeClickChargeMicro(
 }
 
 /**
- * Weighted-random sample without replacement; O(n * limit) which is
- * fine since `take: 50` caps the candidate set.
+ * Thompson-sampling pick without replacement (multi-arm bandit on
+ * creatives). For each candidate we draw one sample from its CTR
+ * posterior — `Beta(clickCount + 1, impressionCount - clickCount + 1)`
+ * — multiply by `max(weight, 1)` so advertisers can still bias the
+ * exploration prior, and pick the top `limit` arms by sampled score.
+ *
+ * Why Beta(c+1, i-c+1):
+ *   • Conjugate posterior of CTR under a Beta(1,1) (uniform) prior.
+ *   • A brand-new creative has Beta(1,1) → uniform sample in [0,1] so
+ *     it gets *exploration* runway despite zero data.
+ *   • A creative with 100 impressions / 5 clicks has Beta(6,96), mean
+ *     ≈0.0612 with tight variance — wins fewer rolls than a creative
+ *     genuinely converting at 6% but still leaks some traffic for
+ *     continued exploration (the right Bayesian behaviour).
+ *
+ * Selection without replacement: we sample once per arm at the start
+ * (so the same arm doesn't get re-rolled into multiple slots) and then
+ * sort by score desc. O(n log n) for `n ≤ 50` (the candidate cap).
  */
-function weightedPickN<T extends { weight: number }>(pool: T[], limit: number): T[] {
-  const remaining = [...pool];
-  const picked: T[] = [];
-  while (picked.length < limit && remaining.length > 0) {
-    const totalWeight = remaining.reduce(
-      (sum, c) => sum + Math.max(c.weight, 1),
-      0,
-    );
-    const roll = Math.random() * totalWeight;
-    let cursor = 0;
-    let idx = remaining.length - 1;
-    for (let i = 0; i < remaining.length; i += 1) {
-      const candidate = remaining[i];
-      if (!candidate) continue;
-      cursor += Math.max(candidate.weight, 1);
-      if (cursor >= roll) {
-        idx = i;
-        break;
-      }
-    }
-    const [chosen] = remaining.splice(idx, 1);
-    if (chosen) picked.push(chosen);
+function thompsonPickN<
+  T extends { weight: number; impressionCount: number; clickCount: number },
+>(pool: T[], limit: number): T[] {
+  if (pool.length === 0 || limit <= 0) return [];
+  const scored = pool.map((c) => {
+    const clicks = Math.max(c.clickCount, 0);
+    // Guard against impressionCount < clickCount (shouldn't happen but
+    // protects the Gamma sampler from non-positive shape parameters if
+    // counters drift).
+    const impressions = Math.max(c.impressionCount, clicks);
+    const alpha = clicks + 1;
+    const beta = impressions - clicks + 1;
+    const sample = sampleBeta(alpha, beta);
+    return { item: c, score: sample * Math.max(c.weight, 1) };
+  });
+  scored.sort((a, b) => b.score - a.score);
+  return scored.slice(0, limit).map((s) => s.item);
+}
+
+/** Beta(α, β) via two Gamma draws — Beta = X / (X + Y). */
+function sampleBeta(alpha: number, beta: number): number {
+  const x = sampleGamma(alpha);
+  const y = sampleGamma(beta);
+  const sum = x + y;
+  // x and y are non-negative; sum can only be 0 if both Gamma draws
+  // hit floating-point underflow, which is astronomically unlikely.
+  // Fall back to the prior mean to keep the result well-formed.
+  if (sum <= 0) return alpha / (alpha + beta);
+  return x / sum;
+}
+
+/**
+ * Marsaglia & Tsang (2000) "A Simple Method for Generating Gamma
+ * Variables". For shape ≥ 1 it's a single accept/reject; for shape < 1
+ * we boost via X = G(shape+1) * U^(1/shape) (Stuart's theorem).
+ */
+function sampleGamma(shape: number): number {
+  if (shape < 1) {
+    const g = sampleGamma(shape + 1);
+    const u = Math.random();
+    // u ∈ (0, 1] — guard against u === 0 since Math.pow(0, +Infinity)
+    // depends on the sign of shape and we want a finite scaler.
+    return g * Math.pow(u === 0 ? Number.MIN_VALUE : u, 1 / shape);
   }
-  return picked;
+  const d = shape - 1 / 3;
+  const c = 1 / Math.sqrt(9 * d);
+  for (;;) {
+    let x: number;
+    let v: number;
+    do {
+      x = sampleNormal();
+      v = 1 + c * x;
+    } while (v <= 0);
+    v = v * v * v;
+    const u = Math.random();
+    if (u < 1 - 0.0331 * x * x * x * x) return d * v;
+    if (Math.log(u) < 0.5 * x * x + d * (1 - v + Math.log(v))) return d * v;
+  }
+}
+
+/** Standard normal via Box-Muller. */
+function sampleNormal(): number {
+  // Math.random() returns [0, 1); Math.log(0) = -Infinity, so push u
+  // off zero with Number.MIN_VALUE to keep the result finite.
+  const u1 = Math.random() || Number.MIN_VALUE;
+  const u2 = Math.random();
+  return Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
 }
 
