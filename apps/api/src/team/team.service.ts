@@ -280,7 +280,7 @@ export class TeamService {
       companyName: invitation.company.name,
       inviterName: invitation.createdBy.name ?? null,
       expiresAt: invitation.expiresAt.toISOString(),
-      emailMatchesViewer: !!caller && caller.email.toLowerCase() === invitation.email,
+      emailMatchesViewer: !!caller && caller.email.toLowerCase() === invitation.email.toLowerCase(),
     };
   }
 
@@ -333,7 +333,12 @@ export class TeamService {
         });
         throw new ConflictException('Invitation has expired; ask the company to issue a new one');
       }
-      if (caller.email.toLowerCase() !== invitation.email) {
+      // Defensively lowercase both sides. `createInvitation` stores the
+      // address pre-lowered via the Zod schema's `.transform`, but any
+      // future internal caller that bypasses the controller pipe could
+      // persist a mixed-case row — a security-relevant gate shouldn't
+      // assume a producer-side normalisation.
+      if (caller.email.toLowerCase() !== invitation.email.toLowerCase()) {
         throw new ForbiddenException(
           'This invitation was issued to a different email address; sign in with that account to accept',
         );
