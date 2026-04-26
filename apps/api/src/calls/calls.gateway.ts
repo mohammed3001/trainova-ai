@@ -114,13 +114,20 @@ export class CallsGateway implements OnModuleInit, OnGatewayConnection {
   // ---------- server-side emitters (called from the controller) ----------
 
   emitIncoming(call: CallDto) {
-    this.server.to(`conv:${call.conversationId}`).emit('call:incoming', { call });
-    // Also fan out to the per-user rooms for any participant currently
-    // outside the conversation room (e.g. just opened a fresh tab and
-    // hasn't joined the conv room yet).
+    // Build a single broadcast targeting both the conversation room
+    // and every participant's user room. Socket.IO deduplicates
+    // per-socket when rooms are chained with `.to()`, so a participant
+    // who is in both rooms (the steady state for a connected user
+    // because `handleConnection` auto-joins every conv room) only
+    // receives the event once. Two separate `.emit()` calls would
+    // fire twice — see ChatGateway, which avoids the same trap by
+    // using *different* event names for its conv-room and user-room
+    // fan-outs (`message:new` vs `conversation:bump`).
+    let target = this.server.to(`conv:${call.conversationId}`);
     for (const p of call.participants) {
-      this.server.to(`user:${p.userId}`).emit('call:incoming', { call });
+      target = target.to(`user:${p.userId}`);
     }
+    target.emit('call:incoming', { call });
   }
 
   emitAccepted(conversationId: string, callId: string, userId: string) {

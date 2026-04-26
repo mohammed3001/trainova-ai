@@ -54,12 +54,17 @@ export class CallsService {
   // Mutations
   // ===================================================================
 
-  async create(userId: string, input: CreateCallInput): Promise<CallSession> {
+  async create(
+    userId: string,
+    input: CreateCallInput,
+  ): Promise<CallSession & { isNew: boolean }> {
     const ctx = await this.loadConversationContext(userId, input.conversationId);
 
     // One active call per conversation. If a row is RINGING/ACTIVE we
     // either return it (initiator re-arming the UI) or 409 (someone
-    // else is already on the line).
+    // else is already on the line). The `isNew` flag lets the
+    // controller decide whether to broadcast a fresh `call:incoming`
+    // event — re-arming an existing call must not re-ring callees.
     const live = await this.prisma.call.findFirst({
       where: {
         conversationId: input.conversationId,
@@ -73,7 +78,7 @@ export class CallsService {
         throw new ConflictException('Another call is already in progress on this conversation');
       }
       const join = await this.mintJoinFor(live, userId, ctx.callerName);
-      return { call: this.toDto(live), join };
+      return { call: this.toDto(live), join, isNew: false };
     }
 
     const created = await this.prisma.call.create({
@@ -122,7 +127,7 @@ export class CallsService {
     });
 
     const join = await this.mintJoinFor(withSession, userId, ctx.callerName);
-    return { call: this.toDto(withSession), join };
+    return { call: this.toDto(withSession), join, isNew: true };
   }
 
   async accept(userId: string, callId: string): Promise<CallSession> {

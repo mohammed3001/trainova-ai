@@ -42,8 +42,13 @@ export class CallsController {
   @Post()
   @UsePipes(new ZodValidationPipe(createCallSchema))
   async create(@CurrentUser() user: AuthUser, @Body() body: CreateCallInput) {
-    const session = await this.service.create(user.id, body);
-    this.gateway.emitIncoming(session.call);
+    const { isNew, ...session } = await this.service.create(user.id, body);
+    // Only broadcast `call:incoming` for genuinely new calls. The
+    // initiator re-arming the UI on an existing RINGING/ACTIVE call
+    // (`isNew=false`) must not re-ring the other side.
+    if (isNew) {
+      this.gateway.emitIncoming(session.call);
+    }
     return session;
   }
 
