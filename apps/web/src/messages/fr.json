@@ -1005,7 +1005,8 @@
       "ads": "Publicités",
       "finance": "Finance",
       "settings": "Settings",
-      "sponsored": "Placements sponsorisés"
+      "sponsored": "Placements sponsorisés",
+      "learningPaths": "Parcours"
     },
     "userRole": {
       "SUPER_ADMIN": "Super administrateur",
@@ -2726,6 +2727,104 @@
       "cancel": "Annuler",
       "paymentError": "Paiement échoué. Aucun montant n’a été prélevé.",
       "requirePaymentMethod": "Ajoutez un moyen de paiement avant de booster."
+    }
+  },
+  "learning": {
+    "title": "Parcours d'apprentissage",
+    "subtitle": "Parcours de formation organisés en plusieurs étapes. Obtenez un certificat vérifiable.",
+    "level": {
+      "BEGINNER": "Débutant",
+      "INTERMEDIATE": "Intermédiaire",
+      "ADVANCED": "Avancé"
+    },
+    "kind": {
+      "ARTICLE": "Article",
+      "LINK": "Lien externe",
+      "VIDEO": "Vidéo",
+      "REFLECTION": "Réflexion"
+    },
+    "filter": {
+      "all": "Tous les niveaux",
+      "search": "Rechercher",
+      "apply": "Appliquer",
+      "industry": "Secteur"
+    },
+    "list": {
+      "empty": "Aucun parcours publié pour le moment.",
+      "steps": "{count} étapes",
+      "enrolled": "{count} apprenants",
+      "hours": "~{hours}h",
+      "open": "Ouvrir"
+    },
+    "detail": {
+      "aboutTitle": "À propos",
+      "stepsTitle": "Étapes",
+      "enroll": "S'inscrire",
+      "enrolled": "Vous êtes inscrit",
+      "enrollAgain": "Continuer",
+      "progressLabel": "Progression : {done}/{total}",
+      "completed": "Parcours terminé",
+      "viewCertificate": "Voir le certificat",
+      "completeNext": "Terminer l'étape suivante",
+      "reflectionPrompt": "Votre réflexion (optionnel)",
+      "reflectionPlaceholder": "Quelques phrases sur ce que vous avez appris…",
+      "loginToEnroll": "Connectez-vous pour vous inscrire"
+    },
+    "me": {
+      "title": "Mes parcours",
+      "subtitle": "Suivez votre progression et téléchargez vos certificats.",
+      "empty": "Vous n'avez encore rejoint aucun parcours.",
+      "progress": "{done}/{total} étapes"
+    },
+    "certificate": {
+      "title": "Certificat de réussite",
+      "verifyTitle": "Vérifier le certificat",
+      "serial": "Numéro de série",
+      "issued": "Délivré le",
+      "learner": "Décerné à",
+      "path": "Parcours",
+      "valid": "Vérifié — ce certificat est authentique.",
+      "invalid": "Échec du contrôle d'intégrité."
+    },
+    "admin": {
+      "title": "Parcours (admin)",
+      "subtitle": "Créer et publier des parcours.",
+      "new": "Nouveau parcours",
+      "col": {
+        "title": "Titre",
+        "level": "Niveau",
+        "steps": "Étapes",
+        "status": "Statut",
+        "updated": "Mis à jour",
+        "enrollments": "Inscriptions"
+      },
+      "status": {
+        "draft": "Brouillon",
+        "published": "Publié"
+      },
+      "actions": {
+        "open": "Ouvrir",
+        "publish": "Publier",
+        "unpublish": "Dépublier",
+        "delete": "Supprimer",
+        "save": "Enregistrer",
+        "create": "Créer"
+      },
+      "form": {
+        "slug": "Slug",
+        "title": "Titre",
+        "summary": "Résumé",
+        "description": "Description (markdown)",
+        "level": "Niveau",
+        "industry": "Secteur (optionnel)",
+        "estimatedHours": "Heures estimées",
+        "steps": "Étapes",
+        "addStep": "Ajouter une étape",
+        "stepKind": "Type",
+        "stepTitle": "Titre",
+        "stepBody": "Contenu",
+        "stepUrl": "URL"
+      }
     }
   }
 }

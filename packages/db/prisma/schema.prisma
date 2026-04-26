@@ -96,6 +96,8 @@ model User {
   interviewsScheduledByMe       InterviewMeeting[]        @relation("InterviewScheduler")
   interviewsAsTrainer           InterviewMeeting[]        @relation("InterviewTrainer")
   interviewsCancelledByMe       InterviewMeeting[]        @relation("InterviewCanceller")
+  learningPathsCreated          LearningPath[]            @relation("LearningPathCreator")
+  learningEnrollments           LearningEnrollment[]      @relation("LearningEnrollmentLearner")
 
   @@index([role, status])
 }
@@ -2222,4 +2224,144 @@ model InterviewMeeting {
   @@index([trainerId, status, scheduledAt])
   @@index([scheduledById, status, scheduledAt])
   @@index([status, scheduledAt])
+}
+
+// =============================================================================
+// Learning paths (T9.M)
+// -----------------------------------------------------------------------------
+// Curated, multi-step trainings authored by CONTENT_MANAGER admins. A trainer
+// enrolls in a path, completes its steps in order, and on the last step is
+// auto-issued a verifiable certificate. The certificate's `serial` is a
+// random uuid that anybody can resolve at the public verify endpoint —
+// employers can paste a URL into a browser without needing an account.
+//
+// Why not reuse the existing `Test` model for steps? A `Test` is a graded
+// assignment in the evaluation context; a step is a content beat (read this,
+// watch that, optionally answer a quick check). Mixing them would leak
+// recruiting semantics into self-paced learning and vice-versa. We do allow
+// a step to *reference* an existing internal `Article` (CMS) so admins can
+// curate without duplicating prose.
+// =============================================================================
+
+enum LearningPathLevel {
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
+}
+
+enum LearningStepKind {
+  /// Plain markdown content rendered inline in the step page.
+  ARTICLE
+  /// External link with a one-line description (opens in a new tab).
+  LINK
+  /// Embeddable video URL (YouTube/Vimeo). The frontend whitelists hosts.
+  VIDEO
+  /// A prompt and a single short-answer text input. The user marks
+  /// completion themselves — this is a self-check, not a graded test.
+  REFLECTION
+}
+
+model LearningPath {
+  id             String            @id @default(cuid())
+  slug           String            @unique
+  title          String
+  /// Short tagline rendered on the listing card (~120 chars).
+  summary        String
+  /// Full description rendered on the detail page header (markdown).
+  description    String
+  level          LearningPathLevel @default(BEGINNER)
+  /// Optional tag — used for filtering on the public listing page.
+  industry       String?
+  /// Author estimate; rendered on the card. Not enforced.
+  estimatedHours Int               @default(2)
+  isPublished    Boolean           @default(false)
+  publishedAt    DateTime?
+  createdById    String
+  createdBy      User              @relation("LearningPathCreator", fields: [createdById], references: [id], onDelete: Restrict)
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+
+  steps       LearningStep[]
+  enrollments LearningEnrollment[]
+
+  @@index([isPublished, publishedAt])
+  @@index([level, isPublished])
+}
+
+model LearningStep {
+  id        String           @id @default(cuid())
+  pathId    String
+  path      LearningPath     @relation(fields: [pathId], references: [id], onDelete: Cascade)
+  /// 1-based ordering within the path. Unique per path so reordering
+  /// can't collide.
+  position  Int
+  kind      LearningStepKind
+  title     String
+  /// Markdown body for ARTICLE / REFLECTION; the descriptive blurb for
+  /// LINK / VIDEO.
+  body      String
+  /// External URL for LINK; embed URL for VIDEO; null otherwise.
+  url       String?
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+
+  progress LearningStepProgress[]
+
+  @@unique([pathId, position])
+  @@index([pathId])
+}
+
+model LearningEnrollment {
+  id          String                @id @default(cuid())
+  userId      String
+  user        User                  @relation("LearningEnrollmentLearner", fields: [userId], references: [id], onDelete: Cascade)
+  pathId      String
+  path        LearningPath          @relation(fields: [pathId], references: [id], onDelete: Cascade)
+  enrolledAt  DateTime              @default(now())
+  /// Set when the learner completes the *final* step. Once this is
+  /// non-null we issue a `LearningCertificate` and never re-issue.
+  completedAt DateTime?
+
+  progress    LearningStepProgress[]
+  certificate LearningCertificate?
+
+  /// One enrollment per user per path. Re-enrolling after completion
+  /// is intentionally blocked — the certificate already proves the
+  /// learner finished, and resetting progress would muddy the audit
+  /// trail. Admin can delete the row to allow re-enrollment.
+  @@unique([userId, pathId])
+  @@index([userId, completedAt])
+  @@index([pathId, completedAt])
+}
+
+model LearningStepProgress {
+  id           String             @id @default(cuid())
+  enrollmentId String
+  enrollment   LearningEnrollment @relation(fields: [enrollmentId], references: [id], onDelete: Cascade)
+  stepId       String
+  step         LearningStep       @relation(fields: [stepId], references: [id], onDelete: Cascade)
+  completedAt  DateTime           @default(now())
+  /// Optional self-typed reflection text for REFLECTION steps —
+  /// stored so the trainer can re-read their own answers later.
+  reflection   String?
+
+  @@unique([enrollmentId, stepId])
+  @@index([stepId])
+}
+
+model LearningCertificate {
+  id           String             @id @default(cuid())
+  enrollmentId String             @unique
+  enrollment   LearningEnrollment @relation(fields: [enrollmentId], references: [id], onDelete: Cascade)
+  /// Public verification handle — opaque uuid embedded in the URL
+  /// (`/certificates/<serial>`). Random and unique so guessing a
+  /// neighbouring serial doesn't leak someone else's certificate.
+  serial       String             @unique
+  /// SHA-256 of `serial + enrollmentId + issuedAt` for tamper-evident
+  /// receipts. The verifier recomputes and compares to detect a forged
+  /// row should the DB be restored from an offline copy.
+  hashSha256   String
+  issuedAt     DateTime           @default(now())
+
+  @@index([issuedAt])
 }
