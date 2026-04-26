@@ -139,6 +139,11 @@ export class RetargetingService {
     const memberships = await this.prisma.audienceMembership.findMany({
       where: {
         expiresAt: { gt: now },
+        // Filter through to the parent segment so a deactivated segment
+        // can never drive ad targeting via stale membership rows. Without
+        // this guard, a `lookbackDays`-aged membership would keep matching
+        // for up to 180 days after the admin flipped `isActive = false`.
+        segment: { isActive: true },
         OR: [
           ...(cookieId ? [{ cookieId } as const] : []),
           ...(userId ? [{ userId } as const] : []),
