@@ -9,6 +9,7 @@ import {
   Res,
 } from '@nestjs/common';
 import { ApiExcludeEndpoint, ApiTags } from '@nestjs/swagger';
+import { SkipThrottle } from '@nestjs/throttler';
 import type { Request, Response } from 'express';
 import {
   RETARGETING_COOKIE_MAX_AGE_SECONDS,
@@ -44,6 +45,12 @@ export class RetargetingPixelController {
    */
   @Get('pixel.gif')
   @ApiExcludeEndpoint()
+  // Bypass the global IP throttle (120/min) on the GIF endpoint only:
+  // a single page can embed multiple pixels and shared-IP visitors
+  // (corporate networks, VPNs) would otherwise see broken-image icons
+  // long before they exceed any reasonable browsing rate. The JSON
+  // event endpoint below keeps its throttle to prevent flood DoS.
+  @SkipThrottle()
   async pixel(
     @Req() req: Request,
     @Res() res: Response,
@@ -54,11 +61,19 @@ export class RetargetingPixelController {
     @Query('path') path: string | undefined,
     @Query('locale') locale: string | undefined,
   ): Promise<void> {
-    // The pixel must always return the GIF — even on validation
+    // The pixel must always return the GIF — even on cookie/validation
     // failure — so that an `<img>` tag never produces a broken-image
-    // icon for the visitor. Validation errors are swallowed and
-    // logged at the service layer.
-    const cookieId = ensureCookie(req, res);
+    // icon for the visitor. Errors are swallowed and the GIF is sent
+    // unconditionally at the bottom of the handler.
+    let cookieId: string;
+    try {
+      cookieId = ensureCookie(req, res);
+    } catch {
+      // `randomBytes` or `res.setHeader` failed — fall back to an
+      // ephemeral id so we can still attempt event recording (and so
+      // the GIF response below is reached).
+      cookieId = RetargetingService.newCookieId();
+    }
     try {
       const parsed = parsePixelQuery({ evt, kind, id, path, locale });
       if (parsed) {
