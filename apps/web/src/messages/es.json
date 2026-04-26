@@ -28,6 +28,21 @@
     "contact": "Contacto",
     "advertise": "Anunciar"
   },
+  "a11y": {
+    "skipToContent": "Saltar al contenido principal",
+    "primaryNav": "Navegación principal",
+    "userNav": "Navegación de la cuenta",
+    "footerNav": "Navegación del pie",
+    "adminNav": "Navegación de administración",
+    "closeDialog": "Cerrar diálogo",
+    "openMenu": "Abrir menú",
+    "closeMenu": "Cerrar menú",
+    "mobileNav": "Navegación móvil",
+    "unreadBadge": "{count} sin leer",
+    "loading": "Cargando contenido",
+    "requiredField": "obligatorio",
+    "errorSummary": "Hay {count, plural, one {# error} other {# errores}} en este formulario"
+  },
   "nav": {
     "home": "Inicio",
     "company": "Company",

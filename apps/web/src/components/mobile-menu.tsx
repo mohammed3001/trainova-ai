@@ -76,7 +76,12 @@ export function MobileMenu({
             e.preventDefault();
             last.focus();
           }
-        } else if (active === last) {
+        } else if (active === last || !drawerEl.contains(active)) {
+          // Symmetrical with the shift-tab branch — if a stray
+          // element outside the drawer somehow holds focus
+          // (extension-injected node, programmatic focus, etc.),
+          // forward-Tab pulls it back in instead of escaping the
+          // aria-modal contract.
           e.preventDefault();
           first.focus();
         }
