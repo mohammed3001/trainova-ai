@@ -4,8 +4,12 @@ import {
   Logger,
   NotFoundException,
 } from '@nestjs/common';
+import { promises as dns } from 'node:dns';
 import type { BrandingSettingsInput } from '@trainova/shared';
 import { PrismaService } from '../prisma/prisma.service';
+
+// Injectable type so tests can stub DNS without hitting the network.
+export type TxtResolver = (hostname: string) => Promise<string[][]>;
 
 // Public-safe shape returned to anonymous host-resolution callers. We never
 // expose the verified timestamp's raw value or unrelated company columns —
@@ -37,8 +41,13 @@ const PUBLIC_BRANDING_SELECT = {
 @Injectable()
 export class WhiteLabelService {
   private readonly logger = new Logger(WhiteLabelService.name);
+  private readonly resolveTxt: TxtResolver;
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) {
+    // Default to the platform DNS resolver. Tests can replace this with a
+    // stub by overriding the property on the constructed instance.
+    this.resolveTxt = (hostname) => dns.resolveTxt(hostname);
+  }
 
   /**
    * Resolves branding for an inbound request based on the Host header. We only
@@ -207,12 +216,13 @@ export class WhiteLabelService {
   }
 
   /**
-   * In production a DNS resolver checks the TXT record matches the expected
-   * token before stamping verifiedAt. Here we expose the same control surface
-   * so the OWNER (or admin tooling) can mark verification as complete after
-   * the resolver call succeeds. The presented token must equal what the
-   * server expects to prevent a logged-in OWNER from forging another tenant's
-   * verification.
+   * Stamps customDomainVerifiedAt only after we ourselves observe the
+   * expected TXT record at `_trainova-verify.<host>` via DNS. The presented
+   * token must equal what the server expects to short-circuit obvious cross
+   * tenant forgery, but the real proof of domain control is the DNS lookup —
+   * without it, an OWNER could simply call GET /verification to obtain the
+   * server-computed token and POST it straight back, claiming any hostname
+   * (including a victim company's domain) without ever touching DNS.
    */
   async markVerifiedForOwner(userId: string, presentedToken: string) {
     const company = await this.prisma.company.findUnique({
@@ -227,6 +237,31 @@ export class WhiteLabelService {
     if (presentedToken !== expected) {
       throw new ForbiddenException('Verification token does not match');
     }
+
+    // Hard requirement: the OWNER must have placed the TXT record before this
+    // call succeeds. We accept either the bare token or `trainova-verify=<token>`
+    // because some DNS UIs auto-prefix the value and others do not — both are
+    // unambiguous because the token is a 32-char hex hash unique to this
+    // {companyId, domain} pair.
+    const recordHost = `_trainova-verify.${company.customDomain}`;
+    const expectedValues = new Set([expected, `trainova-verify=${expected}`]);
+    let records: string[][];
+    try {
+      records = await this.resolveTxt(recordHost);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'unknown error';
+      this.logger.warn(`DNS TXT lookup failed for ${recordHost}: ${message}`);
+      throw new ForbiddenException(
+        `DNS TXT record not found at ${recordHost}; add the record and try again`,
+      );
+    }
+    const matched = records.some((chunks) => expectedValues.has(chunks.join('')));
+    if (!matched) {
+      throw new ForbiddenException(
+        `DNS TXT record at ${recordHost} did not contain the expected verification token`,
+      );
+    }
+
     return this.prisma.company.update({
       where: { id: company.id },
       data: { customDomainVerifiedAt: new Date() },
