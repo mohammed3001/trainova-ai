@@ -22,12 +22,8 @@ import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
 import { CurrentUser, type AuthUser } from '../auth/current-user.decorator';
 import { ZodValidationPipe } from '../common/zod-validation.pipe';
+import { clientIp } from '../common/client-ip.util';
 import { KycService } from './kyc.service';
-
-function clientIp(req: Request): string | null {
-  const addr = (req.socket as { remoteAddress?: string })?.remoteAddress;
-  return addr ?? null;
-}
 
 @ApiTags('admin-kyc')
 @ApiBearerAuth()
