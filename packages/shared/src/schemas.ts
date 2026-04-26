@@ -260,6 +260,34 @@ export const updateCompanySchema = z.object({
 });
 export type UpdateCompanyInput = z.infer<typeof updateCompanySchema>;
 
+// T9.C — White-label branding. brandColorHex/accentColorHex are validated as
+// 3- or 6-digit hex with leading '#' so the server never stores arbitrary CSS
+// (we splice the value straight into a CSS custom property on the public side).
+// customDomain is a hostname only (no scheme, no path, no port) and is stored
+// lowercased; verification happens out-of-band via DNS TXT and is the only
+// path that flips customDomainVerifiedAt — the API never trusts a verified
+// flag from the client.
+const HEX_COLOR = /^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/;
+const HOSTNAME = /^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?)+$/;
+
+export const brandingSettingsSchema = z.object({
+  brandingEnabled: z.boolean().optional(),
+  brandColorHex: z.string().regex(HEX_COLOR, 'Must be a hex color like #1f6feb').optional().or(z.literal('')),
+  accentColorHex: z.string().regex(HEX_COLOR, 'Must be a hex color like #1f6feb').optional().or(z.literal('')),
+  faviconUrl: z.string().url().optional().or(z.literal('')),
+  supportEmail: z.string().email().max(200).optional().or(z.literal('')),
+  footerNote: z.string().max(500).optional().or(z.literal('')),
+  customDomain: z
+    .string()
+    .trim()
+    .toLowerCase()
+    .max(253)
+    .regex(HOSTNAME, 'Must be a valid hostname (e.g. ai.acme.com)')
+    .optional()
+    .or(z.literal('')),
+});
+export type BrandingSettingsInput = z.infer<typeof brandingSettingsSchema>;
+
 export const sendMessageSchema = z.object({
   conversationId: z.string().cuid(),
   body: z.string().min(1).max(5000),

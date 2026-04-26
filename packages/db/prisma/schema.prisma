@@ -171,6 +171,18 @@ model Company {
   description      String?
   verified         Boolean  @default(false)
   stripeCustomerId String?
+  // T9.C — white-label branding. brandingEnabled is the master toggle so an
+  // OWNER can stage colors/copy without the public surface flipping until they
+  // are ready. customDomain is unique because we resolve a request's branding
+  // by host header, and verifiedAt drives whether we honor the host claim.
+  brandingEnabled        Boolean   @default(false)
+  brandColorHex          String?
+  accentColorHex         String?
+  faviconUrl             String?
+  supportEmail           String?
+  footerNote             String?
+  customDomain           String?   @unique
+  customDomainVerifiedAt DateTime?
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 

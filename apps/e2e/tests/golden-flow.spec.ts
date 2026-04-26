@@ -326,6 +326,7 @@ test.describe('Golden E2E flow — 11 steps', () => {
       'notifications',
       'payments',
       'public',
+      'public-branding',
       'reports',
       'reviews',
       'skills',
@@ -335,6 +336,7 @@ test.describe('Golden E2E flow — 11 steps', () => {
       'uploads',
       'users',
       'verification',
+      'white-label',
       'workbench',
     ];
     expect(tagNames).toEqual(expected);

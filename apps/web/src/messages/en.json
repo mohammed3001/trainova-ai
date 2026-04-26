@@ -2861,5 +2861,41 @@
       "paymentError": "Payment failed. No charge was made.",
       "requirePaymentMethod": "Add a payment method on file before boosting."
     }
+  },
+  "whiteLabel": {
+    "title": "White-label & branding",
+    "subtitle": "Customize colors, contact info, and serve the trainer portal from your own domain.",
+    "saved": "Branding saved.",
+    "verified": "Custom domain marked as verified.",
+    "domainVerified": "Verified at {at}",
+    "domainUnverified": "Domain not yet verified — add the DNS TXT record below, then mark as verified.",
+    "sections": {
+      "theme": "Theme",
+      "contact": "Contact",
+      "domain": "Custom domain",
+      "preview": "Preview"
+    },
+    "fields": {
+      "enabled": "Enable white-label branding",
+      "enabledHint": "When enabled and your custom domain is verified, the public portal served from that hostname uses your colors and footer.",
+      "brandColor": "Brand color (hex)",
+      "accentColor": "Accent color (hex)",
+      "faviconUrl": "Favicon URL",
+      "supportEmail": "Support email",
+      "footerNote": "Footer note",
+      "customDomain": "Custom domain"
+    },
+    "actions": {
+      "showInstructions": "Show DNS instructions",
+      "markVerified": "Mark as verified"
+    },
+    "verification": {
+      "host": "DNS TXT host",
+      "value": "DNS TXT value"
+    },
+    "preview": {
+      "primary": "Primary action",
+      "accent": "Accent"
+    }
   }
 }

@@ -2727,5 +2727,41 @@
       "paymentError": "El pago falló. No se realizó ningún cargo.",
       "requirePaymentMethod": "Agrega un método de pago antes de impulsar."
     }
+  },
+  "whiteLabel": {
+    "title": "Marca blanca e identidad",
+    "subtitle": "Personaliza colores, datos de contacto y sirve el portal de formadores desde tu propio dominio.",
+    "saved": "Identidad guardada.",
+    "verified": "Dominio personalizado marcado como verificado.",
+    "domainVerified": "Verificado el {at}",
+    "domainUnverified": "Dominio sin verificar — añade el registro DNS TXT abajo y luego márcalo como verificado.",
+    "sections": {
+      "theme": "Tema",
+      "contact": "Contacto",
+      "domain": "Dominio personalizado",
+      "preview": "Vista previa"
+    },
+    "fields": {
+      "enabled": "Activar marca blanca",
+      "enabledHint": "Cuando esté activado y tu dominio esté verificado, el portal público servido desde ese host usará tus colores y pie de página.",
+      "brandColor": "Color de marca (hex)",
+      "accentColor": "Color de acento (hex)",
+      "faviconUrl": "URL del favicon",
+      "supportEmail": "Correo de soporte",
+      "footerNote": "Nota de pie",
+      "customDomain": "Dominio personalizado"
+    },
+    "actions": {
+      "showInstructions": "Mostrar instrucciones DNS",
+      "markVerified": "Marcar como verificado"
+    },
+    "verification": {
+      "host": "Host DNS TXT",
+      "value": "Valor DNS TXT"
+    },
+    "preview": {
+      "primary": "Acción principal",
+      "accent": "Acento"
+    }
   }
 }
