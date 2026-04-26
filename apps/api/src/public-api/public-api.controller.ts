@@ -10,6 +10,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
+import { SkipThrottle } from '@nestjs/throttler';
 import type { Request } from 'express';
 import { z } from 'zod';
 import { Prisma } from '@trainova/db';
@@ -92,6 +93,10 @@ type ListContractsQuery = z.infer<typeof listContractsQuerySchema>;
  */
 @ApiTags('public-api')
 @Controller({ path: 'v1', version: undefined })
+// Opt out of the global 120 req/min/IP `ThrottlerGuard`; the per-token
+// limiter inside `ApiTokenGuard` is the source of truth here and can
+// scale up to `API_TOKEN_MAX_RATE_LIMIT_PER_MINUTE` (600).
+@SkipThrottle()
 @UseGuards(ApiTokenGuard)
 export class PublicApiController {
   constructor(private readonly prisma: PrismaService) {}
