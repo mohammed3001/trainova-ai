@@ -387,7 +387,28 @@ export class RetargetingService {
     const expiresAt = new Date(
       Date.now() + segment.lookbackDays * 24 * 60 * 60 * 1000,
     );
-    const memberCount = cookieIds.size + userIds.size;
+
+    // Compute the displayed `memberCount` as a count of unique people, not
+    // unique membership rows. A logged-in visitor produces events with both
+    // `cookieId` and `userId` set, so they appear in both `cookieIds` and
+    // `userIds`; without deduplication the admin dashboard would show
+    // ~2x the true audience for any segment with logged-in traffic.
+    // Find the overlap by querying events that link any of our cookieIds
+    // to any of our userIds, then subtract that overlap from the sum.
+    let overlap = 0;
+    if (cookieIds.size > 0 && userIds.size > 0) {
+      const linked = await this.prisma.retargetingEvent.findMany({
+        where: {
+          cookieId: { in: Array.from(cookieIds) },
+          userId: { in: Array.from(userIds) },
+        },
+        select: { cookieId: true },
+        distinct: ['cookieId'],
+        take: cookieIds.size,
+      });
+      overlap = linked.length;
+    }
+    const memberCount = cookieIds.size + userIds.size - overlap;
 
     await this.prisma.$transaction(async (tx) => {
       // Snapshot of current memberships for diffing.
