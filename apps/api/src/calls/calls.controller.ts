@@ -87,8 +87,14 @@ export class CallsController {
     @Param('id') id: string,
     @Body() body: EndCallInput,
   ) {
-    const dto = await this.service.end(user.id, id, body);
-    this.gateway.emitEnded(dto.conversationId, id, user.id, dto.endReason);
-    return dto;
+    const { call, changed } = await this.service.end(user.id, id, body);
+    // Suppress the broadcast on the idempotent path — the row was
+    // already terminal before this request, so re-emitting `call:ended`
+    // would duplicate the event and (worse) attribute it to the wrong
+    // user.
+    if (changed) {
+      this.gateway.emitEnded(call.conversationId, id, user.id, call.endReason);
+    }
+    return call;
   }
 }

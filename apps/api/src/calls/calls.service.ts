@@ -177,13 +177,19 @@ export class CallsService {
     return this.toDto(ended);
   }
 
-  async end(userId: string, callId: string, input: EndCallInput): Promise<CallDto> {
+  async end(
+    userId: string,
+    callId: string,
+    input: EndCallInput,
+  ): Promise<{ call: CallDto; changed: boolean }> {
     const call = await this.loadCall(callId);
     await this.assertParticipant(call, userId);
     if (call.status === 'ENDED' || call.status === 'REJECTED' || call.status === 'MISSED') {
       // Idempotent — caller may end a call that was already torn down
-      // by the other side.
-      return this.toDto(call);
+      // by the other side. `changed=false` lets the controller skip
+      // the WS broadcast so callees don't see a duplicate
+      // `call:ended` event with the wrong `endedById`.
+      return { call: this.toDto(call), changed: false };
     }
 
     const now = new Date();
@@ -214,7 +220,7 @@ export class CallsService {
       include: this.participantInclude(),
     });
     void this.bestEffortEndProvider(ended);
-    return this.toDto(ended);
+    return { call: this.toDto(ended), changed: true };
   }
 
   // ===================================================================
