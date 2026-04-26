@@ -298,3 +298,57 @@ export interface StartAdTopupResponse {
   clientSecret: string;
   publishableKey: string;
 }
+
+/**
+ * Daily aggregate point for a single campaign. `date` is the
+ * UTC day boundary in ISO `YYYY-MM-DD` form (DATE_TRUNC('day', ...)).
+ * Empty days are filled with zeros so the chart axis is contiguous.
+ *
+ * `spentCents` is the dollar-cent equivalent of all charged events on
+ * that day (sum of `AdImpression.chargedCents` rounded to whole cents
+ * + sum of `AdClick.chargedCents`). Microcent accumulation that hasn't
+ * crossed the cent boundary is **not** reflected here — only the
+ * billed amount is, matching what the advertiser sees on `spentCents`.
+ */
+export interface DailyAdSeriesPoint {
+  date: string;
+  impressions: number;
+  clicks: number;
+  spentCents: number;
+}
+
+export interface CreativeAnalyticsRow {
+  creativeId: string;
+  headline: string;
+  isActive: boolean;
+  impressions: number;
+  clicks: number;
+  /** Click-through rate as a decimal between 0 and 1 (e.g. 0.025 == 2.5%). */
+  ctr: number;
+  spentCents: number;
+}
+
+/**
+ * Self-serve analytics for a single campaign, keyed by the campaign id.
+ * Currently rolled up daily for `windowDays` (default 30, capped at 90)
+ * — enough for trend visualization without paginating tens of thousands
+ * of impression rows on the client.
+ */
+export interface CampaignAnalytics {
+  campaignId: string;
+  windowDays: number;
+  totals: {
+    impressions: number;
+    clicks: number;
+    /** Click-through rate as a decimal between 0 and 1. */
+    ctr: number;
+    spentCents: number;
+  };
+  daily: DailyAdSeriesPoint[];
+  perCreative: CreativeAnalyticsRow[];
+}
+
+export const campaignAnalyticsQuerySchema = z.object({
+  days: z.coerce.number().int().min(1).max(90).optional(),
+});
+export type CampaignAnalyticsQuery = z.infer<typeof campaignAnalyticsQuerySchema>;

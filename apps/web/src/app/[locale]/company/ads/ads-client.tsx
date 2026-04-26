@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import {
   AD_CREATIVE_TYPES,
@@ -10,6 +10,7 @@ import {
   type AdCreativeType,
   type AdPlacement,
   type AdPricingModel,
+  type CampaignAnalytics,
   type CreateCampaignInput,
   type CreateCreativeInput,
   type OwnerAdCampaign,
@@ -268,6 +269,7 @@ function CampaignRow({
   }, [campaign.totals.clicks, campaign.totals.impressions]);
 
   const remaining = Math.max(campaign.budgetCents - campaign.spentCents, 0);
+  const [showAnalytics, setShowAnalytics] = useState(false);
 
   return (
     <li className="glass-card rounded-3xl border border-slate-200/80 p-5 shadow-sm dark:border-slate-700/60">
@@ -341,7 +343,7 @@ function CampaignRow({
         />
       </div>
 
-      <div className="mt-4">
+      <div className="mt-4 flex flex-wrap gap-4">
         <button
           type="button"
           className="text-sm font-medium text-brand-600 hover:text-brand-700 dark:text-brand-300 dark:hover:text-brand-200"
@@ -349,14 +351,180 @@ function CampaignRow({
         >
           {t('list.creatives', { count: campaign.creatives.length })}
         </button>
-        {showCreatives ? (
-          <CreativesPanel
-            campaign={campaign}
-            onChanged={onCreativeChange}
-          />
-        ) : null}
+        <button
+          type="button"
+          className="text-sm font-medium text-brand-600 hover:text-brand-700 dark:text-brand-300 dark:hover:text-brand-200"
+          onClick={() => setShowAnalytics((s) => !s)}
+        >
+          {t('analytics.toggle')}
+        </button>
       </div>
+      {showCreatives ? (
+        <div className="mt-4">
+          <CreativesPanel campaign={campaign} onChanged={onCreativeChange} />
+        </div>
+      ) : null}
+      {showAnalytics ? (
+        <div className="mt-4">
+          <AnalyticsPanel campaignId={campaign.id} locale={locale} />
+        </div>
+      ) : null}
     </li>
+  );
+}
+
+/* ============================================================================
+ * Analytics
+ * ========================================================================== */
+
+const ANALYTICS_WINDOWS = [7, 30, 90] as const;
+type AnalyticsWindow = (typeof ANALYTICS_WINDOWS)[number];
+
+function AnalyticsPanel({ campaignId, locale }: { campaignId: string; locale: string }) {
+  const t = useTranslations('ads');
+  const [days, setDays] = useState<AnalyticsWindow>(30);
+  const [data, setData] = useState<CampaignAnalytics | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    setError(null);
+    proxyJson<CampaignAnalytics>(
+      `/ads/campaigns/${campaignId}/analytics?days=${days}`,
+    )
+      .then((d) => {
+        if (!cancelled) setData(d);
+      })
+      .catch((err: unknown) => {
+        if (!cancelled) setError((err as Error).message);
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [campaignId, days]);
+
+  const maxImp = useMemo(
+    () => (data ? data.daily.reduce((m, p) => Math.max(m, p.impressions), 0) : 0),
+    [data],
+  );
+
+  return (
+    <div className="rounded-2xl border border-slate-200/80 bg-white/60 p-4 dark:border-slate-700/60 dark:bg-slate-900/40">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <h4 className="text-sm font-semibold text-slate-900 dark:text-white">
+          {t('analytics.title')}
+        </h4>
+        <div className="flex gap-1">
+          {ANALYTICS_WINDOWS.map((w) => (
+            <button
+              key={w}
+              type="button"
+              className={
+                w === days
+                  ? 'rounded-full bg-brand-600 px-3 py-1 text-xs font-medium text-white'
+                  : 'rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700'
+              }
+              onClick={() => setDays(w)}
+            >
+              {t('analytics.days', { days: w })}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {loading ? (
+        <p className="mt-3 text-xs text-slate-500 dark:text-slate-400">
+          {t('analytics.loading')}
+        </p>
+      ) : error ? (
+        <p className="mt-3 text-xs text-rose-600 dark:text-rose-300">{error}</p>
+      ) : data ? (
+        <>
+          <div className="mt-3 grid grid-cols-2 gap-3 md:grid-cols-4">
+            <Stat
+              label={t('analytics.impressions')}
+              value={data.totals.impressions.toLocaleString(locale)}
+            />
+            <Stat
+              label={t('analytics.clicks')}
+              value={data.totals.clicks.toLocaleString(locale)}
+            />
+            <Stat
+              label={t('analytics.ctr')}
+              value={(data.totals.ctr * 100).toFixed(2) + '%'}
+            />
+            <Stat
+              label={t('analytics.spent')}
+              value={formatCents(data.totals.spentCents, locale)}
+            />
+          </div>
+
+          {/* Sparkline-style bars; height in % so it renders on every viewport. */}
+          <div className="mt-4">
+            <p className="mb-1 text-[11px] uppercase tracking-wider text-slate-500 dark:text-slate-400">
+              {t('analytics.dailyImpressions')}
+            </p>
+            <div className="flex h-20 items-end gap-[2px]" role="img" aria-label={t('analytics.dailyImpressions')}>
+              {data.daily.map((p) => {
+                const h = maxImp > 0 ? Math.max((p.impressions / maxImp) * 100, p.impressions > 0 ? 4 : 0) : 0;
+                return (
+                  <div
+                    key={p.date}
+                    className="flex-1 rounded-sm bg-brand-500/70 dark:bg-brand-400/70"
+                    style={{ height: `${h}%` }}
+                    title={`${p.date}: ${p.impressions} / ${p.clicks}`}
+                  />
+                );
+              })}
+            </div>
+          </div>
+
+          {data.perCreative.length > 0 ? (
+            <div className="mt-4 overflow-x-auto">
+              <table className="w-full min-w-[480px] text-xs">
+                <thead>
+                  <tr className="text-left text-slate-500 dark:text-slate-400">
+                    <th className="py-1 font-medium">{t('analytics.creative')}</th>
+                    <th className="py-1 font-medium">{t('analytics.impressions')}</th>
+                    <th className="py-1 font-medium">{t('analytics.clicks')}</th>
+                    <th className="py-1 font-medium">{t('analytics.ctr')}</th>
+                    <th className="py-1 font-medium">{t('analytics.spent')}</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                  {data.perCreative.map((row) => (
+                    <tr key={row.creativeId}>
+                      <td className="py-1.5 pr-2 text-slate-700 dark:text-slate-200">
+                        <span className={row.isActive ? '' : 'text-slate-400 line-through'}>
+                          {row.headline}
+                        </span>
+                      </td>
+                      <td className="py-1.5 pr-2 tabular-nums">
+                        {row.impressions.toLocaleString(locale)}
+                      </td>
+                      <td className="py-1.5 pr-2 tabular-nums">
+                        {row.clicks.toLocaleString(locale)}
+                      </td>
+                      <td className="py-1.5 pr-2 tabular-nums">
+                        {(row.ctr * 100).toFixed(2)}%
+                      </td>
+                      <td className="py-1.5 tabular-nums">
+                        {formatCents(row.spentCents, locale)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : null}
+        </>
+      ) : null}
+    </div>
   );
 }
 
