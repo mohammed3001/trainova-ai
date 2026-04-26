@@ -21,3 +21,4 @@ export * from './coupons';
 export * from './sponsored';
 export * from './email-campaigns';
 export * from './interviews';
+export * from './team';

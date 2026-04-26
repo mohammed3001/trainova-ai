@@ -53,8 +53,15 @@ export default async function CompanyDashboard() {
             <Link href={`/${locale}/company/profile`} className="btn-secondary">
               {t('profile.company.editCta')}
             </Link>
+            <Link href={`/${locale}/company/team`} className="btn-secondary">
+              {t('dashboard.teamLink')}
+            </Link>
           </>
-        ) : null}
+        ) : (
+          <Link href={`/${locale}/company/team`} className="btn-secondary">
+            {t('dashboard.teamLink')}
+          </Link>
+        )}
       </div>
 
       <section>

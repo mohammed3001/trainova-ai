@@ -318,7 +318,14 @@ export class AuthService {
     return `${base.replace(/\/+$/, '')}${path.startsWith('/') ? path : `/${path}`}`;
   }
 
-  private async issueTokens(id: string, email: string, role: string) {
+  /**
+   * Mint a fresh access token for an already-authenticated user. Public
+   * so other modules (e.g. {@link TeamService} on invitation accept,
+   * which transitions `User.role` and therefore invalidates the
+   * caller's existing JWT) can re-issue a session token in lock-step
+   * with the role change.
+   */
+  async issueTokens(id: string, email: string, role: string) {
     const payload = { sub: id, email, role };
     const accessToken = await this.jwt.signAsync(payload);
     return { accessToken, user: { id, email, role } };

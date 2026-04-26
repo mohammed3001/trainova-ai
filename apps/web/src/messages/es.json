@@ -160,7 +160,8 @@
     "myApplications": "My applications",
     "myTests": "My tests",
     "openInDashboard": "Open",
-    "applicationsCount": "{count} applications"
+    "applicationsCount": "{count} applications",
+    "teamLink": "Equipo y miembros"
   },
   "requests": {
     "listTitle": "Open AI training requests",
@@ -609,6 +610,38 @@
         "result": {
           "title": "Grading recorded"
         }
+      }
+    },
+    "team": {
+      "title": "Equipo y miembros",
+      "subtitle": "Invita a tus compañeros a colaborar en {company} — controla quién puede publicar solicitudes, revisar candidatos, ejecutar pruebas y chatear con entrenadores.",
+      "inviteTitle": "Invitar a un compañero",
+      "inviteHelp": "Envía una invitación por correo. La persona invitada la acepta tras iniciar sesión con el mismo correo.",
+      "email": "Correo",
+      "role": "Rol",
+      "name": "Nombre",
+      "actions": "Acciones",
+      "sendInvite": "Enviar invitación",
+      "members": "Miembros",
+      "invitations": "Invitaciones",
+      "noInvitations": "Aún no se han enviado invitaciones.",
+      "empty": "Aún no hay miembros.",
+      "remove": "Eliminar",
+      "revoke": "Revocar",
+      "you": "tú",
+      "expiresAt": "expira el {date}",
+      "helpFooter": "Los propietarios pueden asignar el rol ADMIN; los administradores gestionan reclutadores y visores.",
+      "roles": {
+        "OWNER": "Propietario",
+        "ADMIN": "Administrador",
+        "RECRUITER": "Reclutador",
+        "VIEWER": "Visor"
+      },
+      "statuses": {
+        "PENDING": "Pendiente",
+        "ACCEPTED": "Aceptada",
+        "REVOKED": "Revocada",
+        "EXPIRED": "Expirada"
       }
     }
   },
@@ -2726,6 +2759,27 @@
       "cancel": "Cancelar",
       "paymentError": "El pago falló. No se realizó ningún cargo.",
       "requirePaymentMethod": "Agrega un método de pago antes de impulsar."
+    }
+  },
+  "invitations": {
+    "title": "Invitación de equipo",
+    "subtitle": "Revisa el rol y la empresa antes de unirte.",
+    "company": "Empresa",
+    "role": "Rol",
+    "invitedBy": "Invitado por",
+    "invitedEmail": "Correo invitado",
+    "expiresAt": "Expira",
+    "status": "Estado",
+    "accept": "Aceptar invitación",
+    "cancel": "Ahora no",
+    "notFound": "Esta invitación ya no existe o su enlace es inválido.",
+    "errors": {
+      "generic": "No pudimos procesar esta invitación.",
+      "emailMismatch": "Esta invitación se emitió a {email}. Inicia sesión con esa cuenta para aceptarla.",
+      "pending": "Esta invitación está esperando tu decisión.",
+      "accepted": "Ya aceptaste esta invitación.",
+      "revoked": "La empresa revocó esta invitación.",
+      "expired": "Esta invitación caducó. Pide a la empresa que envíe una nueva."
     }
   }
 }
