@@ -172,9 +172,19 @@ export function MobileMenu({
             </nav>
             <div className="mt-3 border-t border-slate-200 pt-3">
               {authed ? (
-                <Link href={dashboardHref} className="btn-primary w-full justify-center" onClick={close}>
-                  {t('dashboard')}
-                </Link>
+                <div className="flex flex-col gap-2">
+                  <Link href={dashboardHref} className="btn-primary w-full justify-center" onClick={close}>
+                    {t('dashboard')}
+                  </Link>
+                  <Link
+                    href={`/api/logout?locale=${locale}`}
+                    prefetch={false}
+                    className="btn-ghost w-full justify-center"
+                    onClick={close}
+                  >
+                    {t('signOut')}
+                  </Link>
+                </div>
               ) : (
                 <div className="flex flex-col gap-2">
                   <Link
