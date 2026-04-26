@@ -54,7 +54,6 @@ export const DISPOSABLE_EMAIL_DOMAINS: ReadonlySet<string> = new Set([
   'trashmail.com',
   'trashmail.de',
   'trashmail.net',
-  'tutanota.com',
   'yopmail.com',
   'yopmail.fr',
   'yopmail.net',

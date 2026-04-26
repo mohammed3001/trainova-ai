@@ -194,11 +194,12 @@ export class FraudService {
     cursor?: string;
   }) {
     const take = Math.max(1, Math.min(100, input.take ?? 50));
-    const where: Prisma.ApplicationWhereInput = {
-      riskLevel: input.level
-        ? input.level
-        : { in: ['MEDIUM', 'HIGH', 'CRITICAL'] satisfies RiskLevel[] },
-    };
+    // No `level` filter ⇒ admin asked for the full inbox; only filter to a
+    // specific level when one is explicitly requested. We still scope to rows
+    // that have actually been scored so unrelated rows never appear.
+    const where: Prisma.ApplicationWhereInput = input.level
+      ? { riskLevel: input.level }
+      : { riskLevel: { not: null } };
     if (input.onlyUnreviewed !== false) {
       where.riskReviewedAt = null;
     }
