@@ -78,6 +78,19 @@ export class AllExceptionsFilter implements ExceptionFilter {
       });
       this.logger.error(`5xx on ${req.method} ${req.url}: ${body.message}`);
     }
+    // Streaming endpoints (PDF invoices, trainer CV exports) flush
+    // headers via `stream.pipe(res)` *before* the body finishes
+    // writing. If the source stream errors mid-pipe, the response is
+    // already in `headersSent=true`, and trying to call
+    // `res.status().json()` would throw
+    // `Cannot set headers after they are sent to the client` —
+    // a secondary failure inside the error handler that swallows
+    // the original. Match `BaseExceptionFilter`'s guard and just
+    // close the half-written response in that case.
+    if (res.headersSent) {
+      res.end();
+      return;
+    }
     res.status(status).json(body);
   }
 
