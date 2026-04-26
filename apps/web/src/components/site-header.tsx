@@ -5,6 +5,7 @@ import { adminLandingHref } from '@/lib/admin-landing';
 import { getToken, getRole } from '@/lib/session';
 import { authedFetch } from '@/lib/authed-fetch';
 import { LocaleSwitcher } from './locale-switcher';
+import { MobileMenu } from './mobile-menu';
 import { NotificationsBell } from './notifications/notifications-bell';
 
 export async function SiteHeader() {
@@ -62,8 +63,9 @@ export async function SiteHeader() {
             <Link href={`/${locale}/pricing`} className="rounded-md px-1 hover:text-brand-700">{t('pricing')}</Link>
           </nav>
         </div>
-        <nav aria-label={ta('userNav')} className="flex items-center gap-2">
+        <nav aria-label={ta('userNav')} className="flex items-center gap-1 sm:gap-2">
           <LocaleSwitcher />
+          <MobileMenu locale={locale} authed={Boolean(token)} dashboardHref={dashboardHref} />
           {token ? (
             <>
               <NotificationsBell locale={locale} initialUnread={notifUnread} />
@@ -100,13 +102,13 @@ export async function SiteHeader() {
                   </span>
                 ) : null}
               </Link>
-              <Link href={dashboardHref} className="btn-secondary">{t('dashboard')}</Link>
-              <Link href={`/api/logout?locale=${locale}`} prefetch={false} className="btn-ghost">{t('signOut')}</Link>
+              <Link href={dashboardHref} className="btn-secondary hidden sm:inline-flex">{t('dashboard')}</Link>
+              <Link href={`/api/logout?locale=${locale}`} prefetch={false} className="btn-ghost hidden sm:inline-flex">{t('signOut')}</Link>
             </>
           ) : (
             <>
-              <Link href={`/${locale}/login`} className="btn-ghost">{t('signIn')}</Link>
-              <Link href={`/${locale}/register`} className="btn-primary">{t('getStarted')}</Link>
+              <Link href={`/${locale}/login`} className="btn-ghost hidden sm:inline-flex">{t('signIn')}</Link>
+              <Link href={`/${locale}/register`} className="btn-primary hidden sm:inline-flex">{t('getStarted')}</Link>
             </>
           )}
         </nav>

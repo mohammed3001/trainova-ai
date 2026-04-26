@@ -7,6 +7,8 @@
     "adminNav": "قائمة لوحة التحكم",
     "closeDialog": "إغلاق الحوار",
     "openMenu": "فتح القائمة",
+    "closeMenu": "إغلاق القائمة",
+    "mobileNav": "تصفح الموبايل",
     "unreadBadge": "{count} غير مقروء",
     "loading": "جارٍ تحميل المحتوى",
     "requiredField": "مطلوب",
