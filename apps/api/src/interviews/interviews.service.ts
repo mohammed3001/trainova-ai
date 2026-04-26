@@ -247,12 +247,12 @@ export class InterviewsService {
 
     // Resolve "clear field" semantics: explicit null on agenda/notes/url
     // means clear; undefined means leave unchanged.
-    const next = await this.prisma.$transaction(async (tx) => {
+    const { cancelled, next } = await this.prisma.$transaction(async (tx) => {
       const fresh = await tx.interviewMeeting.findUnique({ where: { id } });
       if (!fresh || fresh.status !== 'SCHEDULED') {
         throw new ConflictException('Interview already finalized');
       }
-      const cancelled = await tx.interviewMeeting.update({
+      const cancelledRow = await tx.interviewMeeting.update({
         where: { id },
         data: {
           status: 'CANCELLED',
@@ -277,7 +277,7 @@ export class InterviewsService {
               : (input.meetingUrl ?? existing.meetingUrl),
           agenda: input.agenda === null ? null : (input.agenda ?? existing.agenda),
           notes: input.notes === null ? null : (input.notes ?? existing.notes),
-          rescheduledFromId: cancelled.id,
+          rescheduledFromId: cancelledRow.id,
         },
         include: interviewInclude,
       });
@@ -285,12 +285,17 @@ export class InterviewsService {
         tx,
         created.conversationId,
         userId,
-        this.formatRescheduleMessage(cancelled, created),
+        this.formatRescheduleMessage(cancelledRow, created),
       );
-      return created;
+      return { cancelled: cancelledRow, next: created };
     });
 
     await this.notifyOther(next, existing.trainerId, 'rescheduled');
+    // Reschedule is modelled as cancel-then-create; webhook subscribers
+    // get both events so Zapier/Make flows that key off the meeting id
+    // can close out the old interview and open the new one.
+    void this.dispatchInterviewWebhook(cancelled, 'INTERVIEW_CANCELLED', input.reason ?? 'Rescheduled');
+    void this.dispatchInterviewWebhook(next, 'INTERVIEW_SCHEDULED');
     return this.toDto(next, userId);
   }
 

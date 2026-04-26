@@ -1,9 +1,15 @@
 import { randomBytes, createHmac } from 'node:crypto';
+import type { LookupAddress } from 'node:dns';
+import * as dnsPromises from 'node:dns/promises';
+import * as net from 'node:net';
+import { request as httpsRequest } from 'node:https';
+import { URL } from 'node:url';
 import {
   Injectable,
   Logger,
   NotFoundException,
   ForbiddenException,
+  BadRequestException,
 } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { Prisma } from '@trainova/db';
@@ -79,6 +85,7 @@ export class WebhooksService {
   }
 
   async create(companyId: string, input: CreateWebhookInput) {
+    await this.validateWebhookUrlOrThrow(input.url);
     const secret = this.generateSecret();
     const created = await this.prisma.webhook.create({
       data: {
@@ -107,6 +114,9 @@ export class WebhooksService {
     const existing = await this.prisma.webhook.findUnique({ where: { id } });
     if (!existing) throw new NotFoundException('Webhook not found');
     if (existing.companyId !== companyId) throw new ForbiddenException();
+    if (input.url && input.url !== existing.url) {
+      await this.validateWebhookUrlOrThrow(input.url);
+    }
     const next = await this.prisma.webhook.update({
       where: { id },
       data: {
@@ -368,27 +378,16 @@ export class WebhooksService {
     let respBody = '';
     let succeeded = false;
     try {
-      const ctrl = new AbortController();
-      const t = setTimeout(() => ctrl.abort(), DELIVERY_TIMEOUT_MS);
-      try {
-        const r = await fetch(delivery.webhook.url, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'User-Agent': 'TrainovaWebhooks/1.0',
-            'X-Trainova-Event': delivery.eventType,
-            'X-Trainova-Delivery': deliveryId,
-            'X-Trainova-Signature': `t=${ts},v1=${signature}`,
-          },
-          body,
-          signal: ctrl.signal,
-        });
-        status = r.status;
-        succeeded = r.status >= 200 && r.status < 300;
-        respBody = (await r.text().catch(() => '')).slice(0, 500);
-      } finally {
-        clearTimeout(t);
-      }
+      const r = await this.deliverHttps(delivery.webhook.url, body, {
+        'Content-Type': 'application/json',
+        'User-Agent': 'TrainovaWebhooks/1.0',
+        'X-Trainova-Event': delivery.eventType,
+        'X-Trainova-Delivery': deliveryId,
+        'X-Trainova-Signature': `t=${ts},v1=${signature}`,
+      });
+      status = r.status;
+      succeeded = r.status >= 200 && r.status < 300;
+      respBody = r.body.slice(0, 500);
     } catch (err) {
       respBody = (err instanceof Error ? err.message : String(err)).slice(0, 500);
     }
@@ -490,5 +489,174 @@ export class WebhooksService {
   /** Exposed for tests / health checks. */
   static get knownEvents(): readonly WebhookEventType[] {
     return WEBHOOK_EVENT_TYPES;
+  }
+
+  // -------------------------------------------------------------
+  // SSRF protection
+  // -------------------------------------------------------------
+
+  /**
+   * Reject literal/resolved IPs that point at infrastructure the API
+   * server can reach but the public internet cannot. Without this, a
+   * compromised company owner could register a webhook at
+   * `https://10.0.0.1/...`, `https://kubernetes.default.svc/...`, or
+   * a hostname that resolves to `169.254.169.254` (cloud metadata) and
+   * use our outbound POST to probe internal services. The check fires
+   * at create/update time AND at delivery time so DNS rebinding between
+   * the two cannot bypass it (we pin the resolved IP at connect time —
+   * see `deliverHttps`).
+   */
+  private isBlockedIp(ip: string): boolean {
+    const family = net.isIP(ip);
+    if (family === 0) return true;
+    if (family === 4) {
+      const parts = ip.split('.').map(Number);
+      if (parts.length !== 4 || parts.some((p) => Number.isNaN(p))) return true;
+      const [a, b] = parts as [number, number, number, number];
+      if (a === 10) return true; // 10.0.0.0/8
+      if (a === 127) return true; // loopback
+      if (a === 0) return true; // current network
+      if (a === 169 && b === 254) return true; // link-local + AWS metadata
+      if (a === 172 && b >= 16 && b <= 31) return true; // 172.16.0.0/12
+      if (a === 192 && b === 168) return true; // 192.168.0.0/16
+      if (a === 100 && b >= 64 && b <= 127) return true; // CGN 100.64.0.0/10
+      if (a >= 224) return true; // multicast + reserved
+      return false;
+    }
+    // IPv6
+    const lower = ip.toLowerCase();
+    if (lower === '::1' || lower === '::') return true;
+    // IPv4-mapped IPv6 — recurse on the embedded v4
+    if (lower.startsWith('::ffff:')) {
+      const ipv4 = lower.slice(7);
+      if (net.isIP(ipv4) === 4) return this.isBlockedIp(ipv4);
+      return true;
+    }
+    if (/^f[cd]/.test(lower)) return true; // ULA fc00::/7
+    if (/^fe[89ab]/.test(lower)) return true; // link-local fe80::/10
+    if (lower.startsWith('ff')) return true; // multicast ff00::/8
+    return false;
+  }
+
+  /**
+   * Resolve the hostname and return the first non-blocked address, or
+   * throw if any resolved address is in a blocked range. We reject if
+   * *any* record is blocked (rather than picking the first public one)
+   * because a multi-A record where one entry is internal is almost
+   * always a misconfiguration — and would be a clean rebinding vector.
+   */
+  private async resolveAndPin(hostname: string): Promise<{ ip: string; family: 4 | 6 }> {
+    const literal = net.isIP(hostname);
+    if (literal !== 0) {
+      if (this.isBlockedIp(hostname)) throw new Error('blocked-ip');
+      return { ip: hostname, family: literal as 4 | 6 };
+    }
+    let records: LookupAddress[];
+    try {
+      records = await dnsPromises.lookup(hostname, { all: true, verbatim: true });
+    } catch {
+      throw new Error('dns-lookup-failed');
+    }
+    if (records.length === 0) throw new Error('no-dns-records');
+    for (const r of records) {
+      if (this.isBlockedIp(r.address)) throw new Error('blocked-ip');
+    }
+    const first = records[0]!;
+    return { ip: first.address, family: first.family as 4 | 6 };
+  }
+
+  /**
+   * Validate URL early at create/update time so subscribers get a 400
+   * synchronously instead of seeing deliveries silently abandoned. We
+   * still re-validate at delivery time because DNS may flip between
+   * registration and a future delivery (rebinding) — this is just a
+   * convenience.
+   */
+  private async validateWebhookUrlOrThrow(url: string): Promise<void> {
+    let parsed: URL;
+    try {
+      parsed = new URL(url);
+    } catch {
+      throw new BadRequestException('Invalid URL');
+    }
+    if (parsed.protocol !== 'https:') {
+      throw new BadRequestException('Webhook URL must use https://');
+    }
+    try {
+      await this.resolveAndPin(parsed.hostname);
+    } catch (err) {
+      const reason = err instanceof Error ? err.message : 'invalid';
+      throw new BadRequestException(
+        reason === 'blocked-ip'
+          ? 'Webhook URL points at a private or reserved address'
+          : 'Webhook URL hostname does not resolve',
+      );
+    }
+  }
+
+  /**
+   * SSRF-safe outbound POST. Validates the resolved IP against the
+   * blocklist, then issues the request with `lookup` pinned to the
+   * already-validated address — DNS rebinding between validation and
+   * connect cannot reach a private host because the kernel never
+   * re-queries DNS. TLS SNI / certificate validation continues to use
+   * the original hostname via `servername`, so cert pinning at the
+   * subscriber side keeps working.
+   */
+  private async deliverHttps(
+    url: string,
+    body: string,
+    headers: Record<string, string>,
+  ): Promise<{ status: number; body: string }> {
+    const u = new URL(url);
+    if (u.protocol !== 'https:') throw new Error('https-only');
+    const { ip, family } = await this.resolveAndPin(u.hostname);
+    return new Promise<{ status: number; body: string }>((resolve, reject) => {
+      const req = httpsRequest(
+        {
+          method: 'POST',
+          host: u.hostname,
+          port: u.port ? Number(u.port) : 443,
+          path: `${u.pathname || '/'}${u.search || ''}`,
+          headers: {
+            ...headers,
+            host: u.host,
+            'content-length': String(Buffer.byteLength(body)),
+          },
+          timeout: DELIVERY_TIMEOUT_MS,
+          servername: u.hostname,
+          // Pin DNS — the kernel will not re-resolve this hostname.
+          // `lookup` is invoked once with the validated IP returned.
+          lookup: (_h, _opts, cb) => {
+            cb(null, ip, family);
+          },
+        },
+        (res) => {
+          const chunks: Buffer[] = [];
+          let total = 0;
+          res.on('data', (c: Buffer) => {
+            // Cap captured response body — we only persist `lastResponse`
+            // truncated to 500 chars anyway, no point buffering more.
+            if (total < 4096) {
+              chunks.push(c);
+              total += c.length;
+            }
+          });
+          res.on('end', () => {
+            resolve({
+              status: res.statusCode ?? 0,
+              body: Buffer.concat(chunks).toString('utf8'),
+            });
+          });
+          res.on('error', reject);
+        },
+      );
+      req.on('timeout', () => {
+        req.destroy(new Error('timeout'));
+      });
+      req.on('error', reject);
+      req.write(body);
+      req.end();
+    });
   }
 }
