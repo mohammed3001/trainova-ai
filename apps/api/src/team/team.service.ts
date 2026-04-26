@@ -499,7 +499,33 @@ export class TeamService {
     if (callerRole !== 'OWNER' && member.role === 'ADMIN') {
       throw new ForbiddenException('Only the company owner can remove an admin');
     }
-    await this.prisma.companyMember.delete({ where: { id: member.id } });
+    // Mirror the forward transition in `acceptInvitation`: a TRAINER who
+    // accepted an invite was promoted to `COMPANY_MEMBER` so the role
+    // cookie / JWT lined up with the company surfaces. Removing them
+    // without reverting `User.role` strands the user — the cookie still
+    // claims `COMPANY_MEMBER` so trainer-side guards reject them, while
+    // `requireMembership` (called by every company-side endpoint) throws
+    // `'You are not a member of any company'` because the row we just
+    // deleted is gone. Demoting `COMPANY_MEMBER` back to `TRAINER`
+    // inside the same transaction keeps the user able to navigate to
+    // their trainer dashboard. We deliberately don't touch elevated
+    // roles (`SUPER_ADMIN`, `ADMIN`, finance/support/etc., or
+    // `COMPANY_OWNER` — who would be `member.role === 'OWNER'` and
+    // already short-circuited above) for the same reason
+    // `acceptInvitation` doesn't downgrade them on the way in.
+    await this.prisma.$transaction(async (tx) => {
+      await tx.companyMember.delete({ where: { id: member.id } });
+      const removed = await tx.user.findUniqueOrThrow({
+        where: { id: member.userId },
+        select: { role: true },
+      });
+      if (removed.role === 'COMPANY_MEMBER') {
+        await tx.user.update({
+          where: { id: member.userId },
+          data: { role: 'TRAINER' },
+        });
+      }
+    });
   }
 
   // ---------------------------------------------------------------------------
