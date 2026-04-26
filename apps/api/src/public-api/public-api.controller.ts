@@ -10,8 +10,9 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
-import { SkipThrottle } from '@nestjs/throttler';
+import { Throttle } from '@nestjs/throttler';
 import type { Request } from 'express';
+import { API_TOKEN_MAX_RATE_LIMIT_PER_MINUTE } from '@trainova/shared';
 import { z } from 'zod';
 import { Prisma } from '@trainova/db';
 import { PrismaService } from '../prisma/prisma.service';
@@ -93,10 +94,14 @@ type ListContractsQuery = z.infer<typeof listContractsQuerySchema>;
  */
 @ApiTags('public-api')
 @Controller({ path: 'v1', version: undefined })
-// Opt out of the global 120 req/min/IP `ThrottlerGuard`; the per-token
-// limiter inside `ApiTokenGuard` is the source of truth here and can
-// scale up to `API_TOKEN_MAX_RATE_LIMIT_PER_MINUTE` (600).
-@SkipThrottle()
+// Raise the global per-IP `ThrottlerGuard` ceiling (default 120/min) to
+// match the per-token max so issued tokens with a high `rateLimitPerMinute`
+// can actually use their headroom. We deliberately DON'T `@SkipThrottle()`:
+// the IP-based ceiling is still the only thing throttling unauthenticated /
+// invalid-token traffic *before* the DB lookup in `resolveToken`, and
+// without it an attacker who guesses the public prefix could flood
+// `findUnique(tokenHash)` calls and saturate the Postgres pool.
+@Throttle({ default: { limit: API_TOKEN_MAX_RATE_LIMIT_PER_MINUTE, ttl: 60_000 } })
 @UseGuards(ApiTokenGuard)
 export class PublicApiController {
   constructor(private readonly prisma: PrismaService) {}
