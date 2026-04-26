@@ -2727,5 +2727,23 @@
       "paymentError": "Paiement échoué. Aucun montant n’a été prélevé.",
       "requirePaymentMethod": "Ajoutez un moyen de paiement avant de booster."
     }
+  },
+  "savedSearches": {
+    "title": "Recherches enregistrées",
+    "subtitle": "Enregistrez une requête et nous vous enverrons un récapitulatif quotidien des nouvelles offres correspondantes.",
+    "name": "Nom",
+    "query": "Requête",
+    "industry": "Secteur",
+    "notify": "Recevoir un récapitulatif quotidien des nouveaux résultats",
+    "create": "Enregistrer",
+    "delete": "Supprimer",
+    "empty": "Vous n'avez encore enregistré aucune recherche.",
+    "notifyOn": "Alertes quotidiennes activées",
+    "notifyOff": "Alertes quotidiennes désactivées",
+    "saving": "Enregistrement…",
+    "deleting": "Suppression…",
+    "createError": "Impossible d'enregistrer la recherche.",
+    "updateError": "Impossible de mettre à jour la recherche.",
+    "deleteError": "Impossible de supprimer la recherche."
   }
 }

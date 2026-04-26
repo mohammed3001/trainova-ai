@@ -2727,5 +2727,23 @@
       "paymentError": "El pago falló. No se realizó ningún cargo.",
       "requirePaymentMethod": "Agrega un método de pago antes de impulsar."
     }
+  },
+  "savedSearches": {
+    "title": "Búsquedas guardadas",
+    "subtitle": "Guarda una búsqueda y te enviaremos un resumen diario por correo con las nuevas solicitudes que coincidan.",
+    "name": "Nombre",
+    "query": "Consulta",
+    "industry": "Sector",
+    "notify": "Recibir un resumen diario por correo",
+    "create": "Guardar búsqueda",
+    "delete": "Eliminar",
+    "empty": "Aún no has guardado ninguna búsqueda.",
+    "notifyOn": "Alertas diarias activadas",
+    "notifyOff": "Alertas diarias desactivadas",
+    "saving": "Guardando…",
+    "deleting": "Eliminando…",
+    "createError": "No se pudo guardar la búsqueda.",
+    "updateError": "No se pudo actualizar la búsqueda.",
+    "deleteError": "No se pudo eliminar la búsqueda."
   }
 }

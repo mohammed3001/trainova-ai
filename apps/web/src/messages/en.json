@@ -2861,5 +2861,23 @@
       "paymentError": "Payment failed. No charge was made.",
       "requirePaymentMethod": "Add a payment method on file before boosting."
     }
+  },
+  "savedSearches": {
+    "title": "Saved searches",
+    "subtitle": "Save a search query and we will email you a daily digest of new matching job requests.",
+    "name": "Name",
+    "query": "Search query",
+    "industry": "Industry",
+    "notify": "Email me a daily digest of new matches",
+    "create": "Save search",
+    "delete": "Delete",
+    "empty": "You haven't saved any searches yet.",
+    "notifyOn": "Daily alerts on",
+    "notifyOff": "Daily alerts off",
+    "saving": "Saving…",
+    "deleting": "Deleting…",
+    "createError": "Could not save search.",
+    "updateError": "Could not update search.",
+    "deleteError": "Could not delete search."
   }
 }
