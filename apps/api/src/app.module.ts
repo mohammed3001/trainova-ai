@@ -37,6 +37,7 @@ import { CouponsModule } from './coupons/coupons.module';
 import { SponsoredModule } from './sponsored/sponsored.module';
 import { EmailMarketingModule } from './email-marketing/email-marketing.module';
 import { InterviewsModule } from './interviews/interviews.module';
+import { KycModule } from './kyc/kyc.module';
 import { HealthController } from './health.controller';
 
 @Module({
@@ -80,6 +81,7 @@ import { HealthController } from './health.controller';
     SponsoredModule,
     EmailMarketingModule,
     InterviewsModule,
+    KycModule,
   ],
   controllers: [HealthController],
   providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
