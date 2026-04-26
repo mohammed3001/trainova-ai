@@ -289,21 +289,38 @@ export class KycService {
   }
 
   async review(adminUserId: string, id: string, input: ReviewKycInput, ip: string | null) {
-    const session = await this.prisma.kycSession.findUnique({
-      where: { id },
-      select: { id: true, userId: true, status: true },
-    });
-    if (!session) throw new NotFoundException('KYC session not found');
-    if (session.status !== 'AWAITING_REVIEW') {
-      throw new BadRequestException(
-        `Session is in ${session.status}; only AWAITING_REVIEW can be decided`,
-      );
-    }
+    // Validate input shape before any DB work — cheap, no race-prone state.
     if (input.decision === 'REJECT' && !input.decisionReason?.trim()) {
       throw new BadRequestException('A rejection reason is required');
     }
 
+    // Cheap pre-check outside the transaction so we can 404 fast without
+    // grabbing an advisory lock on a non-existent userId.
+    const pre = await this.prisma.kycSession.findUnique({
+      where: { id },
+      select: { userId: true },
+    });
+    if (!pre) throw new NotFoundException('KYC session not found');
+
     return this.prisma.$transaction(async (tx) => {
+      // Same per-user advisory-lock pattern as startOrResume / submitDocuments.
+      // Two admins concurrently reviewing the same session — or an admin
+      // reviewing while a webhook decides the session — now serialize, so the
+      // second one sees the post-decision status and either short-circuits
+      // (race) or rejects with the BadRequest.
+      await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtextextended(${pre.userId}, 0))`;
+
+      const session = await tx.kycSession.findUnique({
+        where: { id },
+        select: { id: true, userId: true, status: true },
+      });
+      if (!session) throw new NotFoundException('KYC session not found');
+      if (session.status !== 'AWAITING_REVIEW') {
+        throw new BadRequestException(
+          `Session is in ${session.status}; only AWAITING_REVIEW can be decided`,
+        );
+      }
+
       const now = new Date();
       const updated = await tx.kycSession.update({
         where: { id },
@@ -347,19 +364,26 @@ export class KycService {
    * session.
    */
   async revokeVerification(adminUserId: string, subjectUserId: string, reason: string, ip: string | null) {
-    const subject = await this.prisma.user.findUnique({
-      where: { id: subjectUserId },
-      select: { id: true, kycVerifiedAt: true },
-    });
-    if (!subject) throw new NotFoundException('User not found');
-    if (!subject.kycVerifiedAt) {
-      throw new BadRequestException('User is not currently verified');
-    }
     if (!reason.trim()) {
       throw new ForbiddenException('A revocation reason is required');
     }
 
     return this.prisma.$transaction(async (tx) => {
+      // Same per-user advisory-lock pattern as the other KYC mutations —
+      // serializes a revoke against a concurrent admin approve / webhook
+      // decision so we don't double-clear, write a misleading audit row, or
+      // race against a session that's about to flip kycVerifiedAt back on.
+      await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtextextended(${subjectUserId}, 0))`;
+
+      const subject = await tx.user.findUnique({
+        where: { id: subjectUserId },
+        select: { id: true, kycVerifiedAt: true },
+      });
+      if (!subject) throw new NotFoundException('User not found');
+      if (!subject.kycVerifiedAt) {
+        throw new BadRequestException('User is not currently verified');
+      }
+
       const updated = await tx.user.update({
         where: { id: subjectUserId },
         data: { kycVerifiedAt: null },
