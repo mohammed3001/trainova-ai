@@ -1,5 +1,6 @@
 import { BadRequestException, ConflictException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
+import { ConfigService } from '@nestjs/config';
 import { Prisma } from '@trainova/db';
 import {
   CreateEmailCampaignInput,
@@ -16,6 +17,12 @@ import {
 } from '@trainova/shared';
 import { PrismaService } from '../prisma/prisma.service';
 import { EmailService } from '../email/email.service';
+import { AdsService } from '../ads/ads.service';
+import {
+  NEWSLETTER_AD_TOKEN,
+  applyNewsletterAd,
+  pickAndRecordNewsletterAd,
+} from '../ads/newsletter-ad.util';
 
 /**
  * Hard caps on cron pass to keep load predictable. Each cron tick claims at
@@ -35,7 +42,22 @@ export class EmailMarketingService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly email: EmailService,
+    private readonly ads: AdsService,
+    private readonly config: ConfigService,
   ) {}
+
+  /**
+   * Resolve the absolute base URL the API is reachable at, used to build the
+   * tracked click links inside newsletter ad blocks. Falls back to localhost
+   * for dev so the email body still validates.
+   */
+  private resolveApiBaseUrl(): string {
+    return (
+      this.config.get<string>('API_URL') ??
+      this.config.get<string>('NEXT_PUBLIC_API_URL') ??
+      'http://localhost:4000'
+    );
+  }
 
   // ===========================
   // Campaign CRUD
@@ -560,12 +582,33 @@ export class EmailMarketingService {
         });
         if (sendRow.status === 'SENT' || sendRow.status === 'SKIPPED') continue;
         try {
+          // Resolve a per-recipient newsletter ad slot only if the campaign
+          // body opted in via the AD_SLOT token. We pick + record an
+          // impression per recipient (stable session hash so the existing
+          // frequency-cap logic still works) and substitute the rendered
+          // block. If no eligible creative exists, the token is stripped
+          // and the email reads as if the slot wasn't there. T9.F.
+          const wantsAd =
+            campaign.bodyHtml.includes(NEWSLETTER_AD_TOKEN) ||
+            (campaign.bodyText?.includes(NEWSLETTER_AD_TOKEN) ?? false);
+          const ad = wantsAd
+            ? await pickAndRecordNewsletterAd(this.ads, this.resolveApiBaseUrl(), {
+                campaignId: id,
+                recipientId: r.id,
+                recipientEmail: r.email,
+                locale: campaign.locale as CampaignLocale,
+              })
+            : null;
+          const { bodyHtml, bodyText } = wantsAd
+            ? applyNewsletterAd(campaign.bodyHtml, campaign.bodyText, ad)
+            : { bodyHtml: campaign.bodyHtml, bodyText: campaign.bodyText };
+
           await this.email.sendCampaignRaw({
             to: r.email,
             locale: campaign.locale as CampaignLocale,
             subject: campaign.subject,
-            bodyHtml: campaign.bodyHtml,
-            bodyText: campaign.bodyText,
+            bodyHtml,
+            bodyText,
             vars: { name: r.name },
           });
           await this.prisma.emailCampaignSend.update({
@@ -644,12 +687,31 @@ export class EmailMarketingService {
         continue;
       }
       try {
+        // Same opt-in-by-token newsletter ad slot as broadcast campaigns.
+        // Drip enrollments are per-(sequence, user), so the recipientEmail
+        // alone gives a stable hash for frequency-cap accounting across
+        // re-enrollments. T9.F.
+        const wantsAd =
+          step.bodyHtml.includes(NEWSLETTER_AD_TOKEN) ||
+          (step.bodyText?.includes(NEWSLETTER_AD_TOKEN) ?? false);
+        const ad = wantsAd
+          ? await pickAndRecordNewsletterAd(this.ads, this.resolveApiBaseUrl(), {
+              campaignId: e.sequenceId,
+              recipientId: e.user.id,
+              recipientEmail: e.user.email,
+              locale: step.locale as CampaignLocale,
+            })
+          : null;
+        const { bodyHtml, bodyText } = wantsAd
+          ? applyNewsletterAd(step.bodyHtml, step.bodyText, ad)
+          : { bodyHtml: step.bodyHtml, bodyText: step.bodyText };
+
         await this.email.sendCampaignRaw({
           to: e.user.email,
           locale: step.locale as CampaignLocale,
           subject: step.subject,
-          bodyHtml: step.bodyHtml,
-          bodyText: step.bodyText,
+          bodyHtml,
+          bodyText,
           vars: { name: e.user.name },
         });
       } catch (err) {
