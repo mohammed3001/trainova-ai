@@ -304,6 +304,7 @@ test.describe('Golden E2E flow — 11 steps', () => {
       'admin-finance',
       'admin-settings',
       'admin-sponsored',
+      'admin-white-label',
       'ads',
       'ai-assist',
       'applications',
@@ -335,6 +336,7 @@ test.describe('Golden E2E flow — 11 steps', () => {
       'uploads',
       'users',
       'verification',
+      'white-label',
       'workbench',
     ];
     expect(tagNames).toEqual(expected);
