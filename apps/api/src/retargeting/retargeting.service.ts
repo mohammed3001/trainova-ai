@@ -272,9 +272,10 @@ export class RetargetingService {
   // =====================================================================
 
   /**
-   * Every 15 minutes, recompute all active segments whose last recompute
+   * Every 10 minutes, recompute all active segments whose last recompute
    * is older than 10 minutes. The 10-minute floor prevents a flapping
-   * recomputer from running back-to-back when ticks drift.
+   * recomputer from running back-to-back when ticks drift, so each
+   * segment is materially refreshed every ~10–20 minutes.
    */
   @Cron(CronExpression.EVERY_10_MINUTES)
   async cron(): Promise<void> {

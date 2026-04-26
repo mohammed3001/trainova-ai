@@ -142,7 +142,18 @@ function readCookie(req: Request, name: string): string | null {
   const parts = header.split(';');
   for (const raw of parts) {
     const [k, ...v] = raw.trim().split('=');
-    if (k === name) return decodeURIComponent(v.join('='));
+    if (k === name) {
+      // `decodeURIComponent` throws `URIError` on malformed percent-
+      // encoding (e.g. `_tr_visit=rt_%ZZ`). The pixel handler relies on
+      // this function being infallible so the GIF response is always
+      // produced — treat a malformed cookie value as "no cookie" and
+      // let the caller mint a fresh one.
+      try {
+        return decodeURIComponent(v.join('='));
+      } catch {
+        return null;
+      }
+    }
   }
   return null;
 }

@@ -147,7 +147,17 @@ function readRetargetingCookie(req: Request): string | null {
   if (!header) return null;
   for (const raw of header.split(';')) {
     const [k, ...v] = raw.trim().split('=');
-    if (k === RETARGETING_COOKIE_NAME) return decodeURIComponent(v.join('='));
+    if (k === RETARGETING_COOKIE_NAME) {
+      // `decodeURIComponent` throws `URIError` on malformed percent-
+      // encoding. Ad serving must not 500 because of a corrupted/tampered
+      // tracking cookie — treat a bad value as "no cookie" so retargeting
+      // gracefully falls back to an empty audience set.
+      try {
+        return decodeURIComponent(v.join('='));
+      } catch {
+        return null;
+      }
+    }
   }
   return null;
 }
