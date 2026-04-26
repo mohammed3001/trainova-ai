@@ -988,6 +988,7 @@
       "companies": "Companies",
       "trainers": "Trainers",
       "verification": "Verification",
+      "kyc": "KYC",
       "requests": "Requests",
       "tests": "Tests",
       "attempts": "Attempts",
@@ -1961,6 +1962,58 @@
         "failed": "Fallido",
         "recipients": "Destinatarios"
       }
+    },
+    "kyc": {
+      "title": "Sesiones de KYC",
+      "subtitle": "Cola de verificación de identidad. Aprueba o rechaza los documentos recibidos.",
+      "empty": "Ninguna sesión coincide con este filtro.",
+      "alreadyVerified": "Ya verificado",
+      "noDocuments": "Sin documentos adjuntos.",
+      "status": {
+        "PENDING": "Pendiente",
+        "AWAITING_REVIEW": "En revisión",
+        "APPROVED": "Aprobado",
+        "REJECTED": "Rechazado",
+        "EXPIRED": "Expirado"
+      },
+      "documentSide": {
+        "FRONT": "Anverso",
+        "BACK": "Reverso",
+        "SELFIE": "Selfie"
+      },
+      "col": {
+        "submittedAt": "Enviado el",
+        "reviewedAt": "Revisado el",
+        "reviewer": "Revisor"
+      },
+      "field": {
+        "email": "Correo",
+        "emailVerified": "Correo verificado",
+        "kycVerified": "KYC verificado",
+        "documentType": "Tipo de documento",
+        "documentCountry": "País",
+        "providerSessionId": "Sesión del proveedor",
+        "expiresAt": "Expira el",
+        "decisionReason": "Motivo de la decisión"
+      },
+      "section": {
+        "subject": "Sujeto",
+        "session": "Sesión",
+        "documents": "Documentos",
+        "review": "Revisión"
+      },
+      "review": {
+        "approve": "Aprobar",
+        "reject": "Rechazar",
+        "approveNoteLabel": "Nota de aprobación (opcional)",
+        "rejectReasonLabel": "Motivo de rechazo (obligatorio)",
+        "reasonPlaceholder": "Explica al usuario por qué no se pudo verificar su identidad.",
+        "hint": "Aprobar marca al usuario como verificado de inmediato."
+      },
+      "revoke": {
+        "reasonLabel": "Motivo de la revocación",
+        "button": "Revocar verificación"
+      }
     }
   },
   "ads": {
@@ -2726,6 +2779,29 @@
       "cancel": "Cancelar",
       "paymentError": "El pago falló. No se realizó ningún cargo.",
       "requirePaymentMethod": "Agrega un método de pago antes de impulsar."
+    }
+  },
+  "settings": {
+    "kyc": {
+      "title": "Verificación de identidad",
+      "subtitle": "Envía un documento oficial para confirmar tu identidad.",
+      "verifiedBadge": "Verificado",
+      "verifiedAt": "Verificado el {at}",
+      "verifiedHint": "Tu identidad está registrada. Contacta a soporte si quieres actualizarla.",
+      "sessionTitle": "Última sesión",
+      "pendingHint": "La sesión está abierta — sube tus documentos para enviarlos.",
+      "awaitingHint": "Tenemos tus documentos. Un administrador los revisará pronto.",
+      "start": {
+        "title": "Iniciar verificación",
+        "body": "Elige el documento que enviarás.",
+        "documentType": "Tipo de documento",
+        "documentCountry": "País (ISO)",
+        "passport": "Pasaporte",
+        "nationalId": "DNI / Cédula",
+        "driverLicense": "Licencia de conducir",
+        "submit": "Abrir sesión",
+        "error": "No se pudo abrir la sesión — inténtalo de nuevo."
+      }
     }
   }
 }

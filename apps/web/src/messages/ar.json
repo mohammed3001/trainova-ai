@@ -1008,6 +1008,7 @@
       "companies": "الشركات",
       "trainers": "المدربون",
       "verification": "التوثيق",
+      "kyc": "هوية الفرد",
       "requests": "الطلبات",
       "tests": "الاختبارات",
       "attempts": "المحاولات",
@@ -1981,6 +1982,58 @@
         "failed": "فشل",
         "recipients": "المستلمون"
       }
+    },
+    "kyc": {
+      "title": "جلسات التحقق من الهوية",
+      "subtitle": "طابور التحقق من هوية المستخدمين. اعتمد أو ارفض الوثائق المقدمة.",
+      "empty": "لا توجد جلسات تطابق هذا الفلتر.",
+      "alreadyVerified": "موثَّق مسبقاً",
+      "noDocuments": "لا وثائق مرفقة.",
+      "status": {
+        "PENDING": "قيد الإعداد",
+        "AWAITING_REVIEW": "بانتظار المراجعة",
+        "APPROVED": "موثَّق",
+        "REJECTED": "مرفوض",
+        "EXPIRED": "منتهٍ"
+      },
+      "documentSide": {
+        "FRONT": "الوجه الأمامي",
+        "BACK": "الوجه الخلفي",
+        "SELFIE": "صورة شخصية"
+      },
+      "col": {
+        "submittedAt": "تاريخ الإرسال",
+        "reviewedAt": "تاريخ المراجعة",
+        "reviewer": "المراجِع"
+      },
+      "field": {
+        "email": "البريد الإلكتروني",
+        "emailVerified": "تأكيد البريد",
+        "kycVerified": "تأكيد الهوية",
+        "documentType": "نوع الوثيقة",
+        "documentCountry": "الدولة",
+        "providerSessionId": "معرّف الجلسة لدى المزوّد",
+        "expiresAt": "تاريخ انتهاء الجلسة",
+        "decisionReason": "سبب القرار"
+      },
+      "section": {
+        "subject": "الشخص",
+        "session": "الجلسة",
+        "documents": "الوثائق",
+        "review": "المراجعة"
+      },
+      "review": {
+        "approve": "اعتماد",
+        "reject": "رفض",
+        "approveNoteLabel": "ملاحظة اعتماد (اختياري)",
+        "rejectReasonLabel": "سبب الرفض (إلزامي)",
+        "reasonPlaceholder": "وضّح للمستخدم سبب عدم اعتماد هويته.",
+        "hint": "الاعتماد يفعّل علامة \"موثَّق\" فوراً."
+      },
+      "revoke": {
+        "reasonLabel": "سبب الإلغاء",
+        "button": "إلغاء حالة التوثيق"
+      }
     }
   },
   "ads": {
@@ -2860,6 +2913,29 @@
       "cancel": "إلغاء",
       "paymentError": "فشل الدفع. لم يتم خصم أي مبلغ.",
       "requirePaymentMethod": "أضف طريقة دفع قبل التعزيز."
+    }
+  },
+  "settings": {
+    "kyc": {
+      "title": "التحقق من الهوية",
+      "subtitle": "أرفِق وثيقة هوية رسمية لنتأكد من شخصيتك.",
+      "verifiedBadge": "موثَّق",
+      "verifiedAt": "تم التوثيق في {at}",
+      "verifiedHint": "هويتك مسجلة لدينا. تواصل مع الدعم لتحديثها.",
+      "sessionTitle": "آخر جلسة",
+      "pendingHint": "الجلسة مفتوحة — ارفع وثائقك لإكمال الإرسال.",
+      "awaitingHint": "وصلت وثائقك. سيراجعها المشرف قريباً.",
+      "start": {
+        "title": "بدء التحقق",
+        "body": "اختر الوثيقة التي ستقدّمها.",
+        "documentType": "نوع الوثيقة",
+        "documentCountry": "الدولة (ISO)",
+        "passport": "جواز السفر",
+        "nationalId": "بطاقة هوية وطنية",
+        "driverLicense": "رخصة قيادة",
+        "submit": "فتح الجلسة",
+        "error": "تعذّر فتح الجلسة — حاول لاحقاً."
+      }
     }
   }
 }

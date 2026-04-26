@@ -44,6 +44,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     { href: `/${locale}/admin/companies`, label: t('admin.nav.companies'), group: all },
     { href: `/${locale}/admin/trainers`, label: t('admin.nav.trainers'), group: all },
     { href: `/${locale}/admin/verification`, label: t('admin.nav.verification'), group: verification },
+    { href: `/${locale}/admin/kyc`, label: t('admin.nav.kyc'), group: moderation },
     { href: `/${locale}/admin/requests`, label: t('admin.nav.requests'), group: moderation },
     { href: `/${locale}/admin/tests`, label: t('admin.nav.tests'), group: all },
     { href: `/${locale}/admin/conversations`, label: t('admin.nav.conversations'), group: moderation },

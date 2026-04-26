@@ -988,6 +988,7 @@
       "companies": "Companies",
       "trainers": "Trainers",
       "verification": "Verification",
+      "kyc": "KYC",
       "requests": "Requests",
       "tests": "Tests",
       "attempts": "Attempts",
@@ -1961,6 +1962,58 @@
         "failed": "Échec",
         "recipients": "Destinataires"
       }
+    },
+    "kyc": {
+      "title": "Sessions KYC",
+      "subtitle": "File d'attente de vérification d'identité. Approuvez ou rejetez les documents reçus.",
+      "empty": "Aucune session ne correspond à ce filtre.",
+      "alreadyVerified": "Déjà vérifié",
+      "noDocuments": "Aucun document joint.",
+      "status": {
+        "PENDING": "En attente",
+        "AWAITING_REVIEW": "À vérifier",
+        "APPROVED": "Approuvé",
+        "REJECTED": "Rejeté",
+        "EXPIRED": "Expiré"
+      },
+      "documentSide": {
+        "FRONT": "Recto",
+        "BACK": "Verso",
+        "SELFIE": "Selfie"
+      },
+      "col": {
+        "submittedAt": "Soumis le",
+        "reviewedAt": "Vérifié le",
+        "reviewer": "Vérificateur"
+      },
+      "field": {
+        "email": "E-mail",
+        "emailVerified": "E-mail vérifié",
+        "kycVerified": "KYC vérifié",
+        "documentType": "Type de document",
+        "documentCountry": "Pays",
+        "providerSessionId": "Session du fournisseur",
+        "expiresAt": "Expire le",
+        "decisionReason": "Motif de la décision"
+      },
+      "section": {
+        "subject": "Sujet",
+        "session": "Session",
+        "documents": "Documents",
+        "review": "Vérification"
+      },
+      "review": {
+        "approve": "Approuver",
+        "reject": "Rejeter",
+        "approveNoteLabel": "Note d'approbation (optionnelle)",
+        "rejectReasonLabel": "Motif du rejet (obligatoire)",
+        "reasonPlaceholder": "Expliquez à l'utilisateur pourquoi son identité n'a pas pu être vérifiée.",
+        "hint": "L'approbation marque l'utilisateur comme vérifié immédiatement."
+      },
+      "revoke": {
+        "reasonLabel": "Motif de la révocation",
+        "button": "Révoquer la vérification"
+      }
     }
   },
   "ads": {
@@ -2726,6 +2779,29 @@
       "cancel": "Annuler",
       "paymentError": "Paiement échoué. Aucun montant n’a été prélevé.",
       "requirePaymentMethod": "Ajoutez un moyen de paiement avant de booster."
+    }
+  },
+  "settings": {
+    "kyc": {
+      "title": "Vérification d'identité",
+      "subtitle": "Soumettez une pièce d'identité officielle pour confirmer votre identité.",
+      "verifiedBadge": "Vérifié",
+      "verifiedAt": "Vérifié le {at}",
+      "verifiedHint": "Votre identité est enregistrée. Contactez le support pour la mettre à jour.",
+      "sessionTitle": "Dernière session",
+      "pendingHint": "La session est ouverte — téléchargez vos documents pour les soumettre.",
+      "awaitingHint": "Nous avons vos documents. Un administrateur les examinera bientôt.",
+      "start": {
+        "title": "Démarrer la vérification",
+        "body": "Choisissez le document que vous soumettrez.",
+        "documentType": "Type de document",
+        "documentCountry": "Pays (ISO)",
+        "passport": "Passeport",
+        "nationalId": "Carte nationale d'identité",
+        "driverLicense": "Permis de conduire",
+        "submit": "Ouvrir la session",
+        "error": "Impossible d'ouvrir la session — réessayez."
+      }
     }
   }
 }

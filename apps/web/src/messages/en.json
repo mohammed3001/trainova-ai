@@ -1008,6 +1008,7 @@
       "companies": "Companies",
       "trainers": "Trainers",
       "verification": "Verification",
+      "kyc": "KYC",
       "requests": "Requests",
       "tests": "Tests",
       "attempts": "Attempts",
@@ -1981,6 +1982,58 @@
         "failed": "Failed",
         "recipients": "Recipients"
       }
+    },
+    "kyc": {
+      "title": "KYC sessions",
+      "subtitle": "Identity verification queue. Approve or reject submitted documents.",
+      "empty": "No sessions match this filter.",
+      "alreadyVerified": "Already verified",
+      "noDocuments": "No documents attached.",
+      "status": {
+        "PENDING": "Pending",
+        "AWAITING_REVIEW": "Awaiting review",
+        "APPROVED": "Approved",
+        "REJECTED": "Rejected",
+        "EXPIRED": "Expired"
+      },
+      "documentSide": {
+        "FRONT": "Front",
+        "BACK": "Back",
+        "SELFIE": "Selfie"
+      },
+      "col": {
+        "submittedAt": "Submitted at",
+        "reviewedAt": "Reviewed at",
+        "reviewer": "Reviewer"
+      },
+      "field": {
+        "email": "Email",
+        "emailVerified": "Email verified",
+        "kycVerified": "KYC verified",
+        "documentType": "Document type",
+        "documentCountry": "Country",
+        "providerSessionId": "Provider session",
+        "expiresAt": "Expires at",
+        "decisionReason": "Decision reason"
+      },
+      "section": {
+        "subject": "Subject",
+        "session": "Session",
+        "documents": "Documents",
+        "review": "Review"
+      },
+      "review": {
+        "approve": "Approve",
+        "reject": "Reject",
+        "approveNoteLabel": "Optional approval note",
+        "rejectReasonLabel": "Rejection reason (required)",
+        "reasonPlaceholder": "Explain to the user why their identity could not be verified.",
+        "hint": "Approving sets the user's identity-verified flag immediately."
+      },
+      "revoke": {
+        "reasonLabel": "Reason for revocation",
+        "button": "Revoke verified status"
+      }
     }
   },
   "ads": {
@@ -2860,6 +2913,29 @@
       "cancel": "Cancel",
       "paymentError": "Payment failed. No charge was made.",
       "requirePaymentMethod": "Add a payment method on file before boosting."
+    }
+  },
+  "settings": {
+    "kyc": {
+      "title": "Identity verification",
+      "subtitle": "Submit a government-issued ID so we can confirm you are who you say you are.",
+      "verifiedBadge": "Verified",
+      "verifiedAt": "Verified on {at}",
+      "verifiedHint": "Your identity is on file. Contact support if you need to update it.",
+      "sessionTitle": "Latest session",
+      "pendingHint": "Your session is open — upload your documents to submit.",
+      "awaitingHint": "We have your documents. An admin will review shortly.",
+      "start": {
+        "title": "Start verification",
+        "body": "Pick the document you'll submit.",
+        "documentType": "Document type",
+        "documentCountry": "Country (ISO code)",
+        "passport": "Passport",
+        "nationalId": "National ID",
+        "driverLicense": "Driver license",
+        "submit": "Open session",
+        "error": "Could not start a session — try again."
+      }
     }
   }
 }

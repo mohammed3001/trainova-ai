@@ -45,6 +45,10 @@ model User {
   currencyPreference String?
   avatarUrl          String?
   emailVerifiedAt    DateTime?
+  /// Denormalised KYC verification timestamp (mirror of the most-recent
+  /// APPROVED `KycSession` — see T9.E). Cleared when an admin revokes the
+  /// approval. Pure read-side cache, never sole source of truth.
+  kycVerifiedAt      DateTime?
   twoFactorSecret    String?
   lastLoginAt        DateTime?
   createdAt          DateTime   @default(now())
@@ -96,6 +100,8 @@ model User {
   interviewsScheduledByMe       InterviewMeeting[]        @relation("InterviewScheduler")
   interviewsAsTrainer           InterviewMeeting[]        @relation("InterviewTrainer")
   interviewsCancelledByMe       InterviewMeeting[]        @relation("InterviewCanceller")
+  kycSessions                   KycSession[]              @relation("KycSubject")
+  kycSessionsReviewed           KycSession[]              @relation("KycReviewer")
 
   @@index([role, status])
 }
@@ -1600,6 +1606,62 @@ model VerificationRequest {
   @@index([status, createdAt])
   @@index([targetType, targetId])
   @@index([submitterId])
+}
+
+// =========================
+// KYC — identity verification (T9.E)
+// =========================
+//
+// `VerificationRequest` (above) covers *manual* document review for company
+// or trainer profiles (logo, business license, portfolio attestation). KYC
+// is the orthogonal individual-identity layer — proof that the human behind
+// a `User` is who they claim — and is normally driven by a third-party
+// provider (Onfido / Persona / Stripe Identity / etc).
+//
+// We model it as a session-per-attempt so retries leave an audit trail and
+// the admin can see e.g. "rejected on 2024-12-01, re-submitted 2024-12-04".
+// One session is "active" (PENDING/AWAITING_REVIEW) at a time per user;
+// `kycVerifiedAt` on the User is denormalised for fast lookups so other
+// surfaces (contract signing, payouts) can gate without joining.
+
+enum KycSessionStatus {
+  PENDING
+  AWAITING_REVIEW
+  APPROVED
+  REJECTED
+  EXPIRED
+}
+
+enum KycProviderName {
+  STUB
+  ONFIDO
+  PERSONA
+  STRIPE_IDENTITY
+}
+
+model KycSession {
+  id                String           @id @default(cuid())
+  userId            String
+  provider          KycProviderName
+  providerSessionId String?
+  status            KycSessionStatus @default(PENDING)
+  documentType      String?
+  documentCountry   String?
+  documents         Json             @default("[]")
+  submittedAt       DateTime?
+  reviewedAt        DateTime?
+  reviewerId        String?
+  decisionReason    String?
+  metadata          Json             @default("{}")
+  expiresAt         DateTime?
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+
+  user     User  @relation("KycSubject", fields: [userId], references: [id], onDelete: Cascade)
+  reviewer User? @relation("KycReviewer", fields: [reviewerId], references: [id], onDelete: SetNull)
+
+  @@index([userId, status])
+  @@index([status, createdAt])
 }
 
 // =========================

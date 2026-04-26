@@ -174,3 +174,33 @@ export async function reviewReportAction(formData: FormData): Promise<void> {
   revalidatePath(`/[locale]/admin/reports/${id}`, 'page');
   revalidatePath(`/[locale]/admin/reports`, 'page');
 }
+
+export async function reviewKycAction(formData: FormData): Promise<void> {
+  const id = String(formData.get('id') ?? '');
+  const decision = String(formData.get('decision') ?? '');
+  const decisionReason = String(formData.get('decisionReason') ?? '').trim() || undefined;
+  if (decision !== 'APPROVE' && decision !== 'REJECT') {
+    throw new Error('Invalid decision');
+  }
+  if (decision === 'REJECT' && !decisionReason) {
+    throw new Error('A rejection reason is required');
+  }
+  await call(`/admin/kyc/sessions/${id}/review`, {
+    method: 'POST',
+    body: JSON.stringify({ decision, decisionReason }),
+  });
+  revalidatePath(`/[locale]/admin/kyc/${id}`, 'page');
+  revalidatePath(`/[locale]/admin/kyc`, 'page');
+}
+
+export async function revokeKycAction(formData: FormData): Promise<void> {
+  const userId = String(formData.get('userId') ?? '');
+  const reason = String(formData.get('reason') ?? '').trim();
+  if (!reason) throw new Error('A revocation reason is required');
+  await call(`/admin/kyc/users/${userId}/revoke`, {
+    method: 'POST',
+    body: JSON.stringify({ reason }),
+  });
+  revalidatePath(`/[locale]/admin/kyc`, 'page');
+  revalidatePath(`/[locale]/admin/users/${userId}`, 'page');
+}
