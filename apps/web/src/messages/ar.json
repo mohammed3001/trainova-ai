@@ -2861,5 +2861,45 @@
       "paymentError": "فشل الدفع. لم يتم خصم أي مبلغ.",
       "requirePaymentMethod": "أضف طريقة دفع قبل التعزيز."
     }
+  },
+  "notifications": {
+    "nav": "الإشعارات",
+    "title": "الإشعارات",
+    "subtitle": "النشاطات في حسابك",
+    "loading": "جارٍ تحميل الإشعارات…",
+    "empty": "لا توجد إشعارات جديدة.",
+    "loadFailed": "تعذّر تحميل الإشعارات.",
+    "retry": "إعادة المحاولة",
+    "markAllRead": "تعليم الكل كمقروء",
+    "justNow": "الآن",
+    "minutesAgo": "قبل {m} د",
+    "hoursAgo": "قبل {h} س",
+    "daysAgo": "قبل {d} يوم",
+    "push": {
+      "title": "إشعارات المتصفح",
+      "on": "مفعّل",
+      "off": "معطّل",
+      "enable": "تفعيل",
+      "disable": "تعطيل"
+    },
+    "types": {
+      "application": {
+        "received": "طلب جديد",
+        "shortlisted": "تم اختيارك للقائمة المختصرة",
+        "accepted": "تم قبول طلبك",
+        "rejected": "تم رفض طلبك"
+      },
+      "test": {
+        "assigned": "اختبار جديد",
+        "submitted": "تم تسليم الاختبار",
+        "graded": "تم تقييم الاختبار"
+      },
+      "chat": {
+        "message": "رسالة جديدة"
+      },
+      "system": {
+        "announcement": "إعلان من النظام"
+      }
+    }
   }
 }
