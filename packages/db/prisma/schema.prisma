@@ -96,6 +96,8 @@ model User {
   interviewsScheduledByMe       InterviewMeeting[]        @relation("InterviewScheduler")
   interviewsAsTrainer           InterviewMeeting[]        @relation("InterviewTrainer")
   interviewsCancelledByMe       InterviewMeeting[]        @relation("InterviewCanceller")
+  apiTokensCreated              ApiToken[]                @relation("ApiTokenCreator")
+  apiTokensRevoked              ApiToken[]                @relation("ApiTokenRevoker")
 
   @@index([role, status])
 }
@@ -179,6 +181,7 @@ model Company {
   adCampaigns      AdCampaign[]
   modelConnections ModelConnection[]
   contracts        Contract[]
+  apiTokens        ApiToken[]
 
   @@index([slug])
 }
@@ -2222,4 +2225,66 @@ model InterviewMeeting {
   @@index([trainerId, status, scheduledAt])
   @@index([scheduledById, status, scheduledAt])
   @@index([status, scheduledAt])
+}
+
+// =========================
+// T9.B — Public API for Enterprise
+// =========================
+
+/// Per-company API token issued by an OWNER / ADMIN of the Company. The
+/// raw secret is shown to the operator exactly once at creation time —
+/// only `tokenHash` (sha256 of the full `prefix.secret`) is persisted, so
+/// even a database leak yields nothing usable. Mirrors the
+/// email-verification / password-reset / refresh-token pattern in this
+/// codebase.
+model ApiToken {
+  id                 String    @id @default(cuid())
+  companyId          String
+  /// User who minted the token. We require this for the audit trail and
+  /// for showing operators "who created this token" in the company UI.
+  createdById        String
+  /// Operator-supplied label, e.g. "Production sync", "Zapier",
+  /// "Internal CI". Helps operators tell tokens apart at revoke time.
+  name               String
+  /// Public-safe identifier (e.g. `tk_live_a1b2c3d4`). Sent in the
+  /// `Authorization: Bearer <prefix>.<secret>` header alongside the
+  /// secret half. Indexed so the auth guard can look up the token
+  /// without scanning the whole table.
+  prefix             String
+  /// SHA-256 of the full `prefix.secret` string. Unique so the guard
+  /// can `findUnique({ where: { tokenHash } })` without ambiguity.
+  tokenHash          String    @unique
+  /// Coarse-grained scopes; see {@link ApiTokenScope} in
+  /// `@trainova/shared`. Empty array means "no API access" (used for
+  /// soft-disabling without revoking).
+  scopes             String[]
+  /// Per-token rate-limit ceiling (requests per minute). Defaults to
+  /// 60 — Enterprise customers can request a higher limit via support.
+  /// The guard reads this column on every request, so any change takes
+  /// effect on the next request without restart.
+  rateLimitPerMinute Int       @default(60)
+  /// Updated lazily on every successful request. Used by the company
+  /// dashboard to show "last used N minutes ago" so operators can spot
+  /// dormant tokens before rotating credentials.
+  lastUsedAt         DateTime?
+  /// IP that made the most recent successful call. Useful when an
+  /// operator suspects a token leak and wants to confirm the egress.
+  lastUsedIp         String?
+  /// Optional hard expiry. Tokens without `expiresAt` never expire on
+  /// their own — operators rotate them manually.
+  expiresAt          DateTime?
+  /// Set when the token is revoked (manually or automatically). The
+  /// guard treats any token with a non-null `revokedAt` as invalid even
+  /// if `expiresAt` is still in the future.
+  revokedAt          DateTime?
+  revokedById        String?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  createdBy User    @relation("ApiTokenCreator", fields: [createdById], references: [id], onDelete: Restrict)
+  revokedBy User?   @relation("ApiTokenRevoker", fields: [revokedById], references: [id], onDelete: SetNull)
+
+  @@index([companyId, revokedAt])
+  @@index([prefix])
 }
