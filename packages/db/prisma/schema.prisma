@@ -96,6 +96,9 @@ model User {
   interviewsScheduledByMe       InterviewMeeting[]        @relation("InterviewScheduler")
   interviewsAsTrainer           InterviewMeeting[]        @relation("InterviewTrainer")
   interviewsCancelledByMe       InterviewMeeting[]        @relation("InterviewCanceller")
+  retargetingEvents             RetargetingEvent[]        @relation("RetargetingEventUser")
+  audienceMemberships           AudienceMembership[]      @relation("AudienceMembershipUser")
+  audienceSegmentsCreated       AudienceSegment[]         @relation("AudienceSegmentCreator")
 
   @@index([role, status])
 }
@@ -1330,40 +1333,45 @@ enum AdPauseReason {
 }
 
 model AdCampaign {
-  id                 String           @id @default(cuid())
-  ownerId            String
-  companyId          String?
-  name               String
-  pricingModel       AdPricingModel   @default(CPM)
+  id                          String           @id @default(cuid())
+  ownerId                     String
+  companyId                   String?
+  name                        String
+  pricingModel                AdPricingModel   @default(CPM)
   // Unit prices in the smallest currency unit (cents). Exactly one is required
   // based on `pricingModel`; see `ads.service#create`.
-  cpmCents           Int?
-  cpcCents           Int?
-  flatFeeCents       Int?
+  cpmCents                    Int?
+  cpcCents                    Int?
+  flatFeeCents                Int?
   // Running totals — kept on the row so serve() can enforce budget cheaply
   // (no aggregate query per request).
-  budgetCents        Int              @default(0)
+  budgetCents                 Int              @default(0)
   // Spent-to-date in whole cents (display-facing, floor of the microcent
   // accumulator) and in microcents (1/1000 of a cent) for lossless sub-cent
   // CPM accrual. CPM charges are fractional per impression, so the sub-cent
   // accumulator prevents Math.floor(cpmCents/1000) from zeroing out for every
   // rate below $10 / 1000 (e.g. cpmCents=500 → 500 microcents/impression).
-  spentCents         Int              @default(0)
-  spentMicroCents    BigInt           @default(0)
-  status             AdCampaignStatus @default(DRAFT)
-  pausedReason       AdPauseReason?
-  rejectionReason    String?
-  reviewedById       String?
-  reviewedAt         DateTime?
-  targetingCountries String[]         @default([])
-  targetingLocales   String[]         @default([])
-  targetingSkillIds  String[]         @default([])
+  spentCents                  Int              @default(0)
+  spentMicroCents             BigInt           @default(0)
+  status                      AdCampaignStatus @default(DRAFT)
+  pausedReason                AdPauseReason?
+  rejectionReason             String?
+  reviewedById                String?
+  reviewedAt                  DateTime?
+  targetingCountries          String[]         @default([])
+  targetingLocales            String[]         @default([])
+  targetingSkillIds           String[]         @default([])
+  /// T9.G — retargeting. When non-empty, the creative is only served to
+  /// sessions that are members of *at least one* of the listed segments.
+  /// Empty array (the default) disables audience targeting and the
+  /// creative is eligible for any session.
+  targetingAudienceSegmentIds String[]         @default([])
   // Hard cap of impressions charged per `sessionHash` within 24h window.
-  frequencyCapPerDay Int?
-  startDate          DateTime?
-  endDate            DateTime?
-  createdAt          DateTime         @default(now())
-  updatedAt          DateTime         @updatedAt
+  frequencyCapPerDay          Int?
+  startDate                   DateTime?
+  endDate                     DateTime?
+  createdAt                   DateTime         @default(now())
+  updatedAt                   DateTime         @updatedAt
 
   owner       User           @relation("AdCampaignOwner", fields: [ownerId], references: [id], onDelete: Cascade)
   reviewer    User?          @relation("AdCampaignReviewer", fields: [reviewedById], references: [id], onDelete: SetNull)
@@ -2222,4 +2230,132 @@ model InterviewMeeting {
   @@index([trainerId, status, scheduledAt])
   @@index([scheduledById, status, scheduledAt])
   @@index([status, scheduledAt])
+}
+
+// =========================
+// T9.G — Retargeting + audience segments
+// =========================
+
+/// One row per pixel hit / explicit page-view event. We deliberately keep
+/// the raw event log instead of doing client-side aggregation, so a future
+/// segment definition can run a fresh query against historical data
+/// without losing fidelity. The cron-driven aggregator (see
+/// `RetargetingService.recomputeSegment`) materialises memberships from
+/// these rows into `AudienceMembership` rows so ad serving stays cheap.
+model RetargetingEvent {
+  id         String                 @id @default(cuid())
+  /// Anonymous tracking cookie. Always set; survives across logins so we
+  /// can tie pre- and post-auth behaviour to the same trail.
+  cookieId   String
+  /// Set when the visitor was authenticated at the time of the event.
+  userId     String?
+  eventType  RetargetingEventType
+  /// Free-form path the event was emitted from (`/ar/trainers/foo`,
+  /// `/companies/requests/abc`). Capped at 512 chars at the controller.
+  path       String?
+  /// Optional logical entity the event refers to (e.g. the trainer id on
+  /// a profile view, the request id on a request view, the contract id
+  /// on a checkout-start). Lets segment rules say "viewed trainer=X" or
+  /// "abandoned checkout in last 7 days" without parsing the path.
+  entityKind RetargetingEntityKind?
+  entityId   String?
+  locale     String?
+  /// Truncated user agent (we don't store the full UA string for privacy).
+  userAgent  String?
+  /// Hash of the client IP (sha256, hex, sliced) — never the raw IP.
+  ipHash     String?
+  createdAt  DateTime               @default(now())
+
+  user User? @relation("RetargetingEventUser", fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([cookieId, createdAt])
+  @@index([userId, createdAt])
+  @@index([eventType, createdAt])
+  @@index([entityKind, entityId, createdAt])
+}
+
+enum RetargetingEventType {
+  PAGE_VIEW
+  TRAINER_VIEW
+  REQUEST_VIEW
+  COMPANY_VIEW
+  APPLICATION_START
+  CHECKOUT_START
+  CHECKOUT_ABANDON
+  CHECKOUT_COMPLETE
+  SEARCH
+  CUSTOM
+}
+
+enum RetargetingEntityKind {
+  TRAINER
+  REQUEST
+  COMPANY
+  CONTRACT
+  TEST
+  OTHER
+}
+
+/// Admin-defined audience segment. The `definition` JSON is a list of
+/// rule objects (see `RetargetingSegmentDefinition` in
+/// `packages/shared/src/retargeting.ts`). At recompute time the service
+/// converts each rule into a Prisma WHERE clause against
+/// `RetargetingEvent`, takes the union of matching cookieIds/userIds,
+/// and upserts `AudienceMembership` rows with `expiresAt` derived from
+/// `lookbackDays`.
+model AudienceSegment {
+  id           String    @id @default(cuid())
+  /// Stable slug used by ad-creative editors when targeting; lower-kebab.
+  slug         String    @unique
+  name         String
+  description  String?
+  /// JSON-encoded array of `RetargetingSegmentRule`s — see shared types.
+  /// Stored as JSON (rather than a relation table) because the rule shape
+  /// is heterogeneous across rule types and we don't query *into* it from
+  /// SQL — only the recomputer reads it.
+  definition   Json
+  /// Max age (in days) of events considered when recomputing membership.
+  /// Effectively the segment TTL — a cookie that hasn't matched any rule
+  /// in the last `lookbackDays` falls out on the next recompute pass.
+  lookbackDays Int       @default(30)
+  isActive     Boolean   @default(true)
+  /// When the cron last finished a full recompute pass. Used by admin UI
+  /// to surface staleness and by the cron to skip segments that already
+  /// recomputed in this tick.
+  recomputedAt DateTime?
+  /// Snapshot of membership count at last recompute. Display-only.
+  memberCount  Int       @default(0)
+  createdById  String
+  createdBy    User      @relation("AudienceSegmentCreator", fields: [createdById], references: [id], onDelete: Cascade)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  memberships AudienceMembership[]
+
+  @@index([isActive, recomputedAt])
+}
+
+/// Materialised membership row. One per (segment, cookieId) and per
+/// (segment, userId) — both kept so a logged-out cookie that later
+/// authenticates can be quickly resolved to its segments via either key.
+model AudienceMembership {
+  id        String   @id @default(cuid())
+  segmentId String
+  /// At least one of `cookieId` / `userId` is always set.
+  cookieId  String?
+  userId    String?
+  /// Membership expires at `addedAt + segment.lookbackDays`. Stale rows
+  /// are pruned by the recomputer; they are also filtered at lookup time
+  /// so a missed cron pass can't keep someone in a segment forever.
+  expiresAt DateTime
+  addedAt   DateTime @default(now())
+
+  segment AudienceSegment @relation(fields: [segmentId], references: [id], onDelete: Cascade)
+  user    User?           @relation("AudienceMembershipUser", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([segmentId, cookieId])
+  @@unique([segmentId, userId])
+  @@index([cookieId, expiresAt])
+  @@index([userId, expiresAt])
+  @@index([segmentId, expiresAt])
 }
