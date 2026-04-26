@@ -1,6 +1,20 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { siteUrl } from '@/lib/seo';
 import './globals.css';
+
+export const viewport: Viewport = {
+  // Polish pass — explicit mobile-first viewport so iOS Safari + small
+  // Android viewports render at the design width instead of zooming
+  // out to a desktop fallback. Lighthouse mobile audit also hard-fails
+  // without this. `themeColor` is split per color scheme to match the
+  // light/dark `<html>` palette.
+  width: 'device-width',
+  initialScale: 1,
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#f8fafc' },
+    { media: '(prefers-color-scheme: dark)', color: '#0f172a' },
+  ],
+};
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl()),

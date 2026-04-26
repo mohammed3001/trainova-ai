@@ -37,11 +37,13 @@ import { CouponsModule } from './coupons/coupons.module';
 import { SponsoredModule } from './sponsored/sponsored.module';
 import { EmailMarketingModule } from './email-marketing/email-marketing.module';
 import { InterviewsModule } from './interviews/interviews.module';
+import { ObservabilityModule } from './observability/observability.module';
 import { HealthController } from './health.controller';
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
+    ObservabilityModule,
     // A single 'default' bucket with a generous ceiling for regular traffic.
     // Sensitive auth endpoints override this via @Throttle() at the method level
     // (see apps/api/src/auth/auth.controller.ts).
