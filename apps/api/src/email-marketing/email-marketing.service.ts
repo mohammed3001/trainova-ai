@@ -1,5 +1,6 @@
 import { BadRequestException, ConflictException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
+import { ConfigService } from '@nestjs/config';
 import { Prisma } from '@trainova/db';
 import {
   CreateEmailCampaignInput,
@@ -13,9 +14,16 @@ import {
   UpdateEmailCampaignInput,
   UpdateEmailDripSequenceInput,
   UpdateEmailDripStepInput,
+  interpolateEmailTemplate,
 } from '@trainova/shared';
 import { PrismaService } from '../prisma/prisma.service';
 import { EmailService } from '../email/email.service';
+import { AdsService } from '../ads/ads.service';
+import {
+  applyNewsletterAd,
+  hasNewsletterAdToken,
+  pickAndRecordNewsletterAd,
+} from '../ads/newsletter-ad.util';
 
 /**
  * Hard caps on cron pass to keep load predictable. Each cron tick claims at
@@ -35,7 +43,22 @@ export class EmailMarketingService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly email: EmailService,
+    private readonly ads: AdsService,
+    private readonly config: ConfigService,
   ) {}
+
+  /**
+   * Resolve the absolute base URL the API is reachable at, used to build the
+   * tracked click links inside newsletter ad blocks. Falls back to localhost
+   * for dev so the email body still validates.
+   */
+  private resolveApiBaseUrl(): string {
+    return (
+      this.config.get<string>('API_URL') ??
+      this.config.get<string>('NEXT_PUBLIC_API_URL') ??
+      'http://localhost:4000'
+    );
+  }
 
   // ===========================
   // Campaign CRUD
@@ -560,13 +583,59 @@ export class EmailMarketingService {
         });
         if (sendRow.status === 'SENT' || sendRow.status === 'SKIPPED') continue;
         try {
+          // Resolve a per-recipient newsletter ad slot only if the campaign
+          // body opted in via the AD_SLOT token. We pick + record an
+          // impression per recipient (stable session hash so the existing
+          // frequency-cap logic still works) and substitute the rendered
+          // block. If no eligible creative exists, the token is stripped
+          // and the email reads as if the slot wasn't there. T9.F.
+          const wantsAd =
+            hasNewsletterAdToken(campaign.bodyHtml) ||
+            hasNewsletterAdToken(campaign.bodyText);
+          const ad = wantsAd
+            ? await pickAndRecordNewsletterAd(this.ads, this.resolveApiBaseUrl(), {
+                campaignId: id,
+                recipientId: r.id,
+                recipientEmail: r.email,
+                locale: campaign.locale as CampaignLocale,
+              })
+            : null;
+          // Pre-interpolate the campaign-author body with recipient vars
+          // *before* injecting advertiser content, then pass `vars: {}` to
+          // `sendCampaignRaw` so the second interpolation pass inside
+          // `EmailService` is a no-op for the body. This prevents an
+          // advertiser from embedding `{{name}}` in headline/body/ctaLabel
+          // and having it resolved against the recipient's actual fields
+          // (template-injection / phishing vector). Subject is also
+          // pre-interpolated since the slot helper does not touch it but we
+          // still need vars applied somewhere.
+          const recipientVars = { name: r.name };
+          const interpolatedSubject = interpolateEmailTemplate(
+            campaign.subject,
+            recipientVars,
+            { escapeHtml: false },
+          );
+          const interpolatedHtml = interpolateEmailTemplate(
+            campaign.bodyHtml,
+            recipientVars,
+            { escapeHtml: true },
+          );
+          const interpolatedText = campaign.bodyText
+            ? interpolateEmailTemplate(campaign.bodyText, recipientVars, {
+                escapeHtml: false,
+              })
+            : campaign.bodyText;
+          const { bodyHtml, bodyText } = wantsAd
+            ? applyNewsletterAd(interpolatedHtml, interpolatedText, ad)
+            : { bodyHtml: interpolatedHtml, bodyText: interpolatedText };
+
           await this.email.sendCampaignRaw({
             to: r.email,
             locale: campaign.locale as CampaignLocale,
-            subject: campaign.subject,
-            bodyHtml: campaign.bodyHtml,
-            bodyText: campaign.bodyText,
-            vars: { name: r.name },
+            subject: interpolatedSubject,
+            bodyHtml,
+            bodyText,
+            vars: {},
           });
           await this.prisma.emailCampaignSend.update({
             where: { id: sendRow.id },
@@ -644,13 +713,48 @@ export class EmailMarketingService {
         continue;
       }
       try {
+        // Same opt-in-by-token newsletter ad slot as broadcast campaigns.
+        // Drip enrollments are per-(sequence, user), so the recipientEmail
+        // alone gives a stable hash for frequency-cap accounting across
+        // re-enrollments. T9.F.
+        const wantsAd =
+          hasNewsletterAdToken(step.bodyHtml) || hasNewsletterAdToken(step.bodyText);
+        const ad = wantsAd
+          ? await pickAndRecordNewsletterAd(this.ads, this.resolveApiBaseUrl(), {
+              campaignId: e.sequenceId,
+              recipientId: e.user.id,
+              recipientEmail: e.user.email,
+              locale: step.locale as CampaignLocale,
+            })
+          : null;
+        // Pre-interpolate before ad injection — see broadcast loop above.
+        const recipientVars = { name: e.user.name };
+        const interpolatedSubject = interpolateEmailTemplate(
+          step.subject,
+          recipientVars,
+          { escapeHtml: false },
+        );
+        const interpolatedHtml = interpolateEmailTemplate(
+          step.bodyHtml,
+          recipientVars,
+          { escapeHtml: true },
+        );
+        const interpolatedText = step.bodyText
+          ? interpolateEmailTemplate(step.bodyText, recipientVars, {
+              escapeHtml: false,
+            })
+          : step.bodyText;
+        const { bodyHtml, bodyText } = wantsAd
+          ? applyNewsletterAd(interpolatedHtml, interpolatedText, ad)
+          : { bodyHtml: interpolatedHtml, bodyText: interpolatedText };
+
         await this.email.sendCampaignRaw({
           to: e.user.email,
           locale: step.locale as CampaignLocale,
-          subject: step.subject,
-          bodyHtml: step.bodyHtml,
-          bodyText: step.bodyText,
-          vars: { name: e.user.name },
+          subject: interpolatedSubject,
+          bodyHtml,
+          bodyText,
+          vars: {},
         });
       } catch (err) {
         this.logger.error(
