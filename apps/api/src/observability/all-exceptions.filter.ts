@@ -55,10 +55,19 @@ export class AllExceptionsFilter implements ExceptionFilter {
       this.reporter?.captureException(exception, {
         tags: { kind: hostType },
       });
+      const message = exception instanceof Error ? exception.message : String(exception);
       if (exception instanceof Error) {
-        this.logger.error(`unhandled ${hostType}: ${exception.message}`, exception.stack);
+        this.logger.error(`unhandled ${hostType}: ${message}`, exception.stack);
       } else {
-        this.logger.error(`unhandled ${hostType}: ${String(exception)}`);
+        this.logger.error(`unhandled ${hostType}: ${message}`);
+      }
+      // Match NestJS's `BaseWsExceptionFilter`: forward a sanitised
+      // payload to the WS client so its `ack(err)` callback fires
+      // instead of hanging. Never leak stack traces or raw messages
+      // to the client — the original is in the reporter / server log.
+      if (hostType === 'ws') {
+        const client = host.switchToWs().getClient<{ emit?: (event: string, payload: unknown) => unknown }>();
+        client?.emit?.('exception', { status: 'error', message: 'Internal server error' });
       }
       return;
     }

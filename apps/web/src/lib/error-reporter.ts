@@ -37,15 +37,32 @@ function randomEventId(): string {
   return out;
 }
 
-function parseStack(stack: string | undefined): { frames: Array<Record<string, unknown>> } | undefined {
+// V8 (Chrome / Edge / Node):  `    at func (file:line:col)`
+const V8_FRAME_RE = /\s*at (?:(.+?) \()?(.+?):(\d+):(\d+)\)?$/;
+// SpiderMonkey / JavaScriptCore (Firefox / Safari):  `func@file:line:col`
+// `func` may be empty for anonymous frames.
+const MOZ_FRAME_RE = /^(.*?)@(.+?):(\d+):(\d+)$/;
+
+function parseStack(
+  stack: string | undefined,
+): { frames: Array<Record<string, unknown>> } | undefined {
   if (!stack) return undefined;
   const frames: Array<Record<string, unknown>> = [];
-  for (const raw of stack.split('\n').slice(1)) {
-    const m = /\s*at (?:(.+?) \()?(.+?):(\d+):(\d+)\)?$/.exec(raw.trim());
+  // V8 prepends a header line with the error message; Firefox/Safari do not.
+  // Skip line 0 only when it doesn't itself look like a frame.
+  const lines = stack.split('\n');
+  const startsWithFrame =
+    lines.length > 0 && (V8_FRAME_RE.test(lines[0] ?? '') || MOZ_FRAME_RE.test(lines[0] ?? ''));
+  const iter = startsWithFrame ? lines : lines.slice(1);
+  for (const raw of iter) {
+    const trimmed = raw.trim();
+    if (!trimmed) continue;
+    const m = V8_FRAME_RE.exec(trimmed) ?? MOZ_FRAME_RE.exec(trimmed);
     if (!m) continue;
     const filename = m[2] ?? '<unknown>';
+    const fn = m[1]?.trim();
     frames.push({
-      function: m[1] ?? '<anonymous>',
+      function: fn && fn.length > 0 ? fn : '<anonymous>',
       filename,
       lineno: Number(m[3]),
       colno: Number(m[4]),
