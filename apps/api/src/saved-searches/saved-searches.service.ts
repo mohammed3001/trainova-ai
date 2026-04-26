@@ -163,6 +163,20 @@ export class SavedSearchesService {
     const sentAt = new Date();
     const nextAt = new Date(sentAt.getTime() + ONE_DAY_MS);
 
+    // We track success/failure of the email separately from the
+    // "did we have any matches" decision because the two have to
+    // advance the watermarks differently:
+    //   ids.length === 0       — nothing to send. Treat as a successful
+    //                            tick: advance both lastNotifiedAt and
+    //                            nextNotifyAt so we don't loop.
+    //   sendDigest succeeds    — advance both watermarks.
+    //   sendDigest fails       — transient (provider outage, rate limit,
+    //                            network blip). Advance ONLY nextNotifyAt
+    //                            so we don't hammer the cron, and leave
+    //                            lastNotifiedAt UNCHANGED so the next
+    //                            successful run re-includes the matches
+    //                            we failed to deliver this time.
+    let digestSucceeded = true;
     if (ids.length > 0) {
       const items = await this.prisma.jobRequest.findMany({
         where: { id: { in: ids } },
@@ -177,17 +191,19 @@ export class SavedSearchesService {
       const orderedItems = ids
         .map((rid) => items.find((i) => i.id === rid))
         .filter((i): i is NonNullable<typeof i> => !!i);
-      await this.sendDigest(row.user, row.name, orderedItems, total).catch((err) => {
+      try {
+        await this.sendDigest(row.user, row.name, orderedItems, total);
+      } catch (err) {
+        digestSucceeded = false;
         this.logger.warn(
           `Failed to dispatch digest for saved-search ${row.id}: ${(err as Error).message}`,
         );
-      });
+      }
     }
 
-    await this.prisma.savedSearch.update({
-      where: { id: row.id },
-      data: { lastNotifiedAt: sentAt, nextNotifyAt: nextAt },
-    });
+    const data: Prisma.SavedSearchUpdateInput = { nextNotifyAt: nextAt };
+    if (digestSucceeded) data.lastNotifiedAt = sentAt;
+    await this.prisma.savedSearch.update({ where: { id: row.id }, data });
   }
 
   private async sendDigest(
