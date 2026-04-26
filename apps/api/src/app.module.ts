@@ -37,6 +37,8 @@ import { CouponsModule } from './coupons/coupons.module';
 import { SponsoredModule } from './sponsored/sponsored.module';
 import { EmailMarketingModule } from './email-marketing/email-marketing.module';
 import { InterviewsModule } from './interviews/interviews.module';
+import { SearchModule } from './search/search.module';
+import { SavedSearchesModule } from './saved-searches/saved-searches.module';
 import { HealthController } from './health.controller';
 
 @Module({
@@ -80,6 +82,8 @@ import { HealthController } from './health.controller';
     SponsoredModule,
     EmailMarketingModule,
     InterviewsModule,
+    SearchModule,
+    SavedSearchesModule,
   ],
   controllers: [HealthController],
   providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],

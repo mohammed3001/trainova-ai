@@ -96,6 +96,7 @@ model User {
   interviewsScheduledByMe       InterviewMeeting[]        @relation("InterviewScheduler")
   interviewsAsTrainer           InterviewMeeting[]        @relation("InterviewTrainer")
   interviewsCancelledByMe       InterviewMeeting[]        @relation("InterviewCanceller")
+  savedSearches                 SavedSearch[]             @relation("SavedSearchOwner")
 
   @@index([role, status])
 }
@@ -2222,4 +2223,44 @@ model InterviewMeeting {
   @@index([trainerId, status, scheduledAt])
   @@index([scheduledById, status, scheduledAt])
   @@index([status, scheduledAt])
+}
+
+// =========================
+// Marketplace Search v2 (T9.L)
+// =========================
+
+/// Saved Search — user persists a (q + filters) tuple and optionally
+/// subscribes to a daily email digest of new OPEN requests matching it.
+///
+/// `notifyDaily` toggles a cron worker that runs once per day (UTC),
+/// computes the matching jobs published since `lastNotifiedAt`, and
+/// emits a single digest email per user via the existing EmailService.
+///
+/// `queryJson` mirrors the shape of `SavedSearchQuery` in shared:
+/// { q?, skill?, industry?, modelFamily?, workType?, currency?,
+/// budgetMin?, budgetMax? }
+///
+/// The cron uses the same ranked search path as the public list, so an
+/// alert never includes a row the user wouldn't see in the UI.
+///
+model SavedSearch {
+  id              String    @id @default(cuid())
+  userId          String
+  name            String
+  /// Normalised query JSON; validated by Zod on every read/write.
+  queryJson       Json
+  notifyDaily     Boolean   @default(false)
+  /// `null` means "never notified" — cron treats this as `userCreatedAt`.
+  lastNotifiedAt  DateTime?
+  /// Throttle: next earliest UTC instant the cron will consider this row.
+  /// Set to lastNotifiedAt + 24h on send so a missed tick still respects
+  /// the daily cadence.
+  nextNotifyAt    DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  user User @relation("SavedSearchOwner", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@index([notifyDaily, nextNotifyAt])
 }
