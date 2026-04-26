@@ -8,6 +8,7 @@ import {
   UseGuards,
   UsePipes,
 } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
 import { ZodValidationPipe } from '../common/zod-validation.pipe';
 import { createApiTokenSchema, type CreateApiTokenInput } from '@trainova/shared';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
@@ -19,6 +20,7 @@ import { ApiTokensService } from './api-tokens.service';
  * `OWNER` / `ADMIN` of the calling user's company — the service layer
  * enforces this via {@link ApiTokensService.requireAdminCompany}.
  */
+@ApiTags('api-tokens')
 @Controller('company/api-tokens')
 @UseGuards(JwtAuthGuard)
 export class ApiTokensController {

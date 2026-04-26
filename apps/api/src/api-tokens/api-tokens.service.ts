@@ -64,7 +64,11 @@ export class ApiTokensService {
     // and prevent runaway token sprawl. Admins can revoke stale ones to
     // free a slot.
     const activeCount = await this.prisma.apiToken.count({
-      where: { companyId, revokedAt: null },
+      where: {
+        companyId,
+        revokedAt: null,
+        OR: [{ expiresAt: null }, { expiresAt: { gt: new Date() } }],
+      },
     });
     if (activeCount >= API_TOKEN_MAX_PER_COMPANY) {
       throw new ConflictException(

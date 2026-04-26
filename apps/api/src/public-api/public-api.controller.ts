@@ -9,10 +9,12 @@ import {
   Req,
   UseGuards,
 } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
 import type { Request } from 'express';
 import { z } from 'zod';
 import { Prisma } from '@trainova/db';
 import { PrismaService } from '../prisma/prisma.service';
+import { ZodValidationPipe } from '../common/zod-validation.pipe';
 import {
   ApiTokenGuard,
   RequireApiTokenScope,
@@ -24,6 +26,7 @@ const listJobRequestsQuerySchema = z.object({
   limit: z.coerce.number().int().min(1).max(100).default(20),
   offset: z.coerce.number().int().min(0).default(0),
 });
+type ListJobRequestsQuery = z.infer<typeof listJobRequestsQuerySchema>;
 
 const createJobRequestSchema = z.object({
   title: z.string().trim().min(3).max(200),
@@ -36,6 +39,44 @@ const createJobRequestSchema = z.object({
   /** When omitted, the request stays in DRAFT until promoted via the dashboard. */
   publish: z.boolean().optional(),
 });
+type CreateJobRequestInput = z.infer<typeof createJobRequestSchema>;
+
+const listApplicationsQuerySchema = z.object({
+  status: z
+    .enum([
+      'APPLIED',
+      'SHORTLISTED',
+      'TEST_ASSIGNED',
+      'TEST_SUBMITTED',
+      'INTERVIEW',
+      'OFFERED',
+      'ACCEPTED',
+      'REJECTED',
+      'WITHDRAWN',
+    ])
+    .optional(),
+  requestId: z.string().min(1).optional(),
+  limit: z.coerce.number().int().min(1).max(100).default(20),
+  offset: z.coerce.number().int().min(0).default(0),
+});
+type ListApplicationsQuery = z.infer<typeof listApplicationsQuerySchema>;
+
+const listTrainersQuerySchema = z.object({
+  skill: z.string().trim().max(80).optional(),
+  country: z.string().trim().max(80).optional(),
+  limit: z.coerce.number().int().min(1).max(100).default(20),
+  offset: z.coerce.number().int().min(0).default(0),
+});
+type ListTrainersQuery = z.infer<typeof listTrainersQuerySchema>;
+
+const listContractsQuerySchema = z.object({
+  status: z
+    .enum(['DRAFT', 'ACTIVE', 'COMPLETED', 'CANCELLED', 'DISPUTED'])
+    .optional(),
+  limit: z.coerce.number().int().min(1).max(100).default(20),
+  offset: z.coerce.number().int().min(0).default(0),
+});
+type ListContractsQuery = z.infer<typeof listContractsQuerySchema>;
 
 /**
  * T9.B — Public API for Enterprise (`/v1/*`).
@@ -49,6 +90,7 @@ const createJobRequestSchema = z.object({
  * internal-only fields (audit metadata, raw scoring inputs, etc.) so
  * we can evolve those without breaking integrators.
  */
+@ApiTags('public-api')
 @Controller({ path: 'v1', version: undefined })
 @UseGuards(ApiTokenGuard)
 export class PublicApiController {
@@ -60,9 +102,11 @@ export class PublicApiController {
 
   @Get('job-requests')
   @RequireApiTokenScope('read:job-requests')
-  async listJobRequests(@Req() req: Request, @Query() rawQuery: unknown) {
+  async listJobRequests(
+    @Req() req: Request,
+    @Query(new ZodValidationPipe(listJobRequestsQuerySchema)) query: ListJobRequestsQuery,
+  ) {
     const ctx = req.apiToken!;
-    const query = listJobRequestsQuerySchema.parse(rawQuery);
     const where: Prisma.JobRequestWhereInput = {
       companyId: ctx.companyId,
       ...(query.status ? { status: query.status as Prisma.JobRequestWhereInput['status'] } : {}),
@@ -133,9 +177,11 @@ export class PublicApiController {
 
   @Post('job-requests')
   @RequireApiTokenScope('write:job-requests')
-  async createJobRequest(@Req() req: Request, @Body() rawBody: unknown) {
+  async createJobRequest(
+    @Req() req: Request,
+    @Body(new ZodValidationPipe(createJobRequestSchema)) body: CreateJobRequestInput,
+  ) {
     const ctx = req.apiToken!;
-    const body = createJobRequestSchema.parse(rawBody);
     // Slug = lowercased title with random suffix; mirrors the
     // dashboard creator. We avoid sharing helpers across modules to
     // keep the public surface cheap to refactor.
@@ -179,28 +225,11 @@ export class PublicApiController {
 
   @Get('applications')
   @RequireApiTokenScope('read:applications')
-  async listApplications(@Req() req: Request, @Query() rawQuery: unknown) {
+  async listApplications(
+    @Req() req: Request,
+    @Query(new ZodValidationPipe(listApplicationsQuerySchema)) query: ListApplicationsQuery,
+  ) {
     const ctx = req.apiToken!;
-    const query = z
-      .object({
-        status: z
-          .enum([
-            'APPLIED',
-            'SHORTLISTED',
-            'TEST_ASSIGNED',
-            'TEST_SUBMITTED',
-            'INTERVIEW',
-            'OFFERED',
-            'ACCEPTED',
-            'REJECTED',
-            'WITHDRAWN',
-          ])
-          .optional(),
-        requestId: z.string().min(1).optional(),
-        limit: z.coerce.number().int().min(1).max(100).default(20),
-        offset: z.coerce.number().int().min(0).default(0),
-      })
-      .parse(rawQuery);
     const where: Prisma.ApplicationWhereInput = {
       request: { companyId: ctx.companyId },
       ...(query.status ? { status: query.status } : {}),
@@ -238,15 +267,9 @@ export class PublicApiController {
 
   @Get('trainers')
   @RequireApiTokenScope('read:trainers')
-  async listTrainers(@Query() rawQuery: unknown) {
-    const query = z
-      .object({
-        skill: z.string().trim().max(80).optional(),
-        country: z.string().trim().max(80).optional(),
-        limit: z.coerce.number().int().min(1).max(100).default(20),
-        offset: z.coerce.number().int().min(0).default(0),
-      })
-      .parse(rawQuery);
+  async listTrainers(
+    @Query(new ZodValidationPipe(listTrainersQuerySchema)) query: ListTrainersQuery,
+  ) {
     const where: Prisma.UserWhereInput = {
       role: 'TRAINER',
       status: 'ACTIVE',
@@ -293,17 +316,11 @@ export class PublicApiController {
 
   @Get('contracts')
   @RequireApiTokenScope('read:contracts')
-  async listContracts(@Req() req: Request, @Query() rawQuery: unknown) {
+  async listContracts(
+    @Req() req: Request,
+    @Query(new ZodValidationPipe(listContractsQuerySchema)) query: ListContractsQuery,
+  ) {
     const ctx = req.apiToken!;
-    const query = z
-      .object({
-        status: z
-          .enum(['DRAFT', 'ACTIVE', 'COMPLETED', 'CANCELLED', 'DISPUTED'])
-          .optional(),
-        limit: z.coerce.number().int().min(1).max(100).default(20),
-        offset: z.coerce.number().int().min(0).default(0),
-      })
-      .parse(rawQuery);
     const where: Prisma.ContractWhereInput = {
       companyId: ctx.companyId,
       ...(query.status ? { status: query.status } : {}),

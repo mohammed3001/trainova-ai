@@ -2,6 +2,8 @@ import {
   CanActivate,
   ExecutionContext,
   ForbiddenException,
+  HttpException,
+  HttpStatus,
   Injectable,
   Logger,
   SetMetadata,
@@ -106,10 +108,11 @@ export class ApiTokenGuard implements CanActivate {
     }
 
     if (!limiter.consume(resolved.id, resolved.rateLimitPerMinute)) {
-      // 429 surfaces via Nest's HttpException mapping when callers
-      // upgrade to a typed response; for now log and reject.
       this.logger.warn(`Rate limit exceeded for token ${resolved.id}`);
-      throw new ForbiddenException('Rate limit exceeded; try again in 60 seconds');
+      throw new HttpException(
+        'Rate limit exceeded; try again in 60 seconds',
+        HttpStatus.TOO_MANY_REQUESTS,
+      );
     }
 
     req.apiToken = {
