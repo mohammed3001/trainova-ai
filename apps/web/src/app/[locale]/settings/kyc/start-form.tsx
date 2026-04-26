@@ -55,7 +55,7 @@ export function StartKycForm({ labels }: { labels: Labels }) {
           required
           maxLength={2}
           minLength={2}
-          pattern="[A-Z]{2}"
+          pattern="[A-Za-z]{2}"
           placeholder="US"
           className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm uppercase focus:border-brand-400 focus:ring-2 focus:ring-brand-200"
         />

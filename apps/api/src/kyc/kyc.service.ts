@@ -122,26 +122,32 @@ export class KycService {
     input: SubmitKycInput,
     ip: string | null,
   ): Promise<KycSession> {
-    const session = await this.prisma.kycSession.findFirst({
-      where: { userId, status: { in: ACTIVE_STATUSES } },
-      orderBy: { createdAt: 'desc' },
-    });
-    if (!session) {
-      throw new BadRequestException('No active KYC session — start one first');
-    }
-    if (session.status !== 'PENDING') {
-      throw new BadRequestException('Session already submitted for review');
-    }
-    if (!session.providerSessionId) {
-      throw new BadRequestException('Session is missing a provider id — restart');
-    }
-
-    const decision = await this.provider.submitDocuments({
-      providerSessionId: session.providerSessionId,
-      documents: input.documents,
-    });
-
+    // Same per-user advisory-lock pattern as startOrResume — prevents two
+    // concurrent submits from both calling provider.submitDocuments (burning
+    // quota) and prevents the second tx from overwriting the first's decision
+    // (e.g. setting REJECTED while kycVerifiedAt is already set from APPROVED).
     return this.prisma.$transaction(async (tx) => {
+      await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtextextended(${userId}, 0))`;
+
+      const session = await tx.kycSession.findFirst({
+        where: { userId, status: { in: ACTIVE_STATUSES } },
+        orderBy: { createdAt: 'desc' },
+      });
+      if (!session) {
+        throw new BadRequestException('No active KYC session — start one first');
+      }
+      if (session.status !== 'PENDING') {
+        throw new BadRequestException('Session already submitted for review');
+      }
+      if (!session.providerSessionId) {
+        throw new BadRequestException('Session is missing a provider id — restart');
+      }
+
+      const decision = await this.provider.submitDocuments({
+        providerSessionId: session.providerSessionId,
+        documents: input.documents,
+      });
+
       const documentsJson = input.documents as unknown as Prisma.JsonArray;
       const baseUpdate = {
         documents: documentsJson,

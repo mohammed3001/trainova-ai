@@ -46,7 +46,7 @@ export default async function SettingsKycPage() {
     <div className="space-y-6">
       <header>
         <Link href={`/${locale}/settings`} className="text-sm text-slate-500 hover:text-brand-700">
-          ← {t('settings.title')}
+          ← {t('preferences.title')}
         </Link>
         <h1 className="mt-2 text-3xl font-bold text-slate-900">{t('settings.kyc.title')}</h1>
         <p className="mt-1 text-sm text-slate-500">{t('settings.kyc.subtitle')}</p>
