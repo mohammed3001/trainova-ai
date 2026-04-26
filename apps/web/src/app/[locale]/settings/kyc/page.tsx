@@ -40,7 +40,17 @@ export default async function SettingsKycPage() {
   const data = await authedFetch<KycMine>('/kyc/me');
   const verified = !!data.kycVerifiedAt;
   const session = data.session;
-  const canStart = !verified && (!session || session.status === 'REJECTED' || session.status === 'EXPIRED');
+  // After an admin revokes via revokeVerification, kycVerifiedAt is cleared but
+  // the latest session row stays APPROVED (preserves audit trail). The backend
+  // startOrResume only blocks on PENDING/AWAITING_REVIEW, so the form must be
+  // visible whenever the user is not currently verified and there's no active
+  // session — APPROVED-but-revoked included.
+  const canStart =
+    !verified &&
+    (!session ||
+      session.status === 'REJECTED' ||
+      session.status === 'EXPIRED' ||
+      session.status === 'APPROVED');
 
   return (
     <div className="space-y-6">
