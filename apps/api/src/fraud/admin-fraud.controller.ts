@@ -52,6 +52,11 @@ export class AdminFraudController {
     });
   }
 
+  @Get('applications/:id')
+  getOne(@Param('id') id: string) {
+    return this.svc.findOneForReview(id);
+  }
+
   @Post('applications/:id/rescore')
   rescore(@Param('id') id: string) {
     return this.svc.scoreApplicationOrThrow(id);

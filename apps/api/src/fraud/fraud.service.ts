@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import type { Prisma, RiskLevel } from '@trainova/db';
 import { isDisposableEmail } from './disposable-domains';
@@ -93,7 +93,7 @@ export class FraudService {
         request: { select: { budgetMax: true } },
       },
     });
-    if (!app) throw new Error(`Application ${applicationId} not found`);
+    if (!app) throw new NotFoundException(`Application ${applicationId} not found`);
 
     const trainer = await this.prisma.user.findUnique({
       where: { id: app.trainerId },
@@ -110,7 +110,7 @@ export class FraudService {
         },
       },
     });
-    if (!trainer) throw new Error(`Trainer ${app.trainerId} not found`);
+    if (!trainer) throw new NotFoundException(`Trainer ${app.trainerId} not found`);
 
     const flags = new Set<RiskSignalCode>();
 
@@ -273,6 +273,64 @@ export class FraudService {
         riskReviewNote: true,
       },
     });
+  }
+
+  /**
+   * Single-row read for the admin detail page. Returns the full review
+   * payload (risk fields, trainer, request, company, full answers + cover
+   * letter) so the admin can inspect the application without bouncing
+   * through the company-owner-scoped surface.
+   */
+  async findOneForReview(applicationId: string) {
+    const row = await this.prisma.application.findUnique({
+      where: { id: applicationId },
+      select: {
+        id: true,
+        status: true,
+        coverLetter: true,
+        proposedRate: true,
+        proposedTimelineDays: true,
+        answers: true,
+        createdAt: true,
+        riskScore: true,
+        riskLevel: true,
+        riskFlags: true,
+        riskComputedAt: true,
+        riskReviewedAt: true,
+        riskReviewedBy: true,
+        riskReviewNote: true,
+        trainer: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            emailVerifiedAt: true,
+            createdAt: true,
+            trainerProfile: {
+              select: {
+                slug: true,
+                headline: true,
+                country: true,
+                verified: true,
+              },
+            },
+          },
+        },
+        request: {
+          select: {
+            id: true,
+            slug: true,
+            title: true,
+            budgetMin: true,
+            budgetMax: true,
+            applicationSchema: true,
+            company: { select: { name: true, slug: true } },
+          },
+        },
+      },
+    });
+    if (!row) throw new NotFoundException(`Application ${applicationId} not found`);
+    return row;
   }
 }
 

@@ -129,7 +129,7 @@ export default async function AdminFraudPage({
                   </p>
                 </div>
                 <Link
-                  href={`/${locale}/company/requests/${it.request.id}/applications/${it.id}`}
+                  href={`/${locale}/admin/fraud/applications/${it.id}`}
                   className="btn-secondary text-xs"
                 >
                   {t('open')}
