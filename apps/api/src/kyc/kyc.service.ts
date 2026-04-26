@@ -1,6 +1,5 @@
 import {
   BadRequestException,
-  ForbiddenException,
   Inject,
   Injectable,
   Logger,
@@ -364,8 +363,10 @@ export class KycService {
    * session.
    */
   async revokeVerification(adminUserId: string, subjectUserId: string, reason: string, ip: string | null) {
+    // Defensive belt for callers that bypass the controller's Zod validation —
+    // the admin route enforces a non-empty trimmed reason via revokeKycSchema.
     if (!reason.trim()) {
-      throw new ForbiddenException('A revocation reason is required');
+      throw new BadRequestException('A revocation reason is required');
     }
 
     return this.prisma.$transaction(async (tx) => {

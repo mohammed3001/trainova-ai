@@ -75,6 +75,12 @@ export const reviewKycSchema = z.object({
 });
 export type ReviewKycInput = z.infer<typeof reviewKycSchema>;
 
+/// Admin override payload — strips kycVerifiedAt from a user.
+export const revokeKycSchema = z.object({
+  reason: z.string().min(1).max(2000),
+});
+export type RevokeKycInput = z.infer<typeof revokeKycSchema>;
+
 /// Provider abstraction. `apps/api` wires a concrete implementation in DI.
 export interface KycProviderSession {
   providerSessionId: string;

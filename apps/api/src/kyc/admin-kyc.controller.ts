@@ -14,8 +14,10 @@ import {
   ADMIN_ROLE_GROUPS,
   adminListKycQuerySchema,
   reviewKycSchema,
+  revokeKycSchema,
   type AdminListKycQuery,
   type ReviewKycInput,
+  type RevokeKycInput,
 } from '@trainova/shared';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
@@ -57,9 +59,9 @@ export class AdminKycController {
   revoke(
     @CurrentUser() admin: AuthUser,
     @Param('userId') userId: string,
-    @Body() body: { reason: string },
+    @Body(new ZodValidationPipe(revokeKycSchema)) body: RevokeKycInput,
     @Req() req: Request,
   ) {
-    return this.svc.revokeVerification(admin.id, userId, body?.reason ?? '', clientIp(req));
+    return this.svc.revokeVerification(admin.id, userId, body.reason, clientIp(req));
   }
 }
