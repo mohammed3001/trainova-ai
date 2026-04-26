@@ -2727,5 +2727,41 @@
       "paymentError": "Paiement échoué. Aucun montant n’a été prélevé.",
       "requirePaymentMethod": "Ajoutez un moyen de paiement avant de booster."
     }
+  },
+  "whiteLabel": {
+    "title": "Marque blanche et identité",
+    "subtitle": "Personnalisez les couleurs, les coordonnées et servez le portail formateurs depuis votre propre domaine.",
+    "saved": "Identité enregistrée.",
+    "verified": "Domaine personnalisé marqué comme vérifié.",
+    "domainVerified": "Vérifié le {at}",
+    "domainUnverified": "Domaine non vérifié — ajoutez l’enregistrement DNS TXT ci-dessous puis marquez-le comme vérifié.",
+    "sections": {
+      "theme": "Thème",
+      "contact": "Contact",
+      "domain": "Domaine personnalisé",
+      "preview": "Aperçu"
+    },
+    "fields": {
+      "enabled": "Activer la marque blanche",
+      "enabledHint": "Quand activé et que votre domaine est vérifié, le portail public servi depuis cet hôte utilise vos couleurs et votre pied de page.",
+      "brandColor": "Couleur de marque (hex)",
+      "accentColor": "Couleur d’accent (hex)",
+      "faviconUrl": "URL du favicon",
+      "supportEmail": "E-mail de support",
+      "footerNote": "Note de pied de page",
+      "customDomain": "Domaine personnalisé"
+    },
+    "actions": {
+      "showInstructions": "Voir les instructions DNS",
+      "markVerified": "Marquer comme vérifié"
+    },
+    "verification": {
+      "host": "Hôte DNS TXT",
+      "value": "Valeur DNS TXT"
+    },
+    "preview": {
+      "primary": "Action principale",
+      "accent": "Accent"
+    }
   }
 }

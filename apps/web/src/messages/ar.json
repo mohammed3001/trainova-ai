@@ -2861,5 +2861,41 @@
       "paymentError": "فشل الدفع. لم يتم خصم أي مبلغ.",
       "requirePaymentMethod": "أضف طريقة دفع قبل التعزيز."
     }
+  },
+  "whiteLabel": {
+    "title": "العلامة البيضاء والهوية البصرية",
+    "subtitle": "خصّص الألوان ومعلومات التواصل واستضف بوابة المدربين على نطاقك الخاص.",
+    "saved": "تم حفظ الهوية.",
+    "verified": "تم وسم النطاق المخصص كموثّق.",
+    "domainVerified": "تم التوثيق في {at}",
+    "domainUnverified": "لم يتم التوثيق بعد — أضف سجل DNS TXT أدناه ثم اضغط على «وسم كموثّق».",
+    "sections": {
+      "theme": "السمة",
+      "contact": "التواصل",
+      "domain": "النطاق المخصص",
+      "preview": "معاينة"
+    },
+    "fields": {
+      "enabled": "تفعيل الهوية البيضاء",
+      "enabledHint": "عند التفعيل وتوثيق النطاق، تظهر بوابتك العامة على ذلك النطاق بألوانك وتذييلك.",
+      "brandColor": "لون العلامة (هيكس)",
+      "accentColor": "لون التمييز (هيكس)",
+      "faviconUrl": "رابط الأيقونة المصغّرة",
+      "supportEmail": "بريد الدعم",
+      "footerNote": "ملاحظة التذييل",
+      "customDomain": "نطاق مخصص"
+    },
+    "actions": {
+      "showInstructions": "عرض تعليمات DNS",
+      "markVerified": "وسم كموثّق"
+    },
+    "verification": {
+      "host": "اسم DNS TXT",
+      "value": "قيمة DNS TXT"
+    },
+    "preview": {
+      "primary": "إجراء رئيسي",
+      "accent": "تمييز"
+    }
   }
 }
