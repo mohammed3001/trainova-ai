@@ -1,5 +1,4 @@
 import {
-  BadRequestException,
   Body,
   Controller,
   Get,
@@ -172,9 +171,10 @@ function parsePixelQuery(q: {
   });
   if (!result.success) {
     // We deliberately do not surface validation errors via the GIF —
-    // see `pixel()` above. Throwing here would propagate to the catch
-    // there. Returning null is enough.
-    throw new BadRequestException(result.error.errors[0]?.message);
+    // see `pixel()` above. Returning null skips event recording without
+    // creating an exception object on every malformed query string and
+    // keeps the function safe to call from non-pixel contexts.
+    return null;
   }
   return result.data;
 }
