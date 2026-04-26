@@ -130,28 +130,32 @@ export class CallsService {
     return { call: this.toDto(withSession), join, isNew: true };
   }
 
-  async accept(userId: string, callId: string): Promise<CallSession> {
+  async accept(
+    userId: string,
+    callId: string,
+  ): Promise<CallSession & { changed: boolean }> {
     const call = await this.loadCall(callId);
     await this.assertParticipant(call, userId);
-    if (call.status === 'ACTIVE') {
-      // Idempotent: re-issue token + return current row.
-    } else if (call.status !== 'RINGING') {
+    const wasActive = call.status === 'ACTIVE';
+    if (!wasActive && call.status !== 'RINGING') {
       throw new ConflictException(`Cannot accept a ${call.status} call`);
     }
     if (call.initiatorId === userId) {
       throw new BadRequestException('Initiator cannot accept their own call');
     }
-    const updated =
-      call.status === 'ACTIVE'
-        ? call
-        : await this.prisma.call.update({
-            where: { id: call.id },
-            data: { status: 'ACTIVE', startedAt: new Date() },
-            include: this.participantInclude(),
-          });
+    const updated = wasActive
+      ? call
+      : await this.prisma.call.update({
+          where: { id: call.id },
+          data: { status: 'ACTIVE', startedAt: new Date() },
+          include: this.participantInclude(),
+        });
     const me = await this.loadDisplayName(userId);
     const join = await this.mintJoinFor(updated, userId, me);
-    return { call: this.toDto(updated), join };
+    // `changed=false` on the idempotent re-accept path lets the
+    // controller skip the WS broadcast — re-accepting an already-ACTIVE
+    // call (e.g. after a tab reload) must not duplicate `call:accepted`.
+    return { call: this.toDto(updated), join, changed: !wasActive };
   }
 
   async reject(userId: string, callId: string): Promise<CallDto> {

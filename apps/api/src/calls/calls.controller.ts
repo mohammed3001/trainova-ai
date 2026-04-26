@@ -67,8 +67,13 @@ export class CallsController {
 
   @Post(':id/accept')
   async accept(@CurrentUser() user: AuthUser, @Param('id') id: string) {
-    const session = await this.service.accept(user.id, id);
-    this.gateway.emitAccepted(session.call.conversationId, id, user.id);
+    const { changed, ...session } = await this.service.accept(user.id, id);
+    // Suppress the broadcast on the idempotent re-accept path (call
+    // was already ACTIVE before this request), mirroring the `isNew`
+    // guard on `create` and the `changed` guard on `end`.
+    if (changed) {
+      this.gateway.emitAccepted(session.call.conversationId, id, user.id);
+    }
     return session;
   }
 
