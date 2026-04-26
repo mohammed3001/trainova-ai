@@ -14,6 +14,7 @@ import {
   UpdateEmailCampaignInput,
   UpdateEmailDripSequenceInput,
   UpdateEmailDripStepInput,
+  interpolateEmailTemplate,
 } from '@trainova/shared';
 import { PrismaService } from '../prisma/prisma.service';
 import { EmailService } from '../email/email.service';
@@ -599,17 +600,42 @@ export class EmailMarketingService {
                 locale: campaign.locale as CampaignLocale,
               })
             : null;
+          // Pre-interpolate the campaign-author body with recipient vars
+          // *before* injecting advertiser content, then pass `vars: {}` to
+          // `sendCampaignRaw` so the second interpolation pass inside
+          // `EmailService` is a no-op for the body. This prevents an
+          // advertiser from embedding `{{name}}` in headline/body/ctaLabel
+          // and having it resolved against the recipient's actual fields
+          // (template-injection / phishing vector). Subject is also
+          // pre-interpolated since the slot helper does not touch it but we
+          // still need vars applied somewhere.
+          const recipientVars = { name: r.name };
+          const interpolatedSubject = interpolateEmailTemplate(
+            campaign.subject,
+            recipientVars,
+            { escapeHtml: false },
+          );
+          const interpolatedHtml = interpolateEmailTemplate(
+            campaign.bodyHtml,
+            recipientVars,
+            { escapeHtml: true },
+          );
+          const interpolatedText = campaign.bodyText
+            ? interpolateEmailTemplate(campaign.bodyText, recipientVars, {
+                escapeHtml: false,
+              })
+            : campaign.bodyText;
           const { bodyHtml, bodyText } = wantsAd
-            ? applyNewsletterAd(campaign.bodyHtml, campaign.bodyText, ad)
-            : { bodyHtml: campaign.bodyHtml, bodyText: campaign.bodyText };
+            ? applyNewsletterAd(interpolatedHtml, interpolatedText, ad)
+            : { bodyHtml: interpolatedHtml, bodyText: interpolatedText };
 
           await this.email.sendCampaignRaw({
             to: r.email,
             locale: campaign.locale as CampaignLocale,
-            subject: campaign.subject,
+            subject: interpolatedSubject,
             bodyHtml,
             bodyText,
-            vars: { name: r.name },
+            vars: {},
           });
           await this.prisma.emailCampaignSend.update({
             where: { id: sendRow.id },
@@ -702,17 +728,34 @@ export class EmailMarketingService {
               locale: step.locale as CampaignLocale,
             })
           : null;
+        // Pre-interpolate before ad injection — see broadcast loop above.
+        const recipientVars = { name: e.user.name };
+        const interpolatedSubject = interpolateEmailTemplate(
+          step.subject,
+          recipientVars,
+          { escapeHtml: false },
+        );
+        const interpolatedHtml = interpolateEmailTemplate(
+          step.bodyHtml,
+          recipientVars,
+          { escapeHtml: true },
+        );
+        const interpolatedText = step.bodyText
+          ? interpolateEmailTemplate(step.bodyText, recipientVars, {
+              escapeHtml: false,
+            })
+          : step.bodyText;
         const { bodyHtml, bodyText } = wantsAd
-          ? applyNewsletterAd(step.bodyHtml, step.bodyText, ad)
-          : { bodyHtml: step.bodyHtml, bodyText: step.bodyText };
+          ? applyNewsletterAd(interpolatedHtml, interpolatedText, ad)
+          : { bodyHtml: interpolatedHtml, bodyText: interpolatedText };
 
         await this.email.sendCampaignRaw({
           to: e.user.email,
           locale: step.locale as CampaignLocale,
-          subject: step.subject,
+          subject: interpolatedSubject,
           bodyHtml,
           bodyText,
-          vars: { name: e.user.name },
+          vars: {},
         });
       } catch (err) {
         this.logger.error(

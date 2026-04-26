@@ -104,9 +104,17 @@ function renderHtmlBlock(
   creative: { headline: string; body: string | null; ctaLabel: string | null },
   clickUrl: string,
 ): string {
-  const headline = escapeHtml(creative.headline);
-  const body = creative.body ? escapeHtml(creative.body) : '';
-  const cta = escapeHtml(creative.ctaLabel?.trim() || 'Learn more');
+  // Belt-and-braces against template-injection: even though the email-marketing
+  // service pre-interpolates the body before calling applyNewsletterAd, we
+  // also strip `{{varName}}` recognition from advertiser-controlled strings so
+  // a future caller that forgets to pre-interpolate can't leak `{{name}}` via
+  // a hostile creative headline. escapeHtml + neutraliseTemplateBraces both
+  // run on every advertiser-authored field below.
+  const headline = neutraliseTemplateBraces(escapeHtml(creative.headline));
+  const body = creative.body ? neutraliseTemplateBraces(escapeHtml(creative.body)) : '';
+  const cta = neutraliseTemplateBraces(
+    escapeHtml(creative.ctaLabel?.trim() || 'Learn more'),
+  );
   const href = escapeHtmlAttr(clickUrl);
   return [
     '<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:24px 0;border-collapse:collapse;">',
@@ -123,12 +131,12 @@ function renderTextBlock(
   creative: { headline: string; body: string | null; ctaLabel: string | null },
   clickUrl: string,
 ): string {
-  const lines = [
-    '— Sponsored —',
-    creative.headline,
-    creative.body ?? '',
-    `${creative.ctaLabel?.trim() || 'Learn more'}: ${clickUrl}`,
-  ];
+  // Plain-text path has no HTML escaping layer to neutralise `{{varName}}`,
+  // so we strip the template syntax explicitly on advertiser fields.
+  const headline = neutraliseTemplateBracesText(creative.headline);
+  const body = creative.body ? neutraliseTemplateBracesText(creative.body) : '';
+  const cta = neutraliseTemplateBracesText(creative.ctaLabel?.trim() || 'Learn more');
+  const lines = ['— Sponsored —', headline, body, `${cta}: ${clickUrl}`];
   return lines.filter((l) => l.length > 0).join('\n');
 }
 
@@ -143,6 +151,27 @@ function escapeHtml(s: string): string {
 
 function escapeHtmlAttr(s: string): string {
   return escapeHtml(s);
+}
+
+/**
+ * In the HTML path, replace `{` with the numeric entity `&#123;` so the
+ * email-template interpolator's `/\{\{\s*\w+\s*\}\}/g` regex never matches
+ * advertiser content. The browser / mail client renders `&#123;` as a literal
+ * `{` for the recipient, so the user-visible text is unchanged.
+ */
+function neutraliseTemplateBraces(s: string): string {
+  return s.replace(/\{/g, '&#123;');
+}
+
+/**
+ * Plain-text equivalent: insert a zero-width space between consecutive `{`
+ * (and between consecutive `}`) so `{{name}}` becomes `{\u200B{name}\u200B}`,
+ * which no longer matches the interpolator regex but renders identically in
+ * any reasonable plain-text reader. We do not strip the braces because some
+ * advertisers may legitimately want them in the visible text.
+ */
+function neutraliseTemplateBracesText(s: string): string {
+  return s.replace(/\{\{/g, '{\u200B{').replace(/\}\}/g, '}\u200B}');
 }
 
 /**
