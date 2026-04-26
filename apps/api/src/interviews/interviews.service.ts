@@ -21,6 +21,8 @@ import {
 } from '@trainova/shared';
 import { NotificationsService } from '../notifications/notifications.service';
 import { PrismaService } from '../prisma/prisma.service';
+import { WebhooksService } from '../webhooks/webhooks.service';
+import type { WebhookEventType } from '@trainova/shared';
 
 /**
  * Interview scheduling (Tier 8.C).
@@ -58,6 +60,7 @@ export class InterviewsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly notifications: NotificationsService,
+    private readonly webhooks: WebhooksService,
   ) {}
 
   // ===================================================================
@@ -106,6 +109,7 @@ export class InterviewsService {
     });
 
     await this.notifyOther(created, trainerId, 'scheduled');
+    void this.dispatchInterviewWebhook(created, 'INTERVIEW_SCHEDULED');
     return this.toDto(created, userId);
   }
 
@@ -211,6 +215,7 @@ export class InterviewsService {
 
     const otherUserId = userId === cancelled.trainerId ? cancelled.scheduledById : cancelled.trainerId;
     await this.notifyOther(cancelled, otherUserId, 'cancelled');
+    void this.dispatchInterviewWebhook(cancelled, 'INTERVIEW_CANCELLED', input.reason);
     return this.toDto(cancelled, userId);
   }
 
@@ -242,12 +247,12 @@ export class InterviewsService {
 
     // Resolve "clear field" semantics: explicit null on agenda/notes/url
     // means clear; undefined means leave unchanged.
-    const next = await this.prisma.$transaction(async (tx) => {
+    const { cancelled, next } = await this.prisma.$transaction(async (tx) => {
       const fresh = await tx.interviewMeeting.findUnique({ where: { id } });
       if (!fresh || fresh.status !== 'SCHEDULED') {
         throw new ConflictException('Interview already finalized');
       }
-      const cancelled = await tx.interviewMeeting.update({
+      const cancelledRow = await tx.interviewMeeting.update({
         where: { id },
         data: {
           status: 'CANCELLED',
@@ -272,7 +277,7 @@ export class InterviewsService {
               : (input.meetingUrl ?? existing.meetingUrl),
           agenda: input.agenda === null ? null : (input.agenda ?? existing.agenda),
           notes: input.notes === null ? null : (input.notes ?? existing.notes),
-          rescheduledFromId: cancelled.id,
+          rescheduledFromId: cancelledRow.id,
         },
         include: interviewInclude,
       });
@@ -280,12 +285,17 @@ export class InterviewsService {
         tx,
         created.conversationId,
         userId,
-        this.formatRescheduleMessage(cancelled, created),
+        this.formatRescheduleMessage(cancelledRow, created),
       );
-      return created;
+      return { cancelled: cancelledRow, next: created };
     });
 
     await this.notifyOther(next, existing.trainerId, 'rescheduled');
+    // Reschedule is modelled as cancel-then-create; webhook subscribers
+    // get both events so Zapier/Make flows that key off the meeting id
+    // can close out the old interview and open the new one.
+    void this.dispatchInterviewWebhook(cancelled, 'INTERVIEW_CANCELLED', input.reason ?? 'Rescheduled');
+    void this.dispatchInterviewWebhook(next, 'INTERVIEW_SCHEDULED');
     return this.toDto(next, userId);
   }
 
@@ -508,6 +518,41 @@ export class InterviewsService {
     if (row.meetingUrl) lines.push(`Join: ${row.meetingUrl}`);
     if (row.agenda) lines.push(`Agenda: ${row.agenda}`);
     return lines.join('\n');
+  }
+
+  /**
+   * Webhook fan-out for `INTERVIEW_SCHEDULED` / `INTERVIEW_CANCELLED`.
+   * The interview row carries the conversation id but not the
+   * company id; we resolve it through the conversation → request
+   * → company chain. If the conversation has no linked request
+   * (1:1 chat created outside of a job) we silently skip
+   * dispatch — there's no company subscription scope to fan out
+   * to in that case.
+   */
+  private async dispatchInterviewWebhook(
+    row: InterviewWithRelations,
+    eventType: Extract<WebhookEventType, 'INTERVIEW_SCHEDULED' | 'INTERVIEW_CANCELLED'>,
+    cancelReason?: string,
+  ): Promise<void> {
+    try {
+      const conv = await this.prisma.conversation.findUnique({
+        where: { id: row.conversationId },
+        select: { request: { select: { companyId: true } } },
+      });
+      const companyId = conv?.request?.companyId;
+      if (!companyId) return;
+      await this.webhooks.dispatch(companyId, eventType, {
+        interviewId: row.id,
+        conversationId: row.conversationId,
+        trainerId: row.trainerId,
+        scheduledById: row.scheduledById,
+        scheduledAt: row.scheduledAt.toISOString(),
+        durationMin: row.durationMin,
+        cancelReason: eventType === 'INTERVIEW_CANCELLED' ? cancelReason : undefined,
+      });
+    } catch {
+      /* swallow — webhooks are best-effort */
+    }
   }
 
   private formatCancelMessage(row: InterviewWithRelations, reason: string | undefined) {

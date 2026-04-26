@@ -2533,7 +2533,6 @@
         }
       },
       "steps": {
-        "title": "The full workflow, step by step",
         "1": {
           "title": "Post a request",
           "body": "Use the AI-assisted request builder to define skills, conditions, evaluation environment and budget. We auto-suggest pricing from comparable contracts."
@@ -2557,7 +2556,8 @@
         "6": {
           "title": "Review + repeat",
           "body": "Release escrow on milestone approval, exchange verified reviews and re-engage your top trainers for future projects."
-        }
+        },
+        "title": "The full workflow, step by step"
       },
       "cta": {
         "bottomTitle": "Ready to ship better AI training projects?",
@@ -2678,7 +2678,6 @@
         }
       },
       "path": {
-        "title": "Your path on Trainova AI",
         "1": {
           "title": "Build your profile",
           "body": "Add skills, languages, certifications, sample work and a portfolio."
@@ -2694,7 +2693,8 @@
         "4": {
           "title": "Get paid + reviewed",
           "body": "Deliver milestones, release escrow, collect verified reviews and re-engage."
-        }
+        },
+        "title": "Your path on Trainova AI"
       },
       "earnings": {
         "title": "Real earnings, real protections",
@@ -2860,6 +2860,33 @@
       "cancel": "Cancel",
       "paymentError": "Payment failed. No charge was made.",
       "requirePaymentMethod": "Add a payment method on file before boosting."
+    }
+  },
+  "integrations": {
+    "title": "Integrations",
+    "subtitle": "Connect Trainova to your tools via webhooks.",
+    "webhooks": {
+      "title": "Webhooks",
+      "subtitle": "Receive HTTP POST callbacks for platform events.",
+      "createTitle": "Add a new webhook",
+      "createHint": "We will sign every payload with HMAC-SHA256. The secret is shown once.",
+      "urlLabel": "Endpoint URL",
+      "descriptionLabel": "Description (optional)",
+      "eventsLabel": "Events",
+      "eventsHint": "Leave all unchecked to subscribe to every event type.",
+      "createSubmit": "Create webhook",
+      "saving": "Saving…",
+      "secretRevealedTitle": "Signing secret",
+      "secretRevealedHint": "Copy this now — it will not be shown again.",
+      "dismiss": "Dismiss",
+      "listTitle": "Your webhooks",
+      "empty": "No webhooks configured yet.",
+      "enable": "Enable",
+      "disable": "Disable",
+      "delete": "Delete",
+      "confirmDelete": "Delete this webhook?",
+      "subscribeAll": "All events",
+      "autoDisabled": "Auto-disabled after {count} consecutive failures."
     }
   }
 }

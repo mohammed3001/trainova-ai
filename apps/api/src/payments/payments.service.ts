@@ -28,6 +28,7 @@ import { InvoiceService } from '../invoicing/invoice.service';
 import { TaxService } from '../invoicing/tax.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { StripeService } from './stripe.service';
+import { WebhooksService } from '../webhooks/webhooks.service';
 import { computeCouponDiscount } from '@trainova/shared';
 
 type ContractWithRelations = Prisma.ContractGetPayload<{
@@ -79,6 +80,7 @@ export class PaymentsService {
     private readonly tax: TaxService,
     private readonly invoices: InvoiceService,
     private readonly coupons: CouponsService,
+    private readonly webhooks: WebhooksService,
   ) {}
 
   // ===================================================================
@@ -196,6 +198,15 @@ export class PaymentsService {
     this.logger.log(
       `Contract ${contract.id} created: company=${contract.companyId} trainer=${contract.trainerId} total=${total}${contract.currency}`,
     );
+
+    void this.webhooks.dispatch(contract.companyId, 'CONTRACT_CREATED', {
+      contractId: contract.id,
+      companyId: contract.companyId,
+      trainerId: contract.trainerId,
+      status: contract.status,
+      totalMinor: contract.totalAmountCents,
+      currency: contract.currency,
+    });
 
     return this.toPublicContract(contract);
   }
@@ -502,6 +513,18 @@ export class PaymentsService {
         }`,
       );
     }
+
+    void this.webhooks.dispatch(
+      milestone.contract.companyId,
+      'MILESTONE_RELEASED',
+      {
+        milestoneId: milestone.id,
+        contractId: milestone.contractId,
+        amountMinor: milestone.amountCents,
+        currency: milestone.contract.currency,
+        releasedAt: (updated.releasedAt ?? new Date()).toISOString(),
+      },
+    );
 
     // If every milestone is RELEASED/REFUNDED/CANCELLED the contract as
     // a whole is complete.
@@ -1078,10 +1101,44 @@ export class PaymentsService {
       },
     });
     if (remaining === 0) {
-      await this.prisma.contract.updateMany({
+      // updateMany returns the row count; only fan the webhook out
+      // if we actually flipped the status this call (otherwise a
+      // concurrent release that already completed the contract
+      // would re-fire CONTRACT_COMPLETED — the WHERE on `status:
+      // 'ACTIVE'` is the dedup guard).
+      const claim = await this.prisma.contract.updateMany({
         where: { id: contractId, status: 'ACTIVE' },
         data: { status: 'COMPLETED', completedAt: new Date() },
       });
+      if (claim.count === 1) {
+        const completed = await this.prisma.contract.findUnique({
+          where: { id: contractId },
+          select: {
+            id: true,
+            companyId: true,
+            trainerId: true,
+            status: true,
+            totalAmountCents: true,
+            currency: true,
+            completedAt: true,
+          },
+        });
+        if (completed) {
+          void this.webhooks.dispatch(
+            completed.companyId,
+            'CONTRACT_COMPLETED',
+            {
+              contractId: completed.id,
+              companyId: completed.companyId,
+              trainerId: completed.trainerId,
+              status: completed.status,
+              totalMinor: completed.totalAmountCents,
+              currency: completed.currency,
+              completedAt: (completed.completedAt ?? new Date()).toISOString(),
+            },
+          );
+        }
+      }
     }
   }
 

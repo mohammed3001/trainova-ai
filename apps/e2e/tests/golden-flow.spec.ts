@@ -335,6 +335,7 @@ test.describe('Golden E2E flow — 11 steps', () => {
       'uploads',
       'users',
       'verification',
+      'webhooks',
       'workbench',
     ];
     expect(tagNames).toEqual(expected);

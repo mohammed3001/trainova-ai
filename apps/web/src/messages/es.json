@@ -2399,7 +2399,6 @@
         }
       },
       "steps": {
-        "title": "El flujo completo, paso a paso",
         "1": {
           "title": "Publica una solicitud",
           "body": "El builder asistido por IA define habilidades, condiciones, entorno de evaluación y presupuesto."
@@ -2423,7 +2422,8 @@
         "6": {
           "title": "Evalúa y repite",
           "body": "Libera escrow por hito, intercambia reseñas verificadas y vuelve a contratar a tus mejores formadores."
-        }
+        },
+        "title": "El flujo completo, paso a paso"
       },
       "cta": {
         "bottomTitle": "¿Listo para mejores proyectos de IA?",
@@ -2544,7 +2544,6 @@
         }
       },
       "path": {
-        "title": "Tu camino en Trainova AI",
         "1": {
           "title": "Crea tu perfil",
           "body": "Habilidades, idiomas, certificaciones, muestras, portfolio."
@@ -2560,7 +2559,8 @@
         "4": {
           "title": "Cobra y recibe reseñas",
           "body": "Entrega hitos, libera escrow y consigue reseñas verificadas."
-        }
+        },
+        "title": "Tu camino en Trainova AI"
       },
       "earnings": {
         "title": "Ingresos reales, protecciones reales",
@@ -2726,6 +2726,33 @@
       "cancel": "Cancelar",
       "paymentError": "El pago falló. No se realizó ningún cargo.",
       "requirePaymentMethod": "Agrega un método de pago antes de impulsar."
+    }
+  },
+  "integrations": {
+    "title": "Integraciones",
+    "subtitle": "Conecta Trainova con tus herramientas mediante webhooks.",
+    "webhooks": {
+      "title": "Webhooks",
+      "subtitle": "Recibe POST HTTP para eventos de la plataforma.",
+      "createTitle": "Añadir webhook",
+      "createHint": "Firmamos cada payload con HMAC-SHA256. El secreto aparece una sola vez.",
+      "urlLabel": "URL del endpoint",
+      "descriptionLabel": "Descripción (opcional)",
+      "eventsLabel": "Eventos",
+      "eventsHint": "Deja todo sin marcar para suscribirte a todos los eventos.",
+      "createSubmit": "Crear",
+      "saving": "Guardando…",
+      "secretRevealedTitle": "Secreto de firma",
+      "secretRevealedHint": "Cópialo ahora — no volverá a mostrarse.",
+      "dismiss": "Cerrar",
+      "listTitle": "Tus webhooks",
+      "empty": "No hay webhooks configurados.",
+      "enable": "Activar",
+      "disable": "Desactivar",
+      "delete": "Eliminar",
+      "confirmDelete": "¿Eliminar este webhook?",
+      "subscribeAll": "Todos los eventos",
+      "autoDisabled": "Deshabilitado tras {count} fallos consecutivos."
     }
   }
 }
